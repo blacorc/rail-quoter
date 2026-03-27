@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-Slot Frame Quoter</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --navy: #0B1929;
+  --navy-light: #132D4A;
+  --navy-mid: #0F2337;
+  --orange: #F26522;
+  --orange-hover: #FF7A38;
+  --orange-glow: rgba(242, 101, 34, 0.15);
+  --green: #22C55E;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --white: #FFFFFF;
+  --gray-50: #F8FAFC;
+  --gray-100: #F1F5F9;
+  --gray-200: #E2E8F0;
+  --gray-300: #CBD5E1;
+  --gray-400: #94A3B8;
+  --gray-500: #64748B;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1E293B;
+  --font-body: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 24px rgba(0,0,0,0.12);
+  --transition: 200ms ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--gray-50);
+  color: var(--gray-800);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.header {
+  background: var(--navy);
+  color: var(--white);
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+.header-brand { display: flex; align-items: center; gap: 12px; }
+
+.header-logo {
+  width: 36px; height: 36px;
+  background: var(--orange);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px;
+  font-family: var(--font-mono);
+  letter-spacing: -0.5px;
+}
+
+.header-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.header-subtitle { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+.btn-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: var(--transition);
+}
+.btn-icon:hover { background: rgba(255,255,255,0.08); color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+.main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+
+.tabs {
+  display: flex; gap: 4px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.tab {
+  flex: 1; min-width: 120px;
+  padding: 12px 16px;
+  border: none; border-radius: var(--radius);
+  background: transparent; color: var(--gray-500);
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+  white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.tab:hover { color: var(--gray-700); background: var(--gray-50); }
+.tab.active { background: var(--navy); color: var(--white); box-shadow: 0 2px 8px rgba(11,25,41,0.3); }
+.tab-icon { font-size: 16px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+.card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+.card-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+.card-title { font-size: 16px; font-weight: 700; color: var(--navy); }
+.card-body { padding: 24px; }
+
+.upload-zone {
+  border: 2px dashed var(--gray-300);
+  border-radius: var(--radius-lg);
+  padding: 48px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--gray-50);
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--orange); background: var(--orange-glow); }
+.upload-zone-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+.upload-zone-text { font-size: 15px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
+.upload-zone-hint { font-size: 13px; color: var(--gray-400); }
+.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.upload-preview { display: none; margin-top: 16px; position: relative; }
+.upload-preview img { max-width: 100%; max-height: 300px; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+.upload-preview .remove-btn {
+  position: absolute; top: 8px; right: 8px;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: none; background: rgba(0,0,0,0.6); color: white;
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.btn {
+  padding: 10px 20px; border-radius: var(--radius); border: none;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition);
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.btn-primary { background: var(--orange); color: var(--white); }
+.btn-primary:hover { background: var(--orange-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(242,101,34,0.35); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-secondary { background: var(--gray-100); color: var(--gray-700); border: 1px solid var(--gray-200); }
+.btn-secondary:hover { background: var(--gray-200); }
+.btn-navy { background: var(--navy); color: var(--white); }
+.btn-navy:hover { background: var(--navy-light); }
+.btn-danger { background: var(--red); color: var(--white); }
+.btn-danger:hover { opacity: 0.9; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+.quote-section { margin-top: 24px; }
+
+.cut-list-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.cut-list-table th {
+  background: var(--navy); color: var(--white);
+  padding: 12px 16px; text-align: left;
+  font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.cut-list-table th:first-child { border-radius: var(--radius) 0 0 0; }
+.cut-list-table th:last-child { border-radius: 0 var(--radius) 0 0; }
+.cut-list-table td { padding: 10px 16px; border-bottom: 1px solid var(--gray-100); }
+.cut-list-table tr:hover td { background: var(--gray-50); }
+.cut-list-table input, .cut-list-table select {
+  width: 100%; padding: 6px 8px;
+  border: 1px solid var(--gray-200); border-radius: 4px;
+  font-family: var(--font-mono); font-size: 13px;
+  background: var(--white); transition: var(--transition);
+}
+.cut-list-table input:focus, .cut-list-table select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange-glow); }
+.cut-list-table .row-delete {
+  width: 28px; height: 28px; border: none; border-radius: 4px;
+  background: transparent; color: var(--gray-400);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; transition: var(--transition);
+}
+.cut-list-table .row-delete:hover { background: rgba(239,68,68,0.1); color: var(--red); }
+.line-total { font-family: var(--font-mono); font-weight: 600; color: var(--navy); }
+
+.totals-section { display: flex; justify-content: flex-end; margin-top: 16px; }
+.totals-box { background: var(--gray-50); border-radius: var(--radius); padding: 16px 24px; min-width: 280px; border: 1px solid var(--gray-200); }
+.totals-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+.totals-row.grand { border-top: 2px solid var(--navy); margin-top: 8px; padding-top: 12px; font-size: 18px; font-weight: 700; color: var(--navy); }
+.totals-label { color: var(--gray-600); }
+.totals-value { font-family: var(--font-mono); font-weight: 600; }
+
+.confidence-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border-radius: 50px;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.confidence-high { background: rgba(34,197,94,0.12); color: #16a34a; }
+.confidence-medium { background: rgba(245,158,11,0.12); color: #d97706; }
+.confidence-low { background: rgba(239,68,68,0.12); color: #dc2626; }
+.confidence-exact { background: rgba(59,130,246,0.12); color: #2563eb; }
+
+.ai-notes { margin-top: 16px; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200); overflow: hidden; }
+.ai-notes-toggle { width: 100%; padding: 12px 16px; border: none; background: transparent; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; display: flex; align-items: center; gap: 8px; text-align: left; }
+.ai-notes-toggle .arrow { transition: transform 200ms; }
+.ai-notes-toggle.open .arrow { transform: rotate(90deg); }
+.ai-notes-body { display: none; padding: 0 16px 16px; font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+.ai-notes-body.open { display: block; }
+
+.loading-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(11,25,41,0.6); backdrop-filter: blur(4px);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.loading-overlay.active { display: flex; }
+.loading-card { background: var(--white); border-radius: var(--radius-lg); padding: 48px; text-align: center; box-shadow: var(--shadow-lg); max-width: 320px; }
+.spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.loading-sub { font-size: 13px; color: var(--gray-400); }
+
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(11,25,41,0.5); backdrop-filter: blur(4px);
+  z-index: 300; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+.modal-close { width: 32px; height: 32px; border: none; border-radius: 50%; background: var(--gray-100); color: var(--gray-500); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.modal-close:hover { background: var(--gray-200); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 8px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+.form-input { width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); font-family: var(--font-body); font-size: 14px; transition: var(--transition); background: var(--white); }
+.form-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+textarea.form-input { resize: vertical; min-height: 80px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.admin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.5); backdrop-filter: blur(4px); z-index: 400; }
+.admin-overlay.active { display: block; }
+.admin-panel { position: fixed; right: -560px; top: 0; bottom: 0; width: 560px; max-width: 100vw; background: var(--white); z-index: 401; box-shadow: -8px 0 32px rgba(0,0,0,0.15); overflow-y: auto; transition: right 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+.admin-panel.active { right: 0; }
+.admin-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1; }
+.admin-header h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
+.admin-section { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); }
+.admin-section h3 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { background: var(--gray-50); padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
+.admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); }
+.admin-table input { width: 100%; padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
+.admin-table input:focus { outline: none; border-color: var(--orange); }
+
+.pin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.7); backdrop-filter: blur(8px); z-index: 500; align-items: center; justify-content: center; }
+.pin-overlay.active { display: flex; }
+.pin-card { background: var(--white); border-radius: var(--radius-lg); padding: 40px; text-align: center; box-shadow: var(--shadow-lg); max-width: 340px; width: 100%; }
+.pin-card h3 { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.pin-card p { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
+.pin-input { width: 180px; padding: 12px; text-align: center; font-size: 24px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 8px; border: 2px solid var(--gray-200); border-radius: var(--radius); transition: var(--transition); }
+.pin-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+.pin-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+
+.history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.history-table th { background: var(--gray-50); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
+.history-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); }
+.history-table tr:hover td { background: var(--gray-50); }
+.method-badge { display: inline-block; padding: 2px 8px; border-radius: 50px; font-size: 11px; font-weight: 600; }
+.method-ai { background: rgba(139,92,246,0.1); color: #7c3aed; }
+.method-dxf { background: rgba(59,130,246,0.1); color: #2563eb; }
+.method-manual { background: rgba(107,114,128,0.1); color: #4b5563; }
+
+.quote-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+.toggle-group { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--gray-600); }
+.toggle-switch { position: relative; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 12px; cursor: pointer; transition: var(--transition); }
+.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--white); left: 3px; top: 3px; transition: var(--transition); }
+.toggle-switch input:checked + .toggle-slider { background: var(--orange); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+.error-box { display: none; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+.error-box.active { display: block; }
+.error-title { font-weight: 700; color: var(--red); margin-bottom: 4px; font-size: 14px; }
+.error-detail { font-size: 12px; font-family: var(--font-mono); color: var(--gray-600); white-space: pre-wrap; max-height: 150px; overflow-y: auto; margin-top: 8px; background: var(--white); padding: 8px; border-radius: 4px; }
+
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: var(--white); padding: 14px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 500; z-index: 600; transform: translateY(100px); opacity: 0; transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-lg); }
+.toast.active { transform: translateY(0); opacity: 1; }
+.toast.error { background: var(--red); }
+.toast.success { background: var(--green); color: var(--white); }
+
+@media (max-width: 768px) {
+  .main { padding: 16px 12px 80px; }
+  .tabs { flex-wrap: nowrap; }
+  .tab { font-size: 13px; padding: 10px 12px; }
+  .form-row { grid-template-columns: 1fr; }
+  .card-body { padding: 16px; }
+  .cut-list-table { font-size: 12px; }
+  .cut-list-table th, .cut-list-table td { padding: 8px; }
+  .admin-panel { width: 100vw; }
+  .totals-box { min-width: auto; width: 100%; }
+  .totals-section { justify-content: stretch; }
+  .header-subtitle { display: none; }
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo">T</div>
+    <div>
+      <div class="header-title">T-Slot Frame Quoter</div>
+      <div class="header-subtitle">Aluminum Extrusion Estimator</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-icon" onclick="openHistory()" title="Quote History">📋</button>
+    <button class="btn-icon" onclick="promptAdmin()" title="Admin Settings">⚙️</button>
+  </div>
+</header>
+
+<main class="main">
+
+  <div class="tabs">
+    <button class="tab active" data-tab="ai" onclick="switchTab('ai')">
+      <span class="tab-icon">📷</span> AI Estimate
+    </button>
+    <button class="tab" data-tab="dxf" onclick="switchTab('dxf')">
+      <span class="tab-icon">📐</span> DXF Upload
+    </button>
+    <button class="tab" data-tab="manual" onclick="switchTab('manual')">
+      <span class="tab-icon">✏️</span> Manual Entry
+    </button>
+  </div>
+
+  <!-- AI ESTIMATE TAB -->
+  <div id="panel-ai" class="tab-panel active">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Upload Frame Image</div>
+      </div>
+      <div class="card-body">
+        <div class="upload-zone" id="ai-upload-zone">
+          <span class="upload-zone-icon">📷</span>
+          <div class="upload-zone-text">Drop image or click to upload</div>
+          <div class="upload-zone-hint">PNG, JPG, WEBP — screenshots, photos, or CAD renders</div>
+          <input type="file" accept="image/*" id="ai-file-input" onchange="handleAIUpload(event)">
+        </div>
+        <div class="upload-preview" id="ai-preview">
+          <img id="ai-preview-img" src="" alt="Preview">
+          <button class="remove-btn" onclick="clearAIUpload()">✕</button>
+        </div>
+        <div style="margin-top: 16px; text-align: center;">
+          <button class="btn btn-primary" id="analyze-btn" onclick="analyzeImage()" disabled>
+            🔍 Analyze Frame
+          </button>
+        </div>
+        <div class="error-box" id="ai-error">
+          <div class="error-title">⚠️ Analysis Error</div>
+          <div class="error-detail" id="ai-error-detail"></div>
+          <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-secondary" onclick="analyzeImage()">🔄 Retry</button>
+            <button class="btn btn-sm btn-secondary" onclick="switchTab('manual')">✏️ Enter Manually</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DXF UPLOAD TAB -->
+  <div id="panel-dxf" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Upload DXF File</div>
+      </div>
+      <div class="card-body">
+        <div class="upload-zone" id="dxf-upload-zone">
+          <span class="upload-zone-icon">📐</span>
+          <div class="upload-zone-text">Drop .dxf file or click to upload</div>
+          <div class="upload-zone-hint">Layers should be named by profile type (e.g., "40x40")</div>
+          <input type="file" accept=".dxf" id="dxf-file-input" onchange="handleDXFUpload(event)">
+        </div>
+        <div class="toggle-group">
+          <span>Drawing units:</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="dxf-units-mm" onchange="reprocessDXF()">
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="dxf-units-label">Inches</span>
+        </div>
+        <div class="error-box" id="dxf-error">
+          <div class="error-title">⚠️ DXF Parse Error</div>
+          <div class="error-detail" id="dxf-error-detail"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MANUAL ENTRY TAB -->
+  <div id="panel-manual" class="tab-panel">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Build Cut List</div>
+        <button class="btn btn-sm btn-primary" onclick="addManualRow()">+ Add Row</button>
+      </div>
+      <div class="card-body" style="padding:0;"></div>
+    </div>
+  </div>
+
+  <!-- SHARED QUOTE OUTPUT -->
+  <div id="quote-output" class="quote-section" style="display: none;">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Cut List</div>
+          <span class="confidence-badge" id="confidence-badge" style="margin-top: 4px;"></span>
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="addQuoteRow()">+ Add Row</button>
+      </div>
+      <div class="card-body" style="padding: 0; overflow-x: auto;">
+        <table class="cut-list-table" id="cut-list-table">
+          <thead>
+            <tr>
+              <th style="width: 180px;">Profile</th>
+              <th style="width: 80px;">Qty</th>
+              <th style="width: 120px;">Length (in)</th>
+              <th style="width: 120px;">Unit $/in</th>
+              <th style="width: 120px;">Line Total</th>
+              <th style="width: 50px;"></th>
+            </tr>
+          </thead>
+          <tbody id="cut-list-body"></tbody>
+        </table>
+      </div>
+
+      <div class="ai-notes" id="ai-notes-section" style="display: none;">
+        <button class="ai-notes-toggle" onclick="toggleNotes()">
+          <span class="arrow">▶</span> AI Analysis Notes
+        </button>
+        <div class="ai-notes-body" id="ai-notes-body"></div>
+      </div>
+
+      <div style="padding: 0 24px 24px;">
+        <div class="totals-section">
+          <div class="totals-box">
+            <div class="totals-row">
+              <span class="totals-label">Material Subtotal</span>
+              <span class="totals-value" id="subtotal-val">$0.00</span>
+            </div>
+            <div class="totals-row" id="markup-row">
+              <span class="totals-label">Markup (<span id="markup-pct">0</span>%)</span>
+              <span class="totals-value" id="markup-val">$0.00</span>
+            </div>
+            <div class="totals-row grand">
+              <span class="totals-label">Grand Total</span>
+              <span class="totals-value" id="grand-total-val">$0.00</span>
+            </div>
+          </div>
+        </div>
+        <div class="quote-actions">
+          <button class="btn btn-primary" onclick="openSendModal()">✉️ Get This Quote</button>
+          <button class="btn btn-secondary" onclick="saveQuoteDraft()">💾 Save Draft</button>
+          <button class="btn btn-secondary" onclick="clearQuote()">🗑️ Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-card">
+    <div class="spinner"></div>
+    <div class="loading-text">Analyzing frame...</div>
+    <div class="loading-sub">AI is identifying profiles and dimensions</div>
+  </div>
+</div>
+
+<!-- SEND QUOTE MODAL -->
+<div class="modal-overlay" id="send-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Get Your Quote</div>
+      <button class="modal-close" onclick="closeSendModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;">
+        We'll email you this quote and a rep will follow up to help finalize your order.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Your Name *</label>
+          <input class="form-input" id="send-customer" type="text" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email *</label>
+          <input class="form-input" id="send-to" type="email" placeholder="jane@company.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <input class="form-input" id="send-company" type="text" placeholder="Acme Corp">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="send-phone" type="tel" placeholder="(555) 123-4567">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project Name</label>
+        <input class="form-input" id="send-project" type="text" placeholder="Assembly Line Guard">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-input" id="send-notes" placeholder="Any additional details about your project..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeSendModal()">Cancel</button>
+      <button class="btn btn-primary" id="send-btn" onclick="sendQuote()">✉️ Send My Quote</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUOTE HISTORY MODAL -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-header">
+      <div class="modal-title">Quote History</div>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 0; overflow-x: auto;">
+      <table class="history-table" id="history-table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Customer</th><th>Project</th><th>Total</th><th>Method</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <div id="history-empty" style="padding: 40px; text-align: center; color: var(--gray-400); font-size: 14px;">No quotes yet.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PIN ENTRY -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-card">
+    <h3>🔒 Admin Access</h3>
+    <p id="pin-prompt-text">Enter your 4-digit PIN</p>
+    <input type="password" class="pin-input" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" onkeyup="handlePinEntry(event)">
+    <div class="pin-error" id="pin-error">Incorrect PIN</div>
+    <div style="margin-top: 20px;">
+      <button class="btn btn-secondary btn-sm" onclick="closePinOverlay()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN SLIDE-OUT PANEL -->
+<div class="admin-overlay" id="admin-overlay" onclick="closeAdmin()"></div>
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-header">
+    <h2>⚙️ Admin Settings</h2>
+    <button class="modal-close" onclick="closeAdmin()">✕</button>
+  </div>
+
+  <!-- Profile Price List -->
+  <div class="admin-section">
+    <h3>Profile Price List</h3>
+    <table class="admin-table" id="profile-table">
+      <thead>
+        <tr>
+          <th>Profile</th>
+          <th>Description</th>
+          <th>$/Inch</th>
+          <th style="width: 60px;"></th>
+        </tr>
+      </thead>
+      <tbody id="profile-table-body"></tbody>
+    </table>
+    <button class="btn btn-sm btn-secondary" style="margin-top: 8px;" onclick="addProfileRow()">+ Add Profile</button>
+  </div>
+
+  <!-- Markup -->
+  <div class="admin-section">
+    <h3>Markup Settings</h3>
+    <div class="form-group">
+      <label class="form-label">Default Markup %</label>
+      <input class="form-input" id="admin-markup" type="number" min="0" max="100" value="0" style="width: 120px;">
+    </div>
+    <div class="toggle-group">
+      <span>Show markup to customer:</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="admin-show-markup">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Rep Info -->
+  <div class="admin-section">
+    <h3>Rep Info</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rep Name</label>
+        <input class="form-input" id="admin-rep-name" placeholder="John Smith">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rep Phone</label>
+        <input class="form-input" id="admin-rep-phone" placeholder="(555) 123-4567">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Company Name</label>
+      <input class="form-input" id="admin-company-name" placeholder="TSI Solutions">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Logo URL</label>
+      <input class="form-input" id="admin-logo-url" placeholder="https://example.com/logo.png">
+    </div>
+  </div>
+
+  <div class="admin-section" style="border-bottom: none;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="btn btn-primary" onclick="saveAdminSettings()">💾 Save Settings</button>
+      <button class="btn btn-secondary" onclick="resetPIN()">🔑 Change PIN</button>
+      <button class="btn btn-danger btn-sm" onclick="if(confirm('Reset ALL settings and history?')) { localStorage.clear(); location.reload(); }">⚠️ Factory Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── STATE ── */
+const DEFAULT_PROFILES = [
+  { name: '15x15', desc: '15mm Light Duty', ppi: 0.12 },
+  { name: '20x20', desc: '20mm Standard', ppi: 0.18 },
+  { name: '30x30', desc: '30mm Medium', ppi: 0.28 },
+  { name: '40x40', desc: '40mm Standard', ppi: 0.42 },
+  { name: '40x80', desc: '40x80mm Double', ppi: 0.68 },
+  { name: '80x80', desc: '80mm Heavy Duty', ppi: 1.15 },
+];
+
+let state = {
+  currentTab: 'ai',
+  quoteMethod: null,
+  confidence: null,
+  aiNotes: '',
+  cutList: [],
+  uploadedImageB64: null,
+  dxfRawData: null,
+};
+
+/* ── ADMIN DATA ── */
+function getAdmin() {
+  try { return JSON.parse(localStorage.getItem('tslot_admin')) || null; } catch { return null; }
+}
+function getProfiles() {
+  const a = getAdmin(); return (a && a.profiles) ? a.profiles : DEFAULT_PROFILES;
+}
+function getMarkup() {
+  const a = getAdmin(); return (a && typeof a.markup === 'number') ? a.markup : 0;
+}
+function getShowMarkup() {
+  const a = getAdmin(); return a ? !!a.showMarkup : true;
+}
+function getRepInfo() {
+  const a = getAdmin(); return a ? (a.rep || {}) : {};
+}
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('tslot_history')) || []; } catch { return []; }
+}
+function saveHistory(h) { localStorage.setItem('tslot_history', JSON.stringify(h)); }
+function getProfilePrice(name) {
+  const match = getProfiles().find(p => p.name.toLowerCase() === name.toLowerCase());
+  return match ? match.ppi : 0;
+}
+
+/* ── PIN ── */
+async function hashPin(pin) {
+  const data = new TextEncoder().encode(pin + 'tslot_salt');
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/* ── TABS ── */
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'manual' && state.cutList.length === 0) {
+    state.quoteMethod = 'manual';
+    addManualRow();
+    showQuoteOutput();
+  }
+}
+
+/* ── IMAGE UPLOAD ── */
+const aiUploadZone = document.getElementById('ai-upload-zone');
+['dragenter', 'dragover'].forEach(e => aiUploadZone.addEventListener(e, ev => { ev.preventDefault(); aiUploadZone.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(e => aiUploadZone.addEventListener(e, ev => { ev.preventDefault(); aiUploadZone.classList.remove('dragover'); }));
+aiUploadZone.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) processImageFile(f);
+});
+
+function handleAIUpload(e) { const f = e.target.files[0]; if (f) processImageFile(f); }
+
+function processImageFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.uploadedImageB64 = e.target.result;
+    document.getElementById('ai-preview-img').src = e.target.result;
+    document.getElementById('ai-preview').style.display = 'block';
+    document.getElementById('analyze-btn').disabled = false;
+    document.getElementById('ai-error').classList.remove('active');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearAIUpload() {
+  state.uploadedImageB64 = null;
+  document.getElementById('ai-preview').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('ai-file-input').value = '';
+}
+
+/* ── AI ANALYSIS ── */
+async function analyzeImage() {
+  if (!state.uploadedImageB64) return;
+  document.getElementById('ai-error').classList.remove('active');
+  document.getElementById('loading').classList.add('active');
+
+  const parts = state.uploadedImageB64.split(',');
+  const mediaType = (parts[0].match(/data:([^;]+)/) || [])[1] || 'image/png';
+  const imageData = parts[1];
+
+  try {
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData, mediaType }),
+    });
+
+    document.getElementById('loading').classList.remove('active');
+    const data = await response.json();
+
+    if (!response.ok) {
+      document.getElementById('ai-error-detail').textContent = data.error || 'Unknown error';
+      document.getElementById('ai-error').classList.add('active');
+      return;
+    }
+
+    state.quoteMethod = 'ai';
+    state.confidence = data.confidence || 'medium';
+    state.aiNotes = data.notes || '';
+    state.cutList = (data.members || []).map((m, i) => ({
+      id: Date.now() + i,
+      profile: m.profile,
+      qty: m.qty || 1,
+      length: m.length_in || 0,
+      unitPrice: getProfilePrice(m.profile),
+    }));
+
+    showQuoteOutput();
+    showToast('Frame analyzed!', 'success');
+  } catch (err) {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('ai-error-detail').textContent = err.message;
+    document.getElementById('ai-error').classList.add('active');
+  }
+}
+
+/* ── DXF ── */
+const dxfUploadZone = document.getElementById('dxf-upload-zone');
+['dragenter', 'dragover'].forEach(e => dxfUploadZone.addEventListener(e, ev => { ev.preventDefault(); dxfUploadZone.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(e => dxfUploadZone.addEventListener(e, ev => { ev.preventDefault(); dxfUploadZone.classList.remove('dragover'); }));
+dxfUploadZone.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.dxf')) processDXFFile(f);
+});
+
+function handleDXFUpload(e) { const f = e.target.files[0]; if (f) processDXFFile(f); }
+
+function processDXFFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => { state.dxfRawData = e.target.result; parseDXF(state.dxfRawData); };
+  reader.readAsText(file);
+}
+
+function parseDXF(dxfText) {
+  document.getElementById('dxf-error').classList.remove('active');
+  try {
+    const lines = dxfText.split(/\r?\n/);
+    const entities = [];
+    let i = 0, inEntities = false;
+
+    while (i < lines.length) {
+      const code = lines[i]?.trim(), value = lines[i + 1]?.trim();
+      if (code === '2' && value === 'ENTITIES') inEntities = true;
+      if (code === '0' && value === 'ENDSEC' && inEntities) break;
+
+      if (inEntities && code === '0' && value === 'LINE') {
+        let ent = { layer: '0' }, j = i + 2;
+        while (j < lines.length) {
+          const c = lines[j]?.trim(), v = lines[j + 1]?.trim();
+          if (c === '0') break;
+          if (c === '8') ent.layer = v;
+          if (c === '10') ent.x1 = parseFloat(v);
+          if (c === '20') ent.y1 = parseFloat(v);
+          if (c === '11') ent.x2 = parseFloat(v);
+          if (c === '21') ent.y2 = parseFloat(v);
+          if (c === '30') ent.z1 = parseFloat(v) || 0;
+          if (c === '31') ent.z2 = parseFloat(v) || 0;
+          j += 2;
+        }
+        if (ent.x1 != null && ent.x2 != null) entities.push(ent);
+        i = j; continue;
+      }
+      i += 2;
+    }
+
+    if (entities.length === 0) throw new Error('No LINE entities found. Check that the file has line segments in the ENTITIES section.');
+
+    const layerLengths = {}, layerCounts = {};
+    const isMM = document.getElementById('dxf-units-mm').checked;
+    const conv = isMM ? 1 / 25.4 : 1;
+
+    entities.forEach(ent => {
+      const layer = ent.layer || 'Default';
+      const len = Math.sqrt(Math.pow(ent.x2 - ent.x1, 2) + Math.pow(ent.y2 - ent.y1, 2) + Math.pow((ent.z2 || 0) - (ent.z1 || 0), 2));
+      if (!layerLengths[layer]) { layerLengths[layer] = 0; layerCounts[layer] = 0; }
+      layerLengths[layer] += len;
+      layerCounts[layer]++;
+    });
+
+    state.quoteMethod = 'dxf';
+    state.confidence = 'exact';
+    state.aiNotes = '';
+    state.cutList = Object.keys(layerLengths).map((layer, i) => ({
+      id: Date.now() + i, profile: layer,
+      qty: layerCounts[layer],
+      length: Math.round(layerLengths[layer] * conv * 100) / 100,
+      unitPrice: getProfilePrice(layer),
+    }));
+
+    showQuoteOutput();
+    showToast(`DXF parsed: ${entities.length} segments`, 'success');
+  } catch (err) {
+    document.getElementById('dxf-error-detail').textContent = err.message;
+    document.getElementById('dxf-error').classList.add('active');
+  }
+}
+
+function reprocessDXF() {
+  document.getElementById('dxf-units-label').textContent = document.getElementById('dxf-units-mm').checked ? 'Millimeters → Inches' : 'Inches';
+  if (state.dxfRawData) parseDXF(state.dxfRawData);
+}
+
+/* ── MANUAL ── */
+function addManualRow() {
+  state.quoteMethod = 'manual';
+  state.confidence = null;
+  const profiles = getProfiles();
+  state.cutList.push({ id: Date.now(), profile: profiles[0]?.name || '40x40', qty: 1, length: 0, unitPrice: profiles[0]?.ppi || 0 });
+  showQuoteOutput();
+}
+
+/* ── QUOTE OUTPUT ── */
+function showQuoteOutput() {
+  document.getElementById('quote-output').style.display = 'block';
+
+  const badge = document.getElementById('confidence-badge');
+  if (state.confidence) {
+    badge.style.display = 'inline-flex';
+    const labels = { high: 'High Confidence', medium: 'Medium Confidence', low: 'Low Confidence', exact: 'Exact (DXF)' };
+    const dots = { high: '●', medium: '●', low: '●', exact: '◆' };
+    badge.className = 'confidence-badge confidence-' + state.confidence;
+    badge.textContent = (dots[state.confidence] || '') + ' ' + (labels[state.confidence] || state.confidence);
+  } else {
+    badge.style.display = 'none';
+  }
+
+  const notesSection = document.getElementById('ai-notes-section');
+  if (state.aiNotes) {
+    notesSection.style.display = 'block';
+    document.getElementById('ai-notes-body').textContent = state.aiNotes;
+  } else {
+    notesSection.style.display = 'none';
+  }
+
+  renderCutList();
+}
+
+function renderCutList() {
+  const tbody = document.getElementById('cut-list-body');
+  const profiles = getProfiles();
+
+  tbody.innerHTML = state.cutList.map(row => {
+    const lineTotal = row.qty * row.length * row.unitPrice;
+    return `<tr data-id="${row.id}">
+      <td>
+        <select onchange="updateRow(${row.id}, 'profile', this.value)">
+          ${profiles.map(p => `<option value="${p.name}" ${p.name === row.profile ? 'selected' : ''}>${p.name} — ${p.desc}</option>`).join('')}
+          ${!profiles.find(p => p.name === row.profile) ? `<option value="${row.profile}" selected>${row.profile}</option>` : ''}
+        </select>
+      </td>
+      <td><input type="number" min="1" value="${row.qty}" onchange="updateRow(${row.id}, 'qty', this.value)"></td>
+      <td><input type="number" min="0" step="0.25" value="${row.length}" onchange="updateRow(${row.id}, 'length', this.value)"></td>
+      <td><input type="number" min="0" step="0.01" value="${row.unitPrice.toFixed(2)}" onchange="updateRow(${row.id}, 'unitPrice', this.value)"></td>
+      <td class="line-total">$${lineTotal.toFixed(2)}</td>
+      <td><button class="row-delete" onclick="deleteRow(${row.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  updateTotals();
+}
+
+function updateRow(id, field, value) {
+  const row = state.cutList.find(r => r.id === id);
+  if (!row) return;
+  if (field === 'profile') { row.profile = value; row.unitPrice = getProfilePrice(value) || row.unitPrice; }
+  else if (field === 'qty') row.qty = Math.max(1, parseInt(value) || 1);
+  else if (field === 'length') row.length = Math.max(0, parseFloat(value) || 0);
+  else if (field === 'unitPrice') row.unitPrice = Math.max(0, parseFloat(value) || 0);
+  renderCutList();
+}
+
+function deleteRow(id) {
+  state.cutList = state.cutList.filter(r => r.id !== id);
+  renderCutList();
+  if (state.cutList.length === 0) document.getElementById('quote-output').style.display = 'none';
+}
+
+function addQuoteRow() {
+  const profiles = getProfiles();
+  state.cutList.push({ id: Date.now(), profile: profiles[0]?.name || '40x40', qty: 1, length: 0, unitPrice: profiles[0]?.ppi || 0 });
+  renderCutList();
+}
+
+function updateTotals() {
+  const subtotal = state.cutList.reduce((s, r) => s + r.qty * r.length * r.unitPrice, 0);
+  const markupPct = getMarkup();
+  const markupAmt = subtotal * (markupPct / 100);
+  document.getElementById('subtotal-val').textContent = '$' + subtotal.toFixed(2);
+  document.getElementById('markup-pct').textContent = markupPct;
+  document.getElementById('markup-val').textContent = '$' + markupAmt.toFixed(2);
+  document.getElementById('grand-total-val').textContent = '$' + (subtotal + markupAmt).toFixed(2);
+  document.getElementById('markup-row').style.display = markupPct > 0 ? 'flex' : 'none';
+}
+
+function clearQuote() {
+  state.cutList = []; state.confidence = null; state.aiNotes = ''; state.quoteMethod = null;
+  document.getElementById('quote-output').style.display = 'none';
+}
+
+function toggleNotes() {
+  document.querySelector('.ai-notes-toggle').classList.toggle('open');
+  document.getElementById('ai-notes-body').classList.toggle('open');
+}
+
+/* ── SEND QUOTE ── */
+function openSendModal() { document.getElementById('send-modal').classList.add('active'); }
+function closeSendModal() { document.getElementById('send-modal').classList.remove('active'); }
+
+function buildQuoteHTML() {
+  const rep = getRepInfo();
+  const markupPct = getMarkup();
+  const showMarkup = getShowMarkup();
+  const subtotal = state.cutList.reduce((s, r) => s + r.qty * r.length * r.unitPrice, 0);
+  const markupAmt = subtotal * (markupPct / 100);
+  const grandTotal = subtotal + markupAmt;
+  const customerName = document.getElementById('send-customer').value;
+  const projectName = document.getElementById('send-project').value;
+  const notes = document.getElementById('send-notes').value;
+
+  let confidenceNote = '';
+  if (state.quoteMethod === 'ai' && state.confidence) {
+    const levelText = state.confidence.charAt(0).toUpperCase() + state.confidence.slice(1);
+    confidenceNote = `<p style="color:#666;font-size:12px;margin-top:16px;padding:8px;background:#f5f5f5;border-radius:4px;">⚠️ AI-generated estimate with <strong>${levelText}</strong> confidence. Dimensions should be verified before ordering.</p>`;
+  }
+
+  const rows = state.cutList.map(r => {
+    const lt = (r.qty * r.length * r.unitPrice).toFixed(2);
+    return `<tr><td style="padding:6px 12px;border:1px solid #eee;">${r.profile}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;">${r.qty}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;">${r.length}"</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;">$${r.unitPrice.toFixed(2)}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;font-weight:600;">$${lt}</td></tr>`;
+  }).join('');
+
+  let totalsHTML = `<tr><td colspan="4" style="padding:6px 12px;text-align:right;font-weight:600;">Subtotal:</td><td style="padding:6px 12px;text-align:right;">$${subtotal.toFixed(2)}</td></tr>`;
+  if (markupPct > 0 && showMarkup) {
+    totalsHTML += `<tr><td colspan="4" style="padding:6px 12px;text-align:right;">Markup (${markupPct}%):</td><td style="padding:6px 12px;text-align:right;">$${markupAmt.toFixed(2)}</td></tr>`;
+  }
+  totalsHTML += `<tr style="background:#0B1929;color:white;"><td colspan="4" style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">Grand Total:</td><td style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">$${grandTotal.toFixed(2)}</td></tr>`;
+
+  const logoHTML = rep.logoUrl ? `<img src="${rep.logoUrl}" alt="Logo" style="max-height:48px;">` : '';
+
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+  <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">
+    ${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">T-Slot Frame Quote</h1>
+  </div>
+  <div style="padding:20px;border:1px solid #eee;border-top:none;">
+    <p><strong>Customer:</strong> ${customerName || '—'}</p>
+    <p><strong>Project:</strong> ${projectName || '—'}</p>
+    ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <thead><tr style="background:#f1f5f9;">
+        <th style="padding:8px 12px;text-align:left;font-size:12px;">PROFILE</th>
+        <th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th>
+        <th style="padding:8px 12px;text-align:right;font-size:12px;">LENGTH</th>
+        <th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT $/IN</th>
+        <th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th>
+      </tr></thead>
+      <tbody>${rows}${totalsHTML}</tbody>
+    </table>
+    ${confidenceNote}
+  </div>
+  <div style="padding:16px 20px;background:#f8fafc;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;font-size:13px;color:#666;">
+    <strong>${rep.name || ''}</strong>${rep.phone ? ` · ${rep.phone}` : ''}<br>${rep.companyName || ''}
+  </div>
+</div>`;
+}
+
+async function sendQuote() {
+  const toEmail = document.getElementById('send-to').value;
+  const customerName = document.getElementById('send-customer').value;
+  if (!toEmail || !customerName) { showToast('Name and email are required.', 'error'); return; }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true; btn.textContent = 'Sending...';
+
+  try {
+    const response = await fetch('/api/send-quote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        toEmail,
+        customerName,
+        company: document.getElementById('send-company').value,
+        phone: document.getElementById('send-phone').value,
+        projectName: document.getElementById('send-project').value,
+        notes: document.getElementById('send-notes').value,
+        quoteHTML: buildQuoteHTML(),
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) { showToast('Failed: ' + (data.error || 'Unknown error'), 'error'); return; }
+
+    const subtotal = state.cutList.reduce((s, r) => s + r.qty * r.length * r.unitPrice, 0);
+    const history = getHistory();
+    history.unshift({
+      id: Date.now(), timestamp: new Date().toISOString(),
+      customer: customerName, project: document.getElementById('send-project').value || '—',
+      total: subtotal + subtotal * (getMarkup() / 100),
+      method: state.quoteMethod || 'manual',
+      cutList: [...state.cutList], confidence: state.confidence, aiNotes: state.aiNotes,
+    });
+    saveHistory(history);
+
+    closeSendModal();
+    showToast('Quote sent!', 'success');
+  } catch (err) {
+    showToast('Failed: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '✉️ Send My Quote';
+  }
+}
+
+function saveQuoteDraft() {
+  const subtotal = state.cutList.reduce((s, r) => s + r.qty * r.length * r.unitPrice, 0);
+  const history = getHistory();
+  history.unshift({
+    id: Date.now(), timestamp: new Date().toISOString(),
+    customer: 'Draft', project: '—',
+    total: subtotal + subtotal * (getMarkup() / 100),
+    method: state.quoteMethod || 'manual',
+    cutList: [...state.cutList], confidence: state.confidence, aiNotes: state.aiNotes,
+  });
+  saveHistory(history);
+  showToast('Draft saved.', 'success');
+}
+
+/* ── HISTORY ── */
+function openHistory() {
+  const history = getHistory();
+  const tbody = document.getElementById('history-body');
+  const empty = document.getElementById('history-empty');
+
+  if (history.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    tbody.innerHTML = history.map(h => {
+      const date = new Date(h.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const mc = h.method === 'ai' ? 'method-ai' : h.method === 'dxf' ? 'method-dxf' : 'method-manual';
+      const ml = h.method === 'ai' ? 'AI' : h.method === 'dxf' ? 'DXF' : 'Manual';
+      return `<tr><td>${date}</td><td>${h.customer}</td><td>${h.project}</td><td style="font-family:var(--font-mono);font-weight:600;">$${h.total.toFixed(2)}</td><td><span class="method-badge ${mc}">${ml}</span></td><td><button class="btn btn-sm btn-secondary" onclick="reopenQuote(${h.id})">Open</button></td></tr>`;
+    }).join('');
+  }
+  document.getElementById('history-modal').classList.add('active');
+}
+
+function closeHistory() { document.getElementById('history-modal').classList.remove('active'); }
+
+function reopenQuote(id) {
+  const entry = getHistory().find(h => h.id === id);
+  if (!entry) return;
+  state.cutList = entry.cutList || []; state.quoteMethod = entry.method;
+  state.confidence = entry.confidence; state.aiNotes = entry.aiNotes || '';
+  closeHistory(); showQuoteOutput(); showToast('Quote loaded.', 'success');
+}
+
+/* ── ADMIN ── */
+function promptAdmin() {
+  const pinHash = localStorage.getItem('tslot_pin_hash');
+  document.getElementById('pin-prompt-text').textContent = pinHash ? 'Enter your 4-digit PIN' : 'Create a new 4-digit PIN';
+  document.getElementById('pin-overlay').classList.add('active');
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-input').focus();
+  document.getElementById('pin-error').style.display = 'none';
+  window._pinMode = pinHash ? 'verify' : 'create';
+}
+
+async function handlePinEntry(e) {
+  const input = document.getElementById('pin-input');
+  if (input.value.length < 4) return;
+  const hash = await hashPin(input.value);
+
+  if (window._pinMode === 'create') {
+    localStorage.setItem('tslot_pin_hash', hash);
+    closePinOverlay(); openAdmin();
+    showToast('PIN created.', 'success');
+  } else if (window._pinMode === 'verify') {
+    if (hash === localStorage.getItem('tslot_pin_hash')) { closePinOverlay(); openAdmin(); }
+    else { document.getElementById('pin-error').style.display = 'block'; input.value = ''; input.focus(); }
+  } else if (window._pinMode === 'reset') {
+    localStorage.setItem('tslot_pin_hash', hash);
+    closePinOverlay(); showToast('PIN updated.', 'success');
+  }
+}
+
+function closePinOverlay() { document.getElementById('pin-overlay').classList.remove('active'); }
+
+function openAdmin() {
+  const admin = getAdmin() || {};
+  document.getElementById('admin-markup').value = admin.markup || 0;
+  document.getElementById('admin-show-markup').checked = admin.showMarkup !== false;
+  const rep = admin.rep || {};
+  document.getElementById('admin-rep-name').value = rep.name || '';
+  document.getElementById('admin-rep-phone').value = rep.phone || '';
+  document.getElementById('admin-company-name').value = rep.companyName || '';
+  document.getElementById('admin-logo-url').value = rep.logoUrl || '';
+  renderProfileTable(admin.profiles || DEFAULT_PROFILES);
+  document.getElementById('admin-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('admin-panel').classList.add('active'), 10);
+}
+
+function closeAdmin() {
+  document.getElementById('admin-panel').classList.remove('active');
+  setTimeout(() => document.getElementById('admin-overlay').classList.remove('active'), 300);
+}
+
+function renderProfileTable(profiles) {
+  document.getElementById('profile-table-body').innerHTML = profiles.map((p, i) => `<tr>
+    <td><input value="${p.name}" data-field="name" data-idx="${i}"></td>
+    <td><input value="${p.desc}" data-field="desc" data-idx="${i}"></td>
+    <td><input type="number" step="0.01" min="0" value="${p.ppi}" data-field="ppi" data-idx="${i}" style="width:80px;"></td>
+    <td><button class="row-delete" onclick="this.closest('tr').remove()">✕</button></td>
+  </tr>`).join('');
+}
+
+function addProfileRow() {
+  const tbody = document.getElementById('profile-table-body');
+  const idx = tbody.rows.length;
+  const row = document.createElement('tr');
+  row.innerHTML = `<td><input value="" data-field="name" data-idx="${idx}" placeholder="e.g. 45x45"></td><td><input value="" data-field="desc" data-idx="${idx}" placeholder="Description"></td><td><input type="number" step="0.01" min="0" value="0" data-field="ppi" data-idx="${idx}" style="width:80px;"></td><td><button class="row-delete" onclick="this.closest('tr').remove()">✕</button></td>`;
+  tbody.appendChild(row);
+}
+
+function collectProfilesFromTable() {
+  return Array.from(document.getElementById('profile-table-body').querySelectorAll('tr')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    const name = inputs[0]?.value?.trim();
+    return name ? { name, desc: inputs[1]?.value?.trim() || '', ppi: parseFloat(inputs[2]?.value) || 0 } : null;
+  }).filter(Boolean);
+}
+
+function saveAdminSettings() {
+  const admin = {
+    profiles: collectProfilesFromTable(),
+    markup: parseFloat(document.getElementById('admin-markup').value) || 0,
+    showMarkup: document.getElementById('admin-show-markup').checked,
+    rep: {
+      name: document.getElementById('admin-rep-name').value.trim(),
+      phone: document.getElementById('admin-rep-phone').value.trim(),
+      companyName: document.getElementById('admin-company-name').value.trim(),
+      logoUrl: document.getElementById('admin-logo-url').value.trim(),
+    },
+  };
+  localStorage.setItem('tslot_admin', JSON.stringify(admin));
+  if (state.cutList.length > 0) renderCutList();
+  showToast('Settings saved.', 'success');
+}
+
+function resetPIN() {
+  document.getElementById('pin-prompt-text').textContent = 'Enter a new 4-digit PIN';
+  document.getElementById('pin-overlay').classList.add('active');
+  document.getElementById('pin-input').value = '';
+  document.getElementById('pin-input').focus();
+  document.getElementById('pin-error').style.display = 'none';
+  window._pinMode = 'reset';
+}
+
+/* ── TOAST ── */
+function showToast(message, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = 'toast ' + type;
+  setTimeout(() => toast.classList.add('active'), 10);
+  setTimeout(() => toast.classList.remove('active'), 3500);
+}
+
+/* ── CLIPBOARD PASTE ── */
+document.addEventListener('paste', e => {
+  if (state.currentTab !== 'ai') return;
+  for (const item of (e.clipboardData?.items || [])) {
+    if (item.type.startsWith('image/')) { e.preventDefault(); processImageFile(item.getAsFile()); break; }
+  }
+});
+</script>
+</body>
+</html>

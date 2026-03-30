@@ -2,27 +2,34 @@ const SYSTEM_PROMPT =
   'You are an expert in T-slot aluminum extrusion framing systems. ' +
   'Your job is to analyze images of frames and produce structured cut lists.';
 
-const USER_PROMPT =
-  'Analyze this T-slot aluminum extrusion frame. Identify each unique profile type ' +
-  '(e.g. 20x20mm, 40x40mm, 40x80mm), estimate the quantity and length in inches of each member. ' +
-  'Use any visible reference objects, labels, grid lines, or proportional reasoning to estimate dimensions. ' +
-  'Be conservative — if unsure, flag low confidence. ' +
-  'Respond ONLY with a valid JSON object in this exact format, no prose, no markdown:\n' +
-  '{\n' +
-  '  "members": [\n' +
-  '    { "profile": "40x40", "qty": 4, "length_in": 36 },\n' +
-  '    { "profile": "40x80", "qty": 2, "length_in": 24 }\n' +
-  '  ],\n' +
-  '  "confidence": "medium",\n' +
-  '  "notes": "Estimated based on proportional analysis. No scale reference visible."\n' +
-  '}';
+function buildUserPrompt(family) {
+  const profileList = family
+    ? family.profiles.map(p => p.name).join(', ')
+    : '20x20, 40x40, 40x80, 80x80';
+  const familyLabel = family ? family.label : 'T-slot';
+
+  return `Analyze this ${familyLabel} T-slot aluminum extrusion frame. ` +
+    `The profiles in this system are: ${profileList}. ` +
+    `Identify each unique profile type from that list, estimate the quantity and length in inches of each member. ` +
+    `Use any visible reference objects, labels, grid lines, or proportional reasoning to estimate dimensions. ` +
+    `Be conservative — if unsure, flag low confidence. ` +
+    `Respond ONLY with a valid JSON object in this exact format, no prose, no markdown:\n` +
+    `{\n` +
+    `  "members": [\n` +
+    `    { "profile": "${family ? family.profiles[0]?.name : '40x40'}", "qty": 4, "length_in": 36 },\n` +
+    `    { "profile": "${family ? (family.profiles[1]?.name || family.profiles[0]?.name) : '40x80'}", "qty": 2, "length_in": 24 }\n` +
+    `  ],\n` +
+    `  "confidence": "medium",\n` +
+    `  "notes": "Estimated based on proportional analysis. No scale reference visible."\n` +
+    `}`;
+}
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, mediaType } = req.body || {};
+  const { imageData, mediaType, family } = req.body || {};
 
   if (!imageData || !mediaType) {
     return res.status(400).json({ error: 'Missing imageData or mediaType' });
@@ -51,7 +58,7 @@ module.exports = async function handler(req, res) {
               type: 'image',
               source: { type: 'base64', media_type: mediaType, data: imageData },
             },
-            { type: 'text', text: USER_PROMPT },
+            { type: 'text', text: buildUserPrompt(family) },
           ],
         }],
       }),

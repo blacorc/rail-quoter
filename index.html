@@ -47,6 +47,8 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .header-title { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
 .header-subtitle { font-size: 11px; color: var(--gray-400); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
 .header-actions { display: flex; align-items: center; gap: 8px; }
+.header-link { color: var(--gray-400); font-size: 13px; font-weight: 600; text-decoration: none; padding: 8px 12px; border-radius: var(--radius); transition: var(--transition); }
+.header-link:hover { color: var(--white); background: rgba(255,255,255,0.08); }
 .btn-icon { width: 40px; height: 40px; border-radius: var(--radius); border: 1px solid rgba(255,255,255,0.1); background: transparent; color: var(--gray-400); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: var(--transition); }
 .btn-icon:hover { background: rgba(255,255,255,0.08); color: var(--white); border-color: rgba(255,255,255,0.2); }
 
@@ -249,6 +251,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   .totals-box { min-width: auto; width: 100%; }
   .totals-section { justify-content: stretch; }
   .header-subtitle { display: none; }
+  .header-link { display: none; }
 }
 </style>
 </head>
@@ -263,6 +266,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     </div>
   </div>
   <div class="header-actions">
+    <a class="header-link" href="/rails/">Rail Quoter →</a>
     <button class="btn-icon" onclick="openHistory()" title="Quote History">📋</button>
     <button class="btn-icon" onclick="promptAdmin()" title="Admin Settings">⚙️</button>
   </div>

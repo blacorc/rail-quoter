@@ -3,7 +3,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { toEmail, customerName, company, phone, projectName, quoteHTML, notes } = req.body || {};
+  const { toEmail, customerName, company, phone, projectName, quoteHTML, notes, subject } = req.body || {};
 
   if (!toEmail) {
     return res.status(400).json({ error: 'Missing recipient email' });
@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     // Send quote to customer
     const customerRes = await send(
       toEmail,
-      `Your T-Slot Frame Quote${projectName ? ` — ${projectName}` : ''}`,
+      subject || `Your T-Slot Frame Quote${projectName ? ` — ${projectName}` : ''}`,
       quoteHTML,
     );
 

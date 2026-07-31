@@ -9,34 +9,48 @@ Single static page plus one serverless function for sending quotes by email.
 
 ## What it does
 
-**Rail Builder** — cut-length calculator replicating `TSI_Airtac_Rail_Calculator_v26`:
+**Rail Builder** — cut-length calculator using the geometry model from
+`TSI_Airtac_Rail_Calculator_v26`:
 
 ```
 L = (n-1)·P + S + E
-cost/mm   = net cost of 4000mm stock ÷ (4000 - scrap allowance)
-sell price = (cost/mm × priced length + cut fee + handling) ÷ (1 - margin)
+list/mm    = list price of 4000mm stock ÷ (4000 - scrap allowance)
+sell price = list/mm × priced length × (1 - rail discount) + cut fee + handling
 ```
 
 Exact-length mode lets `E` float so the delivered rail matches the customer's
 requested length, and generates the configured part number
 (e.g. `LSD20RLX900-N-D- e=40.0/s=20`). Manual hole-count override is available.
 
-**Carriage Blocks** — LSH and LSD flange/square blocks priced from TSI net cost.
+**Carriage Blocks** — LSH and LSD flange/square blocks, priced at list less any
+configured block discount.
 
 **Quote** — combined rail + block line items, editable qty and price, emailed to
-the customer with a copy of the lead to the rep.
+the customer with a copy of the lead to the rep. A "Request Volume Pricing"
+action sends the same build as a pricing enquiry instead of a firm quote.
 
-## Pricing data
+## Pricing model — list-based by design
 
-Defaults come from the two source spreadsheets and are all editable in the admin
-panel (gear icon, PIN-gated), stored in the browser's localStorage:
+**No cost basis is stored in this repository.** The catalog ships published Airtac
+list prices only, so the deployed site quotes list to anyone who opens it, and
+neither the source nor the browser reveals what stock is bought for.
 
-- Rail net costs are 50% of list (the v26 calculator's convention)
-- Block net costs are 32% of list ("TSI Net" in the carriage spreadsheet)
-- Margin, cut fee, handling and scrap buffer are global settings
+Discounts off list are set per product line in the admin panel (gear icon,
+PIN-gated) and live in that browser's localStorage only — they are never part of
+the deployed site. A visitor with no configuration always sees list.
 
-Pricing follows v26 in charging for the grid-snapped length rather than the
-delivered length. Both figures are shown in the calculator.
+Both discounts default to 0. Quoting at straight list is not a uniform margin,
+because the two source spreadsheets used different net conventions — rail net was
+50% of list, block net 32%. Setting **17% off rails and 47% off blocks**
+reproduces the 40% gross margin the original v26 sheet targeted.
+
+Two deliberate differences from the v26 sheet:
+
+- Cut and handling fees are charged as entered. The sheet divided them by
+  `(1 - margin)`, which marked a $10 cut charge up to $16.67; set the fee to what
+  you intend to charge.
+- Pricing still follows v26 in charging for the grid-snapped length rather than
+  the delivered length. Both figures are shown in the calculator.
 
 ## Deploying to Vercel
 

@@ -208,6 +208,11 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .history-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); }
 .history-table tr:hover td { background: var(--gray-50); }
 
+/* VOLUME PRICING NOTE */
+.volume-note { margin-top: 20px; background: rgba(242,101,34,0.05); border: 1px solid rgba(242,101,34,0.25); border-radius: var(--radius); padding: 14px 18px; }
+.volume-note-title { font-size: 13px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+.volume-note p { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
+
 /* MISC */
 .quote-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: var(--white); padding: 14px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 500; z-index: 600; transform: translateY(100px); opacity: 0; transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-lg); }
@@ -370,11 +375,20 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <span class="totals-label">Total</span>
               <span class="totals-value" id="grand-total-val">$0.00</span>
             </div>
-            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;">Margin, cut fees &amp; handling included in unit prices</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">List price · cut &amp; handling fees included</div>
           </div>
         </div>
+
+        <div class="volume-note">
+          <div class="volume-note-title">💬 Repeat or volume order?</div>
+          <p>Prices shown are <strong>list</strong>. Repeat orders, multi-axis builds and
+          higher quantities are quoted below list &mdash; send us the details and we'll
+          come back with pricing for your specific requirement.</p>
+        </div>
+
         <div class="quote-actions">
           <button class="btn btn-primary" onclick="openSendModal()">✉️ Email Quote</button>
+          <button class="btn btn-secondary" onclick="openSendModal(true)">💬 Request Volume Pricing</button>
           <button class="btn btn-secondary" onclick="saveQuoteDraft()">💾 Save Draft</button>
         </div>
       </div>
@@ -387,10 +401,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 <div class="modal-overlay" id="send-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Email Quote</div>
+      <div class="modal-title" id="send-modal-title">Email Quote</div>
       <button class="modal-close" onclick="closeSendModal()">✕</button>
     </div>
     <div class="modal-body">
+      <div class="volume-note" id="volume-modal-note" style="display:none;margin-top:0;margin-bottom:20px;">
+        <p>Tell us the quantities and how often you expect to reorder. We'll review
+        the build and come back with pricing below the list figures shown here.</p>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Customer Name *</label>
@@ -455,41 +473,50 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
 
   <div class="admin-section">
-    <h3>Pricing Model</h3>
+    <h3>Discount Off List</h3>
+    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
+      Quotes are built from published Airtac list prices. Any discount you set here
+      is stored <strong>in this browser only</strong> &mdash; it is never published with
+      the site, so visitors always see list. Leave at 0 to quote list.
+    </p>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Target Margin (%)</label>
-        <input class="form-input" id="admin-margin" type="number" min="0" max="95" step="1">
+        <label class="form-label">Rail Discount (% off list)</label>
+        <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5">
       </div>
+      <div class="form-group">
+        <label class="form-label">Block Discount (% off list)</label>
+        <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5">
+      </div>
+    </div>
+    <div class="form-row">
       <div class="form-group">
         <label class="form-label">Cut / Processing Fee ($)</label>
         <input class="form-input" id="admin-cutfee" type="number" min="0" step="0.5">
       </div>
-    </div>
-    <div class="form-row">
       <div class="form-group">
         <label class="form-label">Handling / Packaging ($)</label>
         <input class="form-input" id="admin-handling" type="number" min="0" step="0.5">
       </div>
-      <div class="form-group">
-        <label class="form-label">Extra Scrap Buffer (mm)</label>
-        <input class="form-input" id="admin-buffer" type="number" min="0" step="1">
-      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Extra Scrap Buffer (mm)</label>
+      <input class="form-input" id="admin-buffer" type="number" min="0" step="1">
     </div>
   </div>
 
   <div class="admin-section">
-    <h3>Rail Net Costs (4000mm stock)</h3>
+    <h3>Rail List Prices (4000mm stock)</h3>
     <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:100px;">Net Cost ($)</th></tr></thead>
+      <thead><tr><th>Part Number</th><th style="width:100px;">List ($)</th></tr></thead>
       <tbody id="admin-rails-tbody"></tbody>
     </table>
   </div>
 
   <div class="admin-section">
-    <h3>Carriage Block Net Costs</h3>
+    <h3>Carriage Block List Prices</h3>
     <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:90px;">Net ($)</th></tr></thead>
+      <thead><tr><th>Part Number</th><th style="width:100px;">List ($)</th></tr></thead>
       <tbody id="admin-blocks-tbody"></tbody>
     </table>
   </div>
@@ -552,40 +579,43 @@ const SERIES_INFO = {
   LSH: { label: 'LSH', desc: 'Standard Linear Guide', sizes: [15, 20, 25, 30, 35, 45] },
 };
 
-// Net cost = 50% of list (v26 PriceTable convention)
+// Published Airtac list prices for 4000mm stock rails.
+// Cost basis is deliberately NOT shipped here — quoting works off list, with an
+// optional discount that each user sets locally in Admin (localStorage only).
 const DEFAULT_RAILS = [
-  { series: 'LSD', size: 15, pn: 'LSD15RLX4000-N-D', net: 96.85 },
-  { series: 'LSD', size: 20, pn: 'LSD20RLX4000-N-D', net: 104.75 },
-  { series: 'LSD', size: 25, pn: 'LSD25RLX4000-N-D', net: 123.80 },
-  { series: 'LSH', size: 15, pn: 'LSH15RLX4000-N-D', net: 100.00 },
-  { series: 'LSH', size: 20, pn: 'LSH20RLX4000-N-D', net: 111.10 },
-  { series: 'LSH', size: 25, pn: 'LSH25RLX4000-N-D', net: 130.15 },
-  { series: 'LSH', size: 30, pn: 'LSH30RLX4000-N-D', net: 149.20 },
-  { series: 'LSH', size: 35, pn: 'LSH35RLX4000-N-D', net: 177.80 },
-  { series: 'LSH', size: 45, pn: 'LSH45RLX4000-N-D', net: 263.50 },
+  { series: 'LSD', size: 15, pn: 'LSD15RLX4000-N-D', list: 193.70 },
+  { series: 'LSD', size: 20, pn: 'LSD20RLX4000-N-D', list: 209.50 },
+  { series: 'LSD', size: 25, pn: 'LSD25RLX4000-N-D', list: 247.60 },
+  { series: 'LSH', size: 15, pn: 'LSH15RLX4000-N-D', list: 200.00 },
+  { series: 'LSH', size: 20, pn: 'LSH20RLX4000-N-D', list: 222.20 },
+  { series: 'LSH', size: 25, pn: 'LSH25RLX4000-N-D', list: 260.30 },
+  { series: 'LSH', size: 30, pn: 'LSH30RLX4000-N-D', list: 298.40 },
+  { series: 'LSH', size: 35, pn: 'LSH35RLX4000-N-D', list: 355.60 },
+  { series: 'LSH', size: 45, pn: 'LSH45RLX4000-N-D', list: 527.00 },
 ];
 
-// Net = TSI Net (32% of list) from carriage spreadsheet
+// Published Airtac list prices for carriage blocks.
 const DEFAULT_BLOCKS = [
-  { family: 'LSH', type: 'Flange', size: 15, pn: 'LSH15BK-F3N-N-D-M4',  list: 25.40, net: 8.13 },
-  { family: 'LSH', type: 'Flange', size: 20, pn: 'LSH20BK-F3N-N-D-M6',  list: 31.00, net: 9.92 },
-  { family: 'LSH', type: 'Flange', size: 25, pn: 'LSH25BK-F3N-N-D-M6',  list: 38.90, net: 12.45 },
-  { family: 'LSH', type: 'Flange', size: 30, pn: 'LSH30BK-F3N-N-D-M6',  list: 45.30, net: 14.50 },
-  { family: 'LSH', type: 'Flange', size: 35, pn: 'LSH35BK-F3N-N-D-M6',  list: 57.20, net: 18.30 },
-  { family: 'LSH', type: 'Flange', size: 45, pn: 'LSH45BK-F3N-N-D-P01', list: 82.50, net: 26.40 },
-  { family: 'LSH', type: 'Square', size: 15, pn: 'LSH15BK-HN-N-D-M4',   list: 21.40, net: 6.85 },
-  { family: 'LSH', type: 'Square', size: 20, pn: 'LSH20BK-HN-N-D-M6',   list: 26.20, net: 8.38 },
-  { family: 'LSH', type: 'Square', size: 25, pn: 'LSH25BK-HN-N-D-M6',   list: 32.50, net: 10.40 },
-  { family: 'LSH', type: 'Square', size: 30, pn: 'LSH30BK-HN-N-D-M6',   list: 38.10, net: 12.19 },
-  { family: 'LSH', type: 'Square', size: 35, pn: 'LSH35BK-HN-N-D-M6',   list: 49.20, net: 15.74 },
-  { family: 'LSH', type: 'Square', size: 45, pn: 'LSH45BK-HN-N-D-P01',  list: 71.40, net: 22.85 },
-  { family: 'LSD', type: 'Flange', size: 15, pn: 'LSD15BK-F3N-N-D-M4',  list: 23.80, net: 7.62 },
-  { family: 'LSD', type: 'Flange', size: 20, pn: 'LSD20BK-F3N-N-D-M6',  list: 29.40, net: 9.41 },
-  { family: 'LSD', type: 'Flange', size: 25, pn: 'LSD25BK-F3N-N-D-M6',  list: 36.50, net: 11.68 },
-  { family: 'LSD', type: 'Square', size: 25, pn: 'LSD25BK-HN-N-D-M6',   list: 31.70, net: 10.14 },
+  { family: 'LSH', type: 'Flange', size: 15, pn: 'LSH15BK-F3N-N-D-M4',  list: 25.40 },
+  { family: 'LSH', type: 'Flange', size: 20, pn: 'LSH20BK-F3N-N-D-M6',  list: 31.00 },
+  { family: 'LSH', type: 'Flange', size: 25, pn: 'LSH25BK-F3N-N-D-M6',  list: 38.90 },
+  { family: 'LSH', type: 'Flange', size: 30, pn: 'LSH30BK-F3N-N-D-M6',  list: 45.30 },
+  { family: 'LSH', type: 'Flange', size: 35, pn: 'LSH35BK-F3N-N-D-M6',  list: 57.20 },
+  { family: 'LSH', type: 'Flange', size: 45, pn: 'LSH45BK-F3N-N-D-P01', list: 82.50 },
+  { family: 'LSH', type: 'Square', size: 15, pn: 'LSH15BK-HN-N-D-M4',   list: 21.40 },
+  { family: 'LSH', type: 'Square', size: 20, pn: 'LSH20BK-HN-N-D-M6',   list: 26.20 },
+  { family: 'LSH', type: 'Square', size: 25, pn: 'LSH25BK-HN-N-D-M6',   list: 32.50 },
+  { family: 'LSH', type: 'Square', size: 30, pn: 'LSH30BK-HN-N-D-M6',   list: 38.10 },
+  { family: 'LSH', type: 'Square', size: 35, pn: 'LSH35BK-HN-N-D-M6',   list: 49.20 },
+  { family: 'LSH', type: 'Square', size: 45, pn: 'LSH45BK-HN-N-D-P01',  list: 71.40 },
+  { family: 'LSD', type: 'Flange', size: 15, pn: 'LSD15BK-F3N-N-D-M4',  list: 23.80 },
+  { family: 'LSD', type: 'Flange', size: 20, pn: 'LSD20BK-F3N-N-D-M6',  list: 29.40 },
+  { family: 'LSD', type: 'Flange', size: 25, pn: 'LSD25BK-F3N-N-D-M6',  list: 36.50 },
+  { family: 'LSD', type: 'Square', size: 25, pn: 'LSD25BK-HN-N-D-M6',   list: 31.70 },
 ];
 
-const DEFAULT_PRICING = { margin: 40, cutFee: 10, handling: 0, buffer: 0 };
+// Discounts default to 0 = straight list, which is what a visitor sees.
+const DEFAULT_PRICING = { railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
 
 /* ── STATE ── */
 let state = {
@@ -621,7 +651,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   if (!P || !rail) return null;
 
   const p = getPricing();
-  const marginFrac = Math.min(0.95, Math.max(0, p.margin / 100));
+  const discountFrac = Math.min(0.95, Math.max(0, p.railDiscount / 100));
 
   // n: auto (v26 F7/D10) or manual override (B28)
   const suggestedN = L > 0 ? Math.max(2, Math.round(1 + (L - (S + E)) / P)) : null;
@@ -644,24 +674,28 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   const configuredPN = rail.pn.replace('4000', String(pnLen)) +
     `- e=${pnE.toFixed(1)}/s=${S}`;
 
-  // Cost model (v26 B19-B21, B31)
+  // Price model: list price per mm of usable stock (v26 B19-B20 scrap logic),
+  // less any locally-configured discount. Cut/handling fees are service charges
+  // and are not discounted.
   const scrap = S + E + p.buffer;
   const usable = STOCK_LEN - scrap;
-  const costPerMm = rail.net / usable;
-  const sellPrice = ((costPerMm * pricedLen) + p.cutFee + p.handling) / (1 - marginFrac);
+  const listPerMm = rail.list / usable;
+  const materialList = listPerMm * pricedLen;
+  const material = materialList * (1 - discountFrac);
+  const sellPrice = material + p.cutFee + p.handling;
 
   return {
     P, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
-    configuredPN, basePN: rail.pn, costPerMm, sellPrice,
-    materialCost: costPerMm * pricedLen,
+    configuredPN, basePN: rail.pn, listPerMm, sellPrice,
+    materialList, material, discountFrac,
     minLen: P + S + E, // n=2 floor
   };
 }
 
 function blockSellPrice(block) {
   const p = getPricing();
-  const marginFrac = Math.min(0.95, Math.max(0, p.margin / 100));
-  return block.net / (1 - marginFrac);
+  const discountFrac = Math.min(0.95, Math.max(0, p.blockDiscount / 100));
+  return block.list * (1 - discountFrac);
 }
 
 /* ── RAIL UI ── */
@@ -745,8 +779,10 @@ function recalc() {
 
   const p = getPricing();
   document.getElementById('res-price').textContent = '$' + r.sellPrice.toFixed(2);
+  const disc = r.discountFrac > 0
+    ? ` − ${p.railDiscount}% = $${r.material.toFixed(2)}` : '';
   document.getElementById('res-breakdown').textContent =
-    `${r.costPerMm.toFixed(4)} $/mm × ${r.pricedLen}mm = $${r.materialCost.toFixed(2)} + $${p.cutFee.toFixed(2)} cut + $${p.handling.toFixed(2)} handling ÷ ${(100 - p.margin)}% cost basis`;
+    `${r.listPerMm.toFixed(4)} $/mm list × ${r.pricedLen}mm = $${r.materialList.toFixed(2)}${disc} + $${p.cutFee.toFixed(2)} cut + $${p.handling.toFixed(2)} handling`;
 }
 
 function addRailToQuote() {
@@ -866,7 +902,15 @@ function deleteLine(id) {
 function clearQuote() { state.quoteLines = []; renderQuote(); }
 
 /* ── SEND QUOTE ── */
-function openSendModal() { document.getElementById('send-modal').classList.add('active'); }
+function openSendModal(volumeRequest = false) {
+  state.volumeRequest = !!volumeRequest;
+  document.getElementById('send-modal-title').textContent =
+    volumeRequest ? 'Request Volume Pricing' : 'Email Quote';
+  document.getElementById('send-btn').textContent =
+    volumeRequest ? '💬 Send Pricing Request' : '✉️ Send My Quote';
+  document.getElementById('volume-modal-note').style.display = volumeRequest ? 'block' : 'none';
+  document.getElementById('send-modal').classList.add('active');
+}
 function closeSendModal() { document.getElementById('send-modal').classList.remove('active'); }
 
 function buildQuoteHTML() {
@@ -889,9 +933,16 @@ function buildQuoteHTML() {
 
   const totalsHTML = `<tr style="background:#0B1929;color:white;"><td colspan="3" style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">Total:</td><td style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">$${total.toFixed(2)}</td></tr>`;
   const logoHTML = rep.logoUrl ? `<img src="${rep.logoUrl}" alt="Logo" style="max-height:48px;">` : '';
+  const heading = state.volumeRequest ? 'Linear Rail Pricing Request' : 'Linear Rail Quote';
+
+  const volumeHTML = `<div style="margin-top:16px;padding:12px 16px;background:#FFF6F1;border:1px solid #F8D2BC;border-radius:6px;">
+      <p style="margin:0;color:#8A3A12;font-size:13px;"><strong>Prices shown are list.</strong>
+      Repeat orders, multi-axis builds and higher quantities are quoted below list &mdash;
+      reply to this email with your quantities and reorder frequency and we'll price it for your requirement.</p>
+    </div>`;
 
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-  <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">Linear Rail Quote</h1></div>
+  <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">${heading}</h1></div>
   <div style="padding:20px;border:1px solid #eee;border-top:none;">
     <p><strong>Customer:</strong> ${customerName || '—'}</p>
     <p><strong>Project:</strong> ${projectName || '—'}</p>
@@ -900,6 +951,7 @@ function buildQuoteHTML() {
       <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:12px;">ITEM</th><th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th><th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT PRICE</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th></tr></thead>
       <tbody>${rows}${totalsHTML}</tbody>
     </table>
+    ${volumeHTML}
     <p style="color:#666;font-size:12px;margin-top:16px;">Cut rails are supplied from Airtac 4M stock, machined to the lengths and hole patterns listed above.</p>
   </div>
   <div style="padding:16px 20px;background:#f8fafc;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;font-size:13px;color:#666;">
@@ -913,6 +965,8 @@ async function sendQuote() {
   const customerName = document.getElementById('send-customer').value;
   if (!toEmail || !customerName) { showToast('Name and email are required.', 'error'); return; }
   const btn = document.getElementById('send-btn');
+  const isVolume = !!state.volumeRequest;
+  const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Sending...';
   try {
     const projectName = document.getElementById('send-project').value;
@@ -924,7 +978,9 @@ async function sendQuote() {
         phone: document.getElementById('send-phone').value,
         projectName,
         notes: document.getElementById('send-notes').value,
-        subject: `Your Linear Rail Quote${projectName ? ` — ${projectName}` : ''}`,
+        subject: isVolume
+          ? `Your Linear Rail Pricing Request${projectName ? ` — ${projectName}` : ''}`
+          : `Your Linear Rail Quote${projectName ? ` — ${projectName}` : ''}`,
         quoteHTML: buildQuoteHTML(),
       }),
     });
@@ -933,9 +989,10 @@ async function sendQuote() {
     const history = getHistory();
     history.unshift({ id: Date.now(), timestamp: new Date().toISOString(), customer: customerName, project: projectName || '—', total: quoteTotal(), lines: [...state.quoteLines] });
     saveHistory(history);
-    closeSendModal(); showToast('Quote sent!', 'success');
+    closeSendModal();
+    showToast(isVolume ? 'Pricing request sent!' : 'Quote sent!', 'success');
   } catch (err) { showToast('Failed: ' + err.message, 'error'); }
-  finally { btn.disabled = false; btn.textContent = '✉️ Send My Quote'; }
+  finally { btn.disabled = false; btn.textContent = originalLabel; }
 }
 
 function saveQuoteDraft() {
@@ -999,7 +1056,8 @@ function closePinOverlay() { document.getElementById('pin-overlay').classList.re
 /* ── ADMIN ── */
 function openAdmin() {
   const p = getPricing();
-  document.getElementById('admin-margin').value = p.margin;
+  document.getElementById('admin-rail-discount').value = p.railDiscount;
+  document.getElementById('admin-block-discount').value = p.blockDiscount;
   document.getElementById('admin-cutfee').value = p.cutFee;
   document.getElementById('admin-handling').value = p.handling;
   document.getElementById('admin-buffer').value = p.buffer;
@@ -1011,13 +1069,12 @@ function openAdmin() {
 
   document.getElementById('admin-rails-tbody').innerHTML = getRails().map((r, i) => `<tr>
     <td class="pn-cell">${r.pn}</td>
-    <td><input type="number" step="0.01" min="0" value="${r.net}" data-rail-idx="${i}"></td>
+    <td><input type="number" step="0.01" min="0" value="${r.list}" data-rail-idx="${i}"></td>
   </tr>`).join('');
 
   document.getElementById('admin-blocks-tbody').innerHTML = getBlocks().map((b, i) => `<tr>
     <td class="pn-cell">${b.pn}</td>
     <td><input type="number" step="0.01" min="0" value="${b.list}" data-block-list-idx="${i}"></td>
-    <td><input type="number" step="0.01" min="0" value="${b.net}" data-block-net-idx="${i}"></td>
   </tr>`).join('');
 
   document.getElementById('admin-overlay').classList.add('active');
@@ -1032,16 +1089,16 @@ function closeAdmin() {
 function saveAdminSettings() {
   const rails = getRails().map((r, i) => ({
     ...r,
-    net: parseFloat(document.querySelector(`[data-rail-idx="${i}"]`)?.value) || r.net,
+    list: parseFloat(document.querySelector(`[data-rail-idx="${i}"]`)?.value) || r.list,
   }));
   const blocks = getBlocks().map((b, i) => ({
     ...b,
     list: parseFloat(document.querySelector(`[data-block-list-idx="${i}"]`)?.value) || b.list,
-    net: parseFloat(document.querySelector(`[data-block-net-idx="${i}"]`)?.value) || b.net,
   }));
   const admin = {
     pricing: {
-      margin: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-margin').value) || 0)),
+      railDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-rail-discount').value) || 0)),
+      blockDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-block-discount').value) || 0)),
       cutFee: Math.max(0, parseFloat(document.getElementById('admin-cutfee').value) || 0),
       handling: Math.max(0, parseFloat(document.getElementById('admin-handling').value) || 0),
       buffer: Math.max(0, parseFloat(document.getElementById('admin-buffer').value) || 0),

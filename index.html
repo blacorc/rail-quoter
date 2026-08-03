@@ -356,9 +356,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
                 <span class="stock-dot"></span>
                 In stock for immediate shipment
               </div>
-              <p>The series, sizes and blocks shown here are stocked and ship right away,
-              cut to your length. Airtac builds further sizes, block styles and joint rails
-              beyond 4 m to order on a longer lead time.</p>
+              <p>The series, sizes and blocks shown here are normally stocked and ship right
+              away, cut to your length. Airtac builds further sizes, block styles and joint
+              rails beyond 4 m to order on a longer lead time.</p>
               <p>Need something that isn't listed? Tell us what you're building and we'll
               come back with availability, lead time and pricing.</p>
               <button class="btn btn-sm btn-secondary" onclick="openSendModal('availability')">
@@ -449,15 +449,15 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <span class="totals-label">Total</span>
               <span class="totals-value" id="grand-total-val">$0.00</span>
             </div>
-            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">List price · cutting and handling included</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">Cutting and handling included</div>
           </div>
         </div>
 
         <div class="volume-note">
           <div class="volume-note-title">💬 Repeat or volume order?</div>
-          <p>Prices shown are <strong>list</strong>. Repeat orders, multi-axis builds and
-          higher quantities are quoted below list &mdash; send us the details and we'll
-          come back with pricing for your specific requirement.</p>
+          <p>Prices shown are our <strong>published single-quantity price</strong>. Repeat
+          orders, multi-axis builds and higher quantities are quoted lower &mdash; send us
+          the details and we'll come back with pricing for your specific requirement.</p>
         </div>
 
         <div class="quote-actions">
@@ -547,19 +547,30 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
 
   <div class="admin-section">
-    <h3>Discount Off List</h3>
+    <h3>Web Markup</h3>
     <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
-      Quotes are built from published Airtac list prices. Any discount you set here
-      is stored <strong>in this browser only</strong> &mdash; it is never published with
-      the site, so visitors always see list. Leave at 0 to quote list.
+      Advertised prices are Airtac list plus this markup, so the published figure sits
+      above list and leaves room to come down on enquiry. At 20% a $209.50 rail
+      advertises at $251.40.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Web Markup (% above list)</label>
+      <input class="form-input" id="admin-web-markup" type="number" min="0" max="500" step="1" oninput="refreshAdminPrices()">
+    </div>
+
+    <h3 style="margin-top:24px;">Customer Discount</h3>
+    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
+      Taken off the advertised price above. Stored <strong>in this browser only</strong>,
+      never published with the site, so visitors always see the full advertised price.
+      Leave at 0 to quote as advertised.
     </p>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Rail Discount (% off list)</label>
+        <label class="form-label">Rail Discount (% off advertised)</label>
         <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5">
       </div>
       <div class="form-group">
-        <label class="form-label">Block Discount (% off list)</label>
+        <label class="form-label">Block Discount (% off advertised)</label>
         <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5">
       </div>
     </div>
@@ -582,7 +593,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   <div class="admin-section">
     <h3>Rail List Prices (4000mm stock)</h3>
     <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:100px;">List ($)</th></tr></thead>
+      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
       <tbody id="admin-rails-tbody"></tbody>
     </table>
   </div>
@@ -590,7 +601,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   <div class="admin-section">
     <h3>Carriage Block List Prices</h3>
     <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:100px;">List ($)</th></tr></thead>
+      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
       <tbody id="admin-blocks-tbody"></tbody>
     </table>
   </div>
@@ -740,8 +751,16 @@ const DEFAULT_BLOCKS = [
   { family: 'LSD', type: 'Square', size: 25, pn: 'LSD25BK-HN-N-D-M6',   list: 31.70 },
 ];
 
-// Discounts default to 0 = straight list, which is what a visitor sees.
-const DEFAULT_PRICING = { railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
+// webMarkup is applied to list to give the advertised price, so the published
+// figure sits above list and leaves room to come down. Customer discounts then
+// come off that advertised price and default to 0.
+const DEFAULT_PRICING = { webMarkup: 20, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
+
+// list -> advertised web price
+function webPrice(list) {
+  const p = getPricing();
+  return list * (1 + Math.max(0, p.webMarkup) / 100);
+}
 
 /* ── STATE ── */
 let state = {
@@ -806,7 +825,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   // and are not discounted.
   const scrap = S + E + p.buffer;
   const usable = STOCK_LEN - scrap;
-  const listPerMm = rail.list / usable;
+  const listPerMm = webPrice(rail.list) / usable;
   const materialList = listPerMm * pricedLen;
   const material = materialList * (1 - discountFrac);
   const sellPrice = material + p.cutFee + p.handling;
@@ -837,7 +856,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
 function blockSellPrice(block) {
   const p = getPricing();
   const discountFrac = Math.min(0.95, Math.max(0, p.blockDiscount / 100));
-  return block.list * (1 - discountFrac);
+  return webPrice(block.list) * (1 - discountFrac);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1399,8 +1418,8 @@ function buildQuoteHTML() {
     : '';
 
   const volumeHTML = `<div style="margin-top:16px;padding:12px 16px;background:#FFF6F1;border:1px solid #F8D2BC;border-radius:6px;">
-      <p style="margin:0;color:#8A3A12;font-size:13px;"><strong>Prices shown are list.</strong>
-      Repeat orders, multi-axis builds and higher quantities are quoted below list &mdash;
+      <p style="margin:0;color:#8A3A12;font-size:13px;"><strong>Prices shown are our published single-quantity price.</strong>
+      Repeat orders, multi-axis builds and higher quantities are quoted lower &mdash;
       reply to this email with your quantities and reorder frequency and we'll price it for your requirement.</p>
     </div>`;
 
@@ -1525,6 +1544,7 @@ function closePinOverlay() { document.getElementById('pin-overlay').classList.re
 /* ── ADMIN ── */
 function openAdmin() {
   const p = getPricing();
+  document.getElementById('admin-web-markup').value = p.webMarkup;
   document.getElementById('admin-rail-discount').value = p.railDiscount;
   document.getElementById('admin-block-discount').value = p.blockDiscount;
   document.getElementById('admin-cutfee').value = p.cutFee;
@@ -1538,14 +1558,17 @@ function openAdmin() {
 
   document.getElementById('admin-rails-tbody').innerHTML = getRails().map((r, i) => `<tr>
     <td class="pn-cell">${r.pn}</td>
-    <td><input type="number" step="0.01" min="0" value="${r.list}" data-rail-idx="${i}"></td>
+    <td><input type="number" step="0.01" min="0" value="${r.list}" data-rail-idx="${i}" oninput="refreshAdminPrices()"></td>
+    <td class="web-cell" data-web-rail="${i}"></td>
   </tr>`).join('');
 
   document.getElementById('admin-blocks-tbody').innerHTML = getBlocks().map((b, i) => `<tr>
     <td class="pn-cell">${b.pn}</td>
-    <td><input type="number" step="0.01" min="0" value="${b.list}" data-block-list-idx="${i}"></td>
+    <td><input type="number" step="0.01" min="0" value="${b.list}" data-block-list-idx="${i}" oninput="refreshAdminPrices()"></td>
+    <td class="web-cell" data-web-block="${i}"></td>
   </tr>`).join('');
 
+  refreshAdminPrices();
   document.getElementById('admin-overlay').classList.add('active');
   setTimeout(() => document.getElementById('admin-panel').classList.add('active'), 10);
 }
@@ -1553,6 +1576,21 @@ function openAdmin() {
 function closeAdmin() {
   document.getElementById('admin-panel').classList.remove('active');
   setTimeout(() => document.getElementById('admin-overlay').classList.remove('active'), 300);
+}
+
+// Live-update the Web Price column as the markup or a list price is edited,
+// so the effect of a markup change is visible before saving.
+function refreshAdminPrices() {
+  const pct = Math.max(0, parseFloat(document.getElementById('admin-web-markup')?.value) || 0);
+  const factor = 1 + pct / 100;
+  document.querySelectorAll('[data-web-rail]').forEach(td => {
+    const v = parseFloat(document.querySelector(`[data-rail-idx="${td.dataset.webRail}"]`)?.value) || 0;
+    td.textContent = '$' + (v * factor).toFixed(2);
+  });
+  document.querySelectorAll('[data-web-block]').forEach(td => {
+    const v = parseFloat(document.querySelector(`[data-block-list-idx="${td.dataset.webBlock}"]`)?.value) || 0;
+    td.textContent = '$' + (v * factor).toFixed(2);
+  });
 }
 
 function saveAdminSettings() {
@@ -1566,6 +1604,7 @@ function saveAdminSettings() {
   }));
   const admin = {
     pricing: {
+      webMarkup: Math.min(500, Math.max(0, parseFloat(document.getElementById('admin-web-markup').value) || 0)),
       railDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-rail-discount').value) || 0)),
       blockDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-block-discount').value) || 0)),
       cutFee: Math.max(0, parseFloat(document.getElementById('admin-cutfee').value) || 0),

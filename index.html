@@ -123,6 +123,13 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
+/* STOCK / LEAD-TIME NOTE */
+.stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
+.stock-note-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.stock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(31,157,85,0.18); flex: none; }
+.stock-note p { font-size: 13px; color: var(--gray-600); line-height: 1.6; margin-bottom: 8px; }
+.stock-note .btn { margin-top: 4px; }
+
 /* BLOCK FILTER */
 .filter-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; white-space: nowrap; }
 .filter-toggle input { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
@@ -343,6 +350,21 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <label class="form-label">Manual n Override (mounting holes)</label>
               <input class="form-input" id="rail-manual-n" type="number" min="2" step="1" value="10" oninput="recalc()">
             </div>
+
+            <div class="stock-note">
+              <div class="stock-note-head">
+                <span class="stock-dot"></span>
+                In stock for immediate shipment
+              </div>
+              <p>The series, sizes and blocks shown here are stocked and ship right away,
+              cut to your length. Airtac builds further sizes, block styles and joint rails
+              beyond 4 m to order on a longer lead time.</p>
+              <p>Need something that isn't listed? Tell us what you're building and we'll
+              come back with availability, lead time and pricing.</p>
+              <button class="btn btn-sm btn-secondary" onclick="openSendModal('availability')">
+                ✉️ Ask about another size
+              </button>
+            </div>
           </div>
 
           <div class="calc-output">
@@ -439,8 +461,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         </div>
 
         <div class="quote-actions">
-          <button class="btn btn-primary" onclick="openSendModal()">✉️ Email Quote</button>
-          <button class="btn btn-secondary" onclick="openSendModal(true)">💬 Request Volume Pricing</button>
+          <button class="btn btn-primary" onclick="openSendModal('quote')">✉️ Email Quote</button>
+          <button class="btn btn-secondary" onclick="openSendModal('volume')">💬 Request Volume Pricing</button>
           <button class="btn btn-secondary" onclick="saveQuoteDraft()">💾 Save Draft</button>
         </div>
       </div>
@@ -1310,13 +1332,37 @@ function deleteLine(id) {
 function clearQuote() { state.quoteLines = []; renderQuote(); }
 
 /* ── SEND QUOTE ── */
-function openSendModal(volumeRequest = false) {
-  state.volumeRequest = !!volumeRequest;
-  document.getElementById('send-modal-title').textContent =
-    volumeRequest ? 'Request Volume Pricing' : 'Email Quote';
-  document.getElementById('send-btn').textContent =
-    volumeRequest ? '💬 Send Pricing Request' : '✉️ Send My Quote';
-  document.getElementById('volume-modal-note').style.display = volumeRequest ? 'block' : 'none';
+// mode: 'quote' (firm quote) | 'volume' (pricing request) | 'availability'
+// (asking about a size or length that is not stocked)
+const SEND_MODES = {
+  quote: {
+    title: 'Email Quote', btn: '✉️ Send My Quote',
+    subject: 'Your Linear Rail Quote', heading: 'Linear Rail Quote', note: '',
+  },
+  volume: {
+    title: 'Request Volume Pricing', btn: '💬 Send Pricing Request',
+    subject: 'Your Linear Rail Pricing Request', heading: 'Linear Rail Pricing Request',
+    note: `Tell us the quantities and how often you expect to reorder. We'll review
+           the build and come back with pricing below the list figures shown here.`,
+  },
+  availability: {
+    title: 'Ask About Another Size', btn: '✉️ Send Enquiry',
+    subject: 'Your Linear Rail Availability Enquiry', heading: 'Linear Rail Availability Enquiry',
+    note: `Describe the size, length or block style you need in the notes below. Anything
+           you have already added to the quote comes with the enquiry, and we'll reply with
+           availability, lead time and pricing.`,
+  },
+};
+
+function openSendModal(mode = 'quote') {
+  const m = SEND_MODES[mode] ? mode : 'quote';
+  state.sendMode = m;
+  const cfg = SEND_MODES[m];
+  document.getElementById('send-modal-title').textContent = cfg.title;
+  document.getElementById('send-btn').textContent = cfg.btn;
+  const noteEl = document.getElementById('volume-modal-note');
+  noteEl.style.display = cfg.note ? 'block' : 'none';
+  if (cfg.note) noteEl.querySelector('p').textContent = cfg.note.replace(/\s+/g, ' ').trim();
   document.getElementById('send-modal').classList.add('active');
 }
 function closeSendModal() { document.getElementById('send-modal').classList.remove('active'); }
@@ -1341,7 +1387,16 @@ function buildQuoteHTML() {
 
   const totalsHTML = `<tr style="background:#0B1929;color:white;"><td colspan="3" style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">Total:</td><td style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">$${total.toFixed(2)}</td></tr>`;
   const logoHTML = rep.logoUrl ? `<img src="${rep.logoUrl}" alt="Logo" style="max-height:48px;">` : '';
-  const heading = state.volumeRequest ? 'Linear Rail Pricing Request' : 'Linear Rail Quote';
+  const cfg = SEND_MODES[state.sendMode] || SEND_MODES.quote;
+  const heading = cfg.heading;
+
+  // An availability enquiry often has nothing in the quote yet, so carry the
+  // rail currently configured in the calculator instead of an empty table.
+  const inputs = readRailInputs();
+  const configHTML = (state.sendMode === 'availability')
+    ? `<p style="margin-top:16px;"><strong>Currently configured:</strong>
+       ${inputs.series}${inputs.size} · ${inputs.L} mm · S ${inputs.S} / E ${inputs.E} · qty ${inputs.qty}</p>`
+    : '';
 
   const volumeHTML = `<div style="margin-top:16px;padding:12px 16px;background:#FFF6F1;border:1px solid #F8D2BC;border-radius:6px;">
       <p style="margin:0;color:#8A3A12;font-size:13px;"><strong>Prices shown are list.</strong>
@@ -1349,18 +1404,24 @@ function buildQuoteHTML() {
       reply to this email with your quantities and reorder frequency and we'll price it for your requirement.</p>
     </div>`;
 
+  // An enquiry may carry no line items at all; skip the table rather than
+  // sending an empty one with a $0.00 total.
+  const tableHTML = state.quoteLines.length === 0 ? '' : `
+    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:12px;">ITEM</th><th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th><th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT PRICE</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th></tr></thead>
+      <tbody>${rows}${totalsHTML}</tbody>
+    </table>
+    ${volumeHTML}
+    <p style="color:#666;font-size:12px;margin-top:16px;">Cut rails are supplied from Airtac 4M stock, machined to the lengths and hole patterns listed above.</p>`;
+
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
   <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">${heading}</h1></div>
   <div style="padding:20px;border:1px solid #eee;border-top:none;">
     <p><strong>Customer:</strong> ${customerName || '—'}</p>
     <p><strong>Project:</strong> ${projectName || '—'}</p>
     ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
-    <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:12px;">ITEM</th><th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th><th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT PRICE</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th></tr></thead>
-      <tbody>${rows}${totalsHTML}</tbody>
-    </table>
-    ${volumeHTML}
-    <p style="color:#666;font-size:12px;margin-top:16px;">Cut rails are supplied from Airtac 4M stock, machined to the lengths and hole patterns listed above.</p>
+    ${configHTML}
+    ${tableHTML}
   </div>
   <div style="padding:16px 20px;background:#f8fafc;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;font-size:13px;color:#666;">
     <strong>${rep.name || ''}</strong>${rep.phone ? ` · ${rep.phone}` : ''}<br>${rep.companyName || ''}
@@ -1373,7 +1434,8 @@ async function sendQuote() {
   const customerName = document.getElementById('send-customer').value;
   if (!toEmail || !customerName) { showToast('Name and email are required.', 'error'); return; }
   const btn = document.getElementById('send-btn');
-  const isVolume = !!state.volumeRequest;
+  const mode = state.sendMode || 'quote';
+  const cfg = SEND_MODES[mode] || SEND_MODES.quote;
   const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Sending...';
   try {
@@ -1386,9 +1448,7 @@ async function sendQuote() {
         phone: document.getElementById('send-phone').value,
         projectName,
         notes: document.getElementById('send-notes').value,
-        subject: isVolume
-          ? `Your Linear Rail Pricing Request${projectName ? ` — ${projectName}` : ''}`
-          : `Your Linear Rail Quote${projectName ? ` — ${projectName}` : ''}`,
+        subject: `${cfg.subject}${projectName ? ` — ${projectName}` : ''}`,
         quoteHTML: buildQuoteHTML(),
       }),
     });
@@ -1398,7 +1458,8 @@ async function sendQuote() {
     history.unshift({ id: Date.now(), timestamp: new Date().toISOString(), customer: customerName, project: projectName || '—', total: quoteTotal(), lines: [...state.quoteLines] });
     saveHistory(history);
     closeSendModal();
-    showToast(isVolume ? 'Pricing request sent!' : 'Quote sent!', 'success');
+    showToast({ quote: 'Quote sent!', volume: 'Pricing request sent!',
+                availability: 'Enquiry sent!' }[mode], 'success');
   } catch (err) { showToast('Failed: ' + err.message, 'error'); }
   finally { btn.disabled = false; btn.textContent = originalLabel; }
 }

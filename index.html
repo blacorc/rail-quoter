@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>T-Slot Frame Quoter</title>
+<title>Airtac Rail Quoter</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --navy: #0B1929;
-  --navy-light: #132D4A;
-  --orange: #F26522;
-  --orange-hover: #FF7A38;
-  --orange-glow: rgba(242, 101, 34, 0.15);
-  --green: #22C55E;
-  --red: #EF4444;
+  /* TSI Solutions palette — burgundy nav bar, crimson accent */
+  --navy: #5E0B24;          /* header / table headers (TSI nav burgundy) */
+  --navy-light: #7A1030;
+  --orange: #9E0E3A;        /* primary accent (TSI crimson) */
+  --orange-hover: #B81447;
+  --orange-glow: rgba(158, 14, 58, 0.15);
+  --charcoal: #333333;      /* TSI's dark "Go" button */
+  --green: #1F9D55;
+  --red: #C62828;
   --white: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --diagram-line: #5E0B24;
+  --diagram-hatch: #D9C2CA;
+  --diagram-dim: #9E0E3A;
   --gray-50: #F8FAFC;
   --gray-100: #F1F5F9;
   --gray-200: #E2E8F0;
@@ -55,26 +61,8 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 /* LAYOUT */
 .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
 
-/* FAMILY SELECTOR */
-.family-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: 16px; }
-.family-card-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); margin-bottom: 12px; }
-.family-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
-.family-btn {
-  padding: 10px 22px; border-radius: var(--radius); border: 2px solid var(--gray-200);
-  background: var(--white); color: var(--gray-600);
-  font-family: var(--font-body); font-size: 15px; font-weight: 700;
-  cursor: pointer; transition: var(--transition);
-}
-.family-btn:hover { border-color: var(--orange); color: var(--orange); }
-.family-btn.active { background: var(--orange); border-color: var(--orange); color: var(--white); box-shadow: 0 4px 12px rgba(242,101,34,0.3); }
-
-/* TABS */
-.tabs { display: flex; gap: 4px; background: var(--white); border-radius: var(--radius-lg); padding: 4px; box-shadow: var(--shadow); margin-bottom: 24px; overflow-x: auto; }
-.tab { flex: 1; min-width: 120px; padding: 12px 16px; border: none; border-radius: var(--radius); background: transparent; color: var(--gray-500); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.tab:hover { color: var(--gray-700); background: var(--gray-50); }
-.tab.active { background: var(--navy); color: var(--white); box-shadow: 0 2px 8px rgba(11,25,41,0.3); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* STACKED SECTIONS */
+.section-gap { margin-top: 24px; }
 
 /* CARDS */
 .card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
@@ -82,20 +70,93 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .card-title { font-size: 16px; font-weight: 700; color: var(--navy); }
 .card-body { padding: 24px; }
 
-/* UPLOAD */
-.upload-zone { border: 2px dashed var(--gray-300); border-radius: var(--radius-lg); padding: 48px 24px; text-align: center; cursor: pointer; transition: var(--transition); background: var(--gray-50); position: relative; }
-.upload-zone:hover, .upload-zone.dragover { border-color: var(--orange); background: var(--orange-glow); }
-.upload-zone-icon { font-size: 48px; margin-bottom: 12px; display: block; }
-.upload-zone-text { font-size: 15px; font-weight: 600; color: var(--gray-700); margin-bottom: 4px; }
-.upload-zone-hint { font-size: 13px; color: var(--gray-400); }
-.upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.upload-preview { display: none; margin-top: 16px; position: relative; }
-.upload-preview img { max-width: 100%; max-height: 300px; border-radius: var(--radius); border: 1px solid var(--gray-200); }
-.upload-preview .remove-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+/* SERIES / SIZE PICKERS */
+.picker-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); margin-bottom: 10px; }
+.picker-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.picker-btn { padding: 10px 22px; border-radius: var(--radius); border: 2px solid var(--gray-200); background: var(--white); color: var(--gray-600); font-family: var(--font-body); font-size: 15px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+.picker-btn:hover { border-color: var(--orange); color: var(--orange); }
+.picker-btn.active { background: var(--orange); border-color: var(--orange); color: var(--white); box-shadow: 0 4px 12px rgba(242,101,34,0.3); }
+.picker-hint { font-size: 12px; color: var(--gray-400); margin: -12px 0 20px; }
 
-/* FAMILY PROMPT (shown when no family selected) */
-.family-prompt { text-align: center; padding: 24px; background: rgba(242,101,34,0.05); border: 1px dashed rgba(242,101,34,0.3); border-radius: var(--radius); font-size: 14px; color: var(--gray-500); }
-.family-prompt strong { color: var(--orange); }
+/* CALC GRID */
+.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.calc-inputs .form-group { margin-bottom: 14px; }
+.input-suffix { font-size: 12px; color: var(--gray-400); margin-top: 4px; font-family: var(--font-mono); }
+
+/* RESULT BOX */
+.result-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; }
+.result-pn { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--navy); word-break: break-all; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; }
+.result-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px; margin-bottom: 16px; }
+.result-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--gray-200); }
+.result-row .k { color: var(--gray-500); }
+.result-row .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); }
+.result-warn { font-size: 12px; color: #d97706; background: rgba(245,158,11,0.1); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px; }
+.result-warn.ok { color: #15803d; background: rgba(31,157,85,0.1); }
+.result-warn.err { color: #B3261E; background: rgba(198,40,40,0.1); border: 1px solid rgba(198,40,40,0.25); line-height: 1.5; }
+.result-price { display: flex; align-items: baseline; justify-content: space-between; border-top: 2px solid var(--navy); padding-top: 14px; }
+.result-price .label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
+.result-price .value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--orange); }
+
+/* HOLE-PATTERN DIAGRAM */
+.rail-diagram { width: 100%; height: auto; display: block; margin-bottom: 14px; background: var(--card-bg); border: 1px solid var(--gray-200); border-radius: var(--radius); }
+.rail-diagram .dim-label { font-family: var(--font-mono); font-size: 10px; fill: var(--diagram-dim); font-weight: 600; }
+.rail-diagram .dim-label.dim-strong { font-size: 11.5px; font-weight: 700; fill: var(--navy); }
+.rail-diagram .dim-note { font-family: var(--font-body); font-size: 10px; fill: var(--gray-500); font-weight: 600; }
+
+/* CATALOG TABLE */
+.catalog-group-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
+.catalog-group-title:first-child { margin-top: 0; }
+.catalog-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.catalog-table th { background: var(--gray-50); padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
+.catalog-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); }
+.catalog-table tr:hover td { background: var(--gray-50); }
+.catalog-table .pn { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--navy); }
+.catalog-table .price { font-family: var(--font-mono); font-weight: 600; text-align: right; }
+.catalog-table input.qty-input { width: 60px; padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
+.catalog-table input.qty-input:focus { outline: none; border-color: var(--orange); }
+.spec-toggle { border: none; background: transparent; color: var(--orange); font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
+.spec-toggle:hover { background: var(--orange-glow); }
+.spec-row td { background: var(--gray-50); padding: 14px 16px !important; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 20px; }
+.spec-cell { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; border-bottom: 1px dashed var(--gray-200); padding: 3px 0; }
+.spec-cell .k { color: var(--gray-500); }
+.spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
+.spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
+
+/* ADMIN PRICE BASIS READOUT */
+.price-basis { display: grid; gap: 6px; margin-top: 4px; }
+.price-basis div { font-size: 12px; padding: 8px 12px; border-radius: 4px; background: var(--gray-50); border-left: 3px solid var(--gray-300); color: var(--gray-600); }
+.price-basis div.web { border-left-color: var(--orange); }
+.price-basis div.internal { border-left-color: var(--green); }
+.price-basis strong { font-family: var(--font-mono); color: var(--navy); }
+
+/* STOCK / LEAD-TIME NOTE */
+.stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
+.stock-note-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.stock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(31,157,85,0.18); flex: none; }
+.stock-note p { font-size: 13px; color: var(--gray-600); line-height: 1.6; margin-bottom: 8px; }
+.stock-note .btn { margin-top: 4px; }
+
+/* BLOCK FILTER */
+.filter-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; white-space: nowrap; }
+.filter-toggle input { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
+.block-filter-note { font-size: 12px; color: var(--gray-500); background: var(--gray-50); border-left: 3px solid var(--orange); border-radius: 4px; padding: 8px 12px; margin-bottom: 4px; line-height: 1.5; }
+.block-empty { text-align: center; padding: 28px 20px; color: var(--gray-500); }
+.block-empty strong { display: block; color: var(--navy); font-size: 15px; margin-bottom: 6px; }
+.block-empty p { font-size: 13px; max-width: 460px; margin: 0 auto; line-height: 1.6; }
+
+/* CROSS-SECTION DIAGRAMS */
+.calc-output { display: flex; flex-direction: column; gap: 16px; }
+.xs-panel { padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); }
+.xs-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.xs-cols .xs-svg { max-width: 100%; }
+.xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
+.xs-svg { width: 100%; height: auto; display: block; max-width: 340px; }
+.xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600; }
+.xs-svg .xs-cap { font-family: var(--font-body); font-size: 9px; fill: var(--gray-600); font-weight: 600; }
+.xs-svg .xs-cap.dim { fill: var(--gray-400); font-weight: 500; }
+.xs-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; }
+.spec-row .xs-svg { max-width: 300px; margin-top: 10px; }
 
 /* BUTTONS */
 .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -108,19 +169,25 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .btn-danger:hover { opacity: 0.9; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 
-/* CUT LIST TABLE */
+/* QUOTE TABLE */
 .quote-section { margin-top: 24px; }
 .cut-list-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .cut-list-table th { background: var(--navy); color: var(--white); padding: 12px 16px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 .cut-list-table th:first-child { border-radius: var(--radius) 0 0 0; }
 .cut-list-table th:last-child { border-radius: 0 var(--radius) 0 0; }
-.cut-list-table td { padding: 10px 16px; border-bottom: 1px solid var(--gray-100); }
+.cut-list-table td { padding: 10px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
 .cut-list-table tr:hover td { background: var(--gray-50); }
-.cut-list-table input, .cut-list-table select { width: 100%; padding: 6px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 13px; background: var(--white); transition: var(--transition); }
-.cut-list-table input:focus, .cut-list-table select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange-glow); }
+.cut-list-table input { padding: 6px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 13px; background: var(--white); transition: var(--transition); }
+.cut-list-table input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange-glow); }
 .cut-list-table .row-delete { width: 28px; height: 28px; border: none; border-radius: 4px; background: transparent; color: var(--gray-400); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: var(--transition); }
 .cut-list-table .row-delete:hover { background: rgba(239,68,68,0.1); color: var(--red); }
 .line-total { font-family: var(--font-mono); font-weight: 600; color: var(--navy); }
+.line-pn { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--navy); }
+.line-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.line-cutinfo { font-size: 11px; color: var(--gray-400); font-family: var(--font-mono); margin-top: 2px; }
+.kind-badge { display: inline-block; padding: 2px 8px; border-radius: 50px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.kind-rail { background: rgba(59,130,246,0.1); color: #2563eb; }
+.kind-block { background: rgba(139,92,246,0.1); color: #7c3aed; }
 
 /* TOTALS */
 .totals-section { display: flex; justify-content: flex-end; margin-top: 16px; }
@@ -130,34 +197,11 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .totals-label { color: var(--gray-600); }
 .totals-value { font-family: var(--font-mono); font-weight: 600; }
 
-/* CONFIDENCE BADGE */
-.confidence-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.confidence-high { background: rgba(34,197,94,0.12); color: #16a34a; }
-.confidence-medium { background: rgba(245,158,11,0.12); color: #d97706; }
-.confidence-low { background: rgba(239,68,68,0.12); color: #dc2626; }
-.confidence-exact { background: rgba(59,130,246,0.12); color: #2563eb; }
-
-/* AI NOTES */
-.ai-notes { margin-top: 16px; background: var(--gray-50); border-radius: var(--radius); border: 1px solid var(--gray-200); overflow: hidden; }
-.ai-notes-toggle { width: 100%; padding: 12px 16px; border: none; background: transparent; font-family: var(--font-body); font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; display: flex; align-items: center; gap: 8px; }
-.ai-notes-toggle .arrow { transition: transform 200ms; }
-.ai-notes-toggle.open .arrow { transform: rotate(90deg); }
-.ai-notes-body { display: none; padding: 0 16px 16px; font-size: 13px; color: var(--gray-600); line-height: 1.6; }
-.ai-notes-body.open { display: block; }
-
-/* LOADING */
-.loading-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.6); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center; }
-.loading-overlay.active { display: flex; }
-.loading-card { background: var(--white); border-radius: var(--radius-lg); padding: 48px; text-align: center; box-shadow: var(--shadow-lg); max-width: 320px; }
-.spinner { width: 48px; height: 48px; border: 4px solid var(--gray-200); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-weight: 600; color: var(--navy); margin-bottom: 4px; }
-.loading-sub { font-size: 13px; color: var(--gray-400); }
-
 /* MODALS */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.5); backdrop-filter: blur(4px); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.active { display: flex; }
 .modal { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal.wide { max-width: 760px; }
 .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; }
 .modal-title { font-size: 18px; font-weight: 700; color: var(--navy); }
 .modal-close { width: 32px; height: 32px; border: none; border-radius: 50%; background: var(--gray-100); color: var(--gray-500); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
@@ -173,6 +217,15 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 textarea.form-input { resize: vertical; min-height: 80px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+/* TOGGLE */
+.toggle-group { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--gray-600); }
+.toggle-switch { position: relative; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 12px; cursor: pointer; transition: var(--transition); }
+.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--white); left: 3px; top: 3px; transition: var(--transition); }
+.toggle-switch input:checked + .toggle-slider { background: var(--orange); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
 /* ADMIN PANEL */
 .admin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.5); backdrop-filter: blur(4px); z-index: 400; }
 .admin-overlay.active { display: block; }
@@ -182,22 +235,12 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .admin-header h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
 .admin-section { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); }
 .admin-section h3 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-/* Family accordion in admin */
-.family-accordion { border: 1px solid var(--gray-200); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
-.family-accordion-header { padding: 12px 16px; background: var(--gray-50); display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
-.family-accordion-header:hover { background: var(--gray-100); }
-.family-accordion-title { font-size: 14px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
-.family-accordion-arrow { font-size: 12px; transition: transform 200ms; color: var(--gray-400); }
-.family-accordion-header.open .family-accordion-arrow { transform: rotate(90deg); }
-.family-accordion-body { display: none; padding: 16px; }
-.family-accordion-body.open { display: block; }
-
 .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .admin-table th { background: var(--gray-50); padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
 .admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); }
 .admin-table input { width: 100%; padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
 .admin-table input:focus { outline: none; border-color: var(--orange); }
+.admin-table .pn-cell { font-family: var(--font-mono); font-size: 11px; color: var(--gray-600); }
 
 /* PIN */
 .pin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.7); backdrop-filter: blur(8px); z-index: 500; align-items: center; justify-content: center; }
@@ -214,24 +257,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .history-table th { background: var(--gray-50); padding: 10px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
 .history-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-100); }
 .history-table tr:hover td { background: var(--gray-50); }
-.method-badge { display: inline-block; padding: 2px 8px; border-radius: 50px; font-size: 11px; font-weight: 600; }
-.method-ai { background: rgba(139,92,246,0.1); color: #7c3aed; }
-.method-dxf { background: rgba(59,130,246,0.1); color: #2563eb; }
-.method-manual { background: rgba(107,114,128,0.1); color: #4b5563; }
+
+/* VOLUME PRICING NOTE */
+.volume-note { margin-top: 20px; background: rgba(242,101,34,0.05); border: 1px solid rgba(242,101,34,0.25); border-radius: var(--radius); padding: 14px 18px; }
+.volume-note-title { font-size: 13px; font-weight: 700; color: var(--orange); margin-bottom: 4px; }
+.volume-note p { font-size: 13px; color: var(--gray-600); line-height: 1.6; }
 
 /* MISC */
 .quote-actions { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
-.toggle-group { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--gray-600); }
-.toggle-switch { position: relative; width: 44px; height: 24px; }
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 12px; cursor: pointer; transition: var(--transition); }
-.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--white); left: 3px; top: 3px; transition: var(--transition); }
-.toggle-switch input:checked + .toggle-slider { background: var(--orange); }
-.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
-.error-box { display: none; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
-.error-box.active { display: block; }
-.error-title { font-weight: 700; color: var(--red); margin-bottom: 4px; font-size: 14px; }
-.error-detail { font-size: 12px; font-family: var(--font-mono); color: var(--gray-600); white-space: pre-wrap; max-height: 150px; overflow-y: auto; margin-top: 8px; background: var(--white); padding: 8px; border-radius: 4px; }
 .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: var(--white); padding: 14px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 500; z-index: 600; transform: translateY(100px); opacity: 0; transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1); box-shadow: var(--shadow-lg); }
 .toast.active { transform: translateY(0); opacity: 1; }
 .toast.error { background: var(--red); }
@@ -239,8 +272,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 @media (max-width: 768px) {
   .main { padding: 16px 12px 80px; }
-  .family-buttons { gap: 6px; }
-  .family-btn { padding: 8px 14px; font-size: 13px; }
+  .calc-grid { grid-template-columns: 1fr; }
+  .xs-cols { grid-template-columns: 1fr; }
   .tabs { flex-wrap: nowrap; }
   .tab { font-size: 13px; padding: 10px 12px; }
   .form-row { grid-template-columns: 1fr; }
@@ -259,169 +292,185 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 <header class="header">
   <div class="header-brand">
-    <div class="header-logo">T</div>
+    <div class="header-logo">A</div>
     <div>
-      <div class="header-title">T-Slot Frame Quoter</div>
-      <div class="header-subtitle">Aluminum Extrusion Estimator</div>
+      <div class="header-title">Airtac Rail Quoter</div>
+      <div class="header-subtitle">Linear Guide Estimator</div>
     </div>
   </div>
   <div class="header-actions">
-    <a class="header-link" href="/rails/">Rail Quoter →</a>
-    <button class="btn-icon" onclick="openHistory()" title="Quote History">📋</button>
+    <button class="btn-icon" onclick="openHistory()" title="Quote History">🕒</button>
     <button class="btn-icon" onclick="promptAdmin()" title="Admin Settings">⚙️</button>
   </div>
 </header>
 
 <main class="main">
 
-  <!-- STEP 1: PROFILE FAMILY SELECTOR -->
-  <div class="family-card">
-    <div class="family-card-label">Step 1 — Select your profile series</div>
-    <div class="family-buttons" id="family-buttons"></div>
-  </div>
-
-  <!-- STEP 2: QUOTE METHOD TABS -->
-  <div class="tabs">
-    <button class="tab active" data-tab="ai" onclick="switchTab('ai')">
-      <span>📷</span> AI Estimate
-    </button>
-    <button class="tab" data-tab="dxf" onclick="switchTab('dxf')">
-      <span>📐</span> DXF Upload
-    </button>
-    <button class="tab" data-tab="manual" onclick="switchTab('manual')">
-      <span>✏️</span> Manual Entry
-    </button>
-  </div>
-
-  <!-- AI TAB -->
-  <div id="panel-ai" class="tab-panel active">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Upload Frame Image</div></div>
-      <div class="card-body">
-        <div id="ai-family-prompt" class="family-prompt" style="display:none;">
-          <strong>Select a profile series above</strong> to enable AI analysis
-        </div>
-        <div id="ai-upload-area">
-          <div class="upload-zone" id="ai-upload-zone">
-            <span class="upload-zone-icon">📷</span>
-            <div class="upload-zone-text">Drop image or click to upload</div>
-            <div class="upload-zone-hint">PNG, JPG, WEBP — screenshots, photos, or CAD renders</div>
-            <input type="file" accept="image/*" id="ai-file-input" onchange="handleAIUpload(event)">
-          </div>
-          <div class="upload-preview" id="ai-preview">
-            <img id="ai-preview-img" src="" alt="Preview">
-            <button class="remove-btn" onclick="clearAIUpload()">✕</button>
-          </div>
-          <div style="margin-top: 16px; text-align: center;">
-            <button class="btn btn-primary" id="analyze-btn" onclick="analyzeImage()" disabled>
-              🔍 Analyze Frame
-            </button>
-          </div>
-        </div>
-        <div class="error-box" id="ai-error">
-          <div class="error-title">⚠️ Analysis Error</div>
-          <div class="error-detail" id="ai-error-detail"></div>
-          <div style="margin-top: 12px; display: flex; gap: 8px;">
-            <button class="btn btn-sm btn-secondary" onclick="analyzeImage()">🔄 Retry</button>
-            <button class="btn btn-sm btn-secondary" onclick="switchTab('manual')">✏️ Enter Manually</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- DXF TAB -->
-  <div id="panel-dxf" class="tab-panel">
-    <div class="card">
-      <div class="card-header"><div class="card-title">Upload DXF File</div></div>
-      <div class="card-body">
-        <div class="upload-zone" id="dxf-upload-zone">
-          <span class="upload-zone-icon">📐</span>
-          <div class="upload-zone-text">Drop .dxf file or click to upload</div>
-          <div class="upload-zone-hint">Layers should be named by profile type (e.g., "40x40")</div>
-          <input type="file" accept=".dxf" id="dxf-file-input" onchange="handleDXFUpload(event)">
-        </div>
-        <div class="toggle-group">
-          <span>Drawing units:</span>
-          <label class="toggle-switch">
-            <input type="checkbox" id="dxf-units-mm" onchange="reprocessDXF()">
-            <span class="toggle-slider"></span>
-          </label>
-          <span id="dxf-units-label">Inches</span>
-        </div>
-        <div class="error-box" id="dxf-error">
-          <div class="error-title">⚠️ DXF Parse Error</div>
-          <div class="error-detail" id="dxf-error-detail"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MANUAL TAB -->
-  <div id="panel-manual" class="tab-panel">
+  <!-- RAIL BUILDER -->
+  <section id="panel-rail">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Build Cut List</div>
-        <button class="btn btn-sm btn-primary" onclick="addManualRow()">+ Add Row</button>
+        <div class="card-title">Cut-Length Rail Calculator</div>
+        <span style="font-size:12px;color:var(--gray-400);font-family:var(--font-mono);">L = (n−1)·P + S + E</span>
       </div>
-      <div class="card-body" style="padding:0;"></div>
-    </div>
-  </div>
+      <div class="card-body">
 
-  <!-- QUOTE OUTPUT -->
-  <div id="quote-output" class="quote-section" style="display:none;">
+        <div class="calc-grid">
+          <div class="calc-inputs">
+            <div class="picker-label">Series</div>
+            <div class="picker-buttons" id="series-buttons"></div>
+            <div class="picker-hint" id="series-hint"></div>
+
+            <div class="picker-label">Rail Size (mm)</div>
+            <div class="picker-buttons" id="size-buttons"></div>
+
+            <div class="form-group">
+              <label class="form-label">Desired Overall Length L (mm)</label>
+              <input class="form-input" id="rail-length" type="number" min="0" step="1" value="900" oninput="recalc()">
+              <div class="input-suffix" id="rail-length-in"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">First Hole Offset S (mm)</label>
+                <input class="form-input" id="rail-s" type="number" min="0" step="0.5" oninput="recalc()">
+                <div class="input-suffix" id="rail-s-hint"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Hole Offset E (mm)</label>
+                <input class="form-input" id="rail-e" type="number" min="0" step="0.5" oninput="recalc()">
+                <div class="input-suffix" id="rail-e-hint"></div>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Use Airtac standard edge pitch</button>
+            <div class="form-group">
+              <label class="form-label">Quantity</label>
+              <input class="form-input" id="rail-qty" type="number" min="1" step="1" value="1" oninput="recalc()">
+            </div>
+            <div class="toggle-group">
+              <label class="toggle-switch">
+                <input type="checkbox" id="rail-auto-n" checked onchange="recalc()">
+                <span class="toggle-slider"></span>
+              </label>
+              <span>Auto-fill hole count n from length (exact length, E floats)</span>
+            </div>
+            <div class="form-group" id="manual-n-group" style="display:none;margin-top:12px;">
+              <label class="form-label">Manual n Override (mounting holes)</label>
+              <input class="form-input" id="rail-manual-n" type="number" min="2" step="1" value="10" oninput="recalc()">
+            </div>
+
+            <div class="stock-note">
+              <div class="stock-note-head">
+                <span class="stock-dot"></span>
+                In stock for immediate shipment
+              </div>
+              <p>The series, sizes and blocks shown here are normally stocked and ship right
+              away, cut to your length. Airtac builds further sizes, block styles and joint
+              rails beyond 4 m to order on a longer lead time.</p>
+              <p>Need something that isn't listed? Tell us what you're building and we'll
+              come back with availability, lead time and pricing.</p>
+              <button class="btn btn-sm btn-secondary" onclick="openSendModal('availability')">
+                ✉️ Ask about another size
+              </button>
+            </div>
+          </div>
+
+          <div class="calc-output">
+          <div class="xs-panel">
+            <div class="xs-cols">
+              <div>
+                <div class="xs-title" id="xs-title">Rail cross-section</div>
+                <div id="rail-section"></div>
+              </div>
+              <div>
+                <div class="xs-title">LSD vs LSH at this size</div>
+                <div id="xs-compare"></div>
+              </div>
+            </div>
+            <p class="xs-note">Sections drawn to scale from the Airtac catalog dimensions.</p>
+          </div>
+
+          <div class="result-box">
+            <div class="result-pn" id="res-pn">—</div>
+            <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 150" role="img"
+                 aria-label="Rail mounting hole pattern diagram"></svg>
+            <div class="result-rows" id="res-rows"></div>
+            <div class="result-warn" id="res-warn" style="display:none;"></div>
+            <div class="result-price">
+              <span class="label">Unit Price</span>
+              <span class="value" id="res-price">$0.00</span>
+            </div>
+            <div style="margin-top:16px;text-align:right;">
+              <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
+            </div>
+          </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CARRIAGE BLOCKS -->
+  <section id="panel-blocks" class="section-gap">
     <div class="card">
       <div class="card-header">
         <div>
-          <div class="card-title">Cut List</div>
-          <span class="confidence-badge" id="confidence-badge" style="margin-top:4px;"></span>
+          <div class="card-title" id="block-title">Carriage Blocks</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px;">Universal mount · normal accuracy · standard clearance</div>
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="addQuoteRow()">+ Add Row</button>
+        <label class="filter-toggle">
+          <input type="checkbox" id="block-filter" checked onchange="toggleBlockFilter()">
+          <span id="block-filter-label">Matching my rail only</span>
+        </label>
       </div>
-      <div class="card-body" style="padding:0;overflow-x:auto;">
-        <table class="cut-list-table">
-          <thead>
-            <tr>
-              <th style="width:180px;">Profile</th>
-              <th style="width:80px;">Qty</th>
-              <th style="width:120px;">Length (in)</th>
-              <th style="width:120px;">Unit $/in</th>
-              <th style="width:120px;">Line Total</th>
-              <th style="width:50px;"></th>
-            </tr>
-          </thead>
-          <tbody id="cut-list-body"></tbody>
-        </table>
-      </div>
+      <div class="card-body" id="block-catalog"></div>
+    </div>
+  </section>
 
-      <div class="ai-notes" id="ai-notes-section" style="display:none;">
-        <button class="ai-notes-toggle" onclick="toggleNotes()">
-          <span class="arrow">▶</span> AI Analysis Notes
-        </button>
-        <div class="ai-notes-body" id="ai-notes-body"></div>
+  <!-- QUOTE OUTPUT -->
+  <div class="quote-section" id="quote-output" style="display:none;">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Quote</div>
+        <button class="btn btn-sm btn-secondary" onclick="clearQuote()">Clear All</button>
       </div>
-
-      <div style="padding:0 24px 24px;">
+      <div class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="cut-list-table">
+            <thead>
+              <tr>
+                <th style="width:70px;">Type</th>
+                <th>Item</th>
+                <th style="width:80px;">Qty</th>
+                <th style="width:110px;">Unit Price</th>
+                <th style="width:110px;">Line Total</th>
+                <th style="width:40px;"></th>
+              </tr>
+            </thead>
+            <tbody id="quote-body"></tbody>
+          </table>
+        </div>
         <div class="totals-section">
           <div class="totals-box">
-            <div class="totals-row">
-              <span class="totals-label">Material Subtotal</span>
-              <span class="totals-value" id="subtotal-val">$0.00</span>
-            </div>
-            <div class="totals-row" id="markup-row">
-              <span class="totals-label">Markup (<span id="markup-pct">0</span>%)</span>
-              <span class="totals-value" id="markup-val">$0.00</span>
-            </div>
             <div class="totals-row grand">
-              <span class="totals-label">Grand Total</span>
+              <span class="totals-label">Total</span>
               <span class="totals-value" id="grand-total-val">$0.00</span>
             </div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">Cutting and handling included</div>
           </div>
         </div>
+
+        <div class="volume-note">
+          <div class="volume-note-title">💬 Repeat or volume order?</div>
+          <p>Prices shown are our <strong>published single-quantity price</strong>. Repeat
+          orders, multi-axis builds and higher quantities are quoted lower &mdash; send us
+          the details and we'll come back with pricing for your specific requirement.</p>
+        </div>
+
         <div class="quote-actions">
-          <button class="btn btn-primary" onclick="openSendModal()">✉️ Get This Quote</button>
+          <button class="btn btn-primary" onclick="openSendModal('quote')">✉️ Email Quote</button>
+          <button class="btn btn-secondary" onclick="openSendModal('volume')">💬 Request Volume Pricing</button>
           <button class="btn btn-secondary" onclick="saveQuoteDraft()">💾 Save Draft</button>
-          <button class="btn btn-secondary" onclick="clearQuote()">🗑️ Clear</button>
         </div>
       </div>
     </div>
@@ -429,27 +478,21 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 </main>
 
-<!-- LOADING -->
-<div class="loading-overlay" id="loading">
-  <div class="loading-card">
-    <div class="spinner"></div>
-    <div class="loading-text">Analyzing frame...</div>
-    <div class="loading-sub">AI is identifying profiles and dimensions</div>
-  </div>
-</div>
-
-<!-- SEND QUOTE MODAL -->
+<!-- SEND MODAL -->
 <div class="modal-overlay" id="send-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Get Your Quote</div>
+      <div class="modal-title" id="send-modal-title">Email Quote</div>
       <button class="modal-close" onclick="closeSendModal()">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;">We'll email you this quote and a rep will follow up to help finalize your order.</p>
+      <div class="volume-note" id="volume-modal-note" style="display:none;margin-top:0;margin-bottom:20px;">
+        <p>Tell us the quantities and how often you expect to reorder. We'll review
+        the build and come back with pricing below the list figures shown here.</p>
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Your Name *</label>
+          <label class="form-label">Customer Name *</label>
           <input class="form-input" id="send-customer" type="text" placeholder="Jane Smith">
         </div>
         <div class="form-group">
@@ -469,7 +512,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       </div>
       <div class="form-group">
         <label class="form-label">Project Name</label>
-        <input class="form-input" id="send-project" type="text" placeholder="Assembly Line Guard">
+        <input class="form-input" id="send-project" type="text" placeholder="Gantry Axis Retrofit">
       </div>
       <div class="form-group">
         <label class="form-label">Notes</label>
@@ -485,33 +528,24 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 <!-- HISTORY MODAL -->
 <div class="modal-overlay" id="history-modal">
-  <div class="modal" style="max-width:720px;">
+  <div class="modal wide">
     <div class="modal-header">
       <div class="modal-title">Quote History</div>
       <button class="modal-close" onclick="closeHistory()">✕</button>
     </div>
-    <div class="modal-body" style="padding:0;overflow-x:auto;">
-      <table class="history-table">
-        <thead><tr><th>Date</th><th>Customer</th><th>Project</th><th>Total</th><th>Method</th><th></th></tr></thead>
-        <tbody id="history-body"></tbody>
-      </table>
-      <div id="history-empty" style="padding:40px;text-align:center;color:var(--gray-400);font-size:14px;">No quotes yet.</div>
+    <div class="modal-body">
+      <p id="history-empty" style="text-align:center;color:var(--gray-400);padding:24px;display:none;">No quotes yet.</p>
+      <div style="overflow-x:auto;">
+        <table class="history-table">
+          <thead><tr><th>Date</th><th>Customer</th><th>Project</th><th>Total</th><th></th></tr></thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- PIN -->
-<div class="pin-overlay" id="pin-overlay">
-  <div class="pin-card">
-    <h3>🔒 Admin Access</h3>
-    <p id="pin-prompt-text">Enter your 4-digit PIN</p>
-    <input type="password" class="pin-input" id="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" onkeyup="handlePinEntry(event)">
-    <div class="pin-error" id="pin-error">Incorrect PIN</div>
-    <div style="margin-top:20px;"><button class="btn btn-secondary btn-sm" onclick="closePinOverlay()">Cancel</button></div>
-  </div>
-</div>
-
-<!-- ADMIN PANEL -->
+<!-- ADMIN -->
 <div class="admin-overlay" id="admin-overlay" onclick="closeAdmin()"></div>
 <div class="admin-panel" id="admin-panel">
   <div class="admin-header">
@@ -520,28 +554,72 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
 
   <div class="admin-section">
-    <h3>Pricing by Profile Series</h3>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">Set $/inch for each profile. Expand a series to edit.</p>
-    <div id="family-admin-list"></div>
-  </div>
-
-  <div class="admin-section">
-    <h3>Markup</h3>
+    <h3>Web Markup</h3>
+    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
+      Advertised prices are Airtac list plus this markup, so the published figure sits
+      above list and leaves room to come down on enquiry. At 150% a $209.50 rail
+      advertises at $523.75. Benchmarked against AutomationDirect's WON H-series
+      (dimensionally identical to LSH): 150% puts rails at about 75% and blocks at
+      about 91% of their advertised price.
+    </p>
     <div class="form-group">
-      <label class="form-label">Default Markup %</label>
-      <input class="form-input" id="admin-markup" type="number" min="0" max="100" value="0" style="width:120px;">
+      <label class="form-label">Web Markup (% above list)</label>
+      <input class="form-input" id="admin-web-markup" type="number" min="0" max="500" step="1" oninput="refreshAdminPrices()">
     </div>
-    <div class="toggle-group">
-      <span>Show markup to customer:</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="admin-show-markup">
-        <span class="toggle-slider"></span>
-      </label>
+
+    <h3 style="margin-top:24px;">Internal Quoting — Discount Off List</h3>
+    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
+      List stays the anchor for internal quoting: a discount here is a straight
+      percentage <strong>off Airtac list</strong>, not off the marked-up web figure.
+      Setting one switches that product line out of web pricing for this browser.
+      Stored <strong>in this browser only</strong> and never published with the site,
+      so visitors always see the web price. Leave at 0 to quote the web price.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Rail Discount (% off list)</label>
+        <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Block Discount (% off list)</label>
+        <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
+      </div>
+    </div>
+    <div class="price-basis" id="price-basis"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cut / Processing Fee ($)</label>
+        <input class="form-input" id="admin-cutfee" type="number" min="0" step="0.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Handling / Packaging ($)</label>
+        <input class="form-input" id="admin-handling" type="number" min="0" step="0.5">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Extra Scrap Buffer (mm)</label>
+      <input class="form-input" id="admin-buffer" type="number" min="0" step="1">
     </div>
   </div>
 
   <div class="admin-section">
-    <h3>Rep Info</h3>
+    <h3>Rail List Prices (4000mm stock)</h3>
+    <table class="admin-table">
+      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
+      <tbody id="admin-rails-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="admin-section">
+    <h3>Carriage Block List Prices</h3>
+    <table class="admin-table">
+      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
+      <tbody id="admin-blocks-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="admin-section">
+    <h3>Sales Rep Info</h3>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Rep Name</label>
@@ -562,433 +640,833 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     </div>
   </div>
 
-  <div class="admin-section" style="border-bottom:none;">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-primary" onclick="saveAdminSettings()">💾 Save Settings</button>
-      <button class="btn btn-secondary" onclick="resetPIN()">🔑 Change PIN</button>
-      <button class="btn btn-danger btn-sm" onclick="if(confirm('Reset ALL settings and history?')){localStorage.clear();location.reload();}">⚠️ Factory Reset</button>
-    </div>
+  <div class="admin-section">
+    <button class="btn btn-primary" onclick="saveAdminSettings()">💾 Save Settings</button>
+    <button class="btn btn-secondary" onclick="resetPIN()" style="margin-left:8px;">🔑 Change PIN</button>
+    <button class="btn btn-danger" onclick="resetPricing()" style="margin-left:8px;">↺ Reset Prices to Defaults</button>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="pin-overlay" id="pin-overlay">
+  <div class="pin-card">
+    <h3>Admin Access</h3>
+    <p id="pin-prompt-text">Enter your 4-digit PIN</p>
+    <input class="pin-input" id="pin-input" type="password" inputmode="numeric" maxlength="4" oninput="handlePinEntry(event)">
+    <p class="pin-error" id="pin-error">Incorrect PIN. Try again.</p>
+    <br><button class="btn btn-secondary btn-sm" style="margin-top:16px;" onclick="closePinOverlay()">Cancel</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-/* ── DEFAULT FAMILIES ── */
-const DEFAULT_FAMILIES = [
-  {
-    id: '1_5in', label: '1.5"',
-    profiles: [
-      { name: '1.5x1.5', desc: 'Single', ppi: 0 },
-      { name: '1.5x3',   desc: 'Double', ppi: 0 },
-      { name: '3x3',     desc: 'Quad',   ppi: 0 },
-      { name: '1.5x4.5', desc: 'Triple', ppi: 0 },
-    ]
+/* ════════════════════════════════════════════════════════════════
+   CATALOG DEFAULTS — from TSI_Airtac_Rail_Calculator_v26 PriceTable
+   and TSI_Airtac_carriage_spreadsheet (TSI Net = 32% of list).
+   All prices admin-editable; stored in localStorage 'airtac_admin'.
+   ════════════════════════════════════════════════════════════════ */
+const STOCK_LEN = 4000; // mm, fixed stock rail length
+
+// Rail specification per series and size, transcribed from the Airtac
+// brochures ("Rail Specification" + "Specifications and Dimensions" tables;
+// LSH p.15-18, LSD p.42-45):
+//   P     mounting-hole pitch
+//   stdE  standard edge pitch (S/E) — Airtac's default first/last hole offset
+//   minE  minimum permitted edge pitch; below this the bolt hole breaks out
+//   maxE  maximum permitted edge pitch
+//   Lmax  maximum length of a single rail (beyond this a joint rail is required)
+//   W/Hr  rail cross-section width x height (G x H2 in the catalog)
+//   Q/U   counterbore and through-hole diameter (ΦQ / ΦU)
+//   H3    counterbore depth
+//   kgm   rail weight, kg per metre
+const RAIL_SPEC = {
+  LSH: {
+    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
+    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
+    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
+    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
+    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
   },
-  {
-    id: '1in', label: '1"',
-    profiles: [
-      { name: '1x1', desc: 'Single', ppi: 0 },
-      { name: '1x2', desc: 'Double', ppi: 0 },
-      { name: '2x2', desc: 'Quad',   ppi: 0 },
-      { name: '1x3', desc: 'Triple', ppi: 0 },
-    ]
+  LSD: {
+    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
+    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
+    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
   },
-  {
-    id: '40mm', label: '40mm',
-    profiles: [
-      { name: '40x40',  desc: 'Standard', ppi: 0 },
-      { name: '40x80',  desc: 'Double',   ppi: 0 },
-      { name: '80x80',  desc: 'Heavy',    ppi: 0 },
-      { name: '40x120', desc: 'Triple',   ppi: 0 },
-    ]
-  },
-  {
-    id: '45mm', label: '45mm',
-    profiles: [
-      { name: '45x45', desc: 'Standard', ppi: 0 },
-      { name: '45x90', desc: 'Double',   ppi: 0 },
-      { name: '90x90', desc: 'Heavy',    ppi: 0 },
-    ]
-  },
-  {
-    id: '30mm', label: '30mm',
-    profiles: [
-      { name: '30x30', desc: 'Standard', ppi: 0 },
-      { name: '30x60', desc: 'Double',   ppi: 0 },
-      { name: '60x60', desc: 'Heavy',    ppi: 0 },
-    ]
-  },
+};
+
+function getSpec(series, size) { return RAIL_SPEC[series]?.[size] || null; }
+
+// Block dimensions and ratings, transcribed from the Airtac catalog pages for
+// the exact models sold here (normal-length universal-mount flange F3N and
+// square HN blocks; LSH p.16/18, LSD p.42/45). Keys follow Airtac's symbols:
+//   H assembly height · F block width · C block length (standard end caps) ·
+//   C1/A/B mounting bolt pattern · M block thread · screw rail bolt ·
+//   C/C0 dynamic/static load (kN) · MR/MP/MY static moments (kN.m) · wt kg
+const BLOCK_SPECS = {
+  'LSH15BK-F3N-N-D-M4':  { H1: 3.5, H: 24, F: 47,  C: 60,    C1: 40,   A: 30, B: 38,  M: 'M5×0.8',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-F3N-N-D-M6':  { H1: 4.3, H: 30, F: 63,  C: 76.5,  C1: 52,   A: 40, B: 53,  M: 'M6×1.0',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.40 },
+  'LSH25BK-F3N-N-D-M6':  { H1: 6.5, H: 36, F: 70,  C: 83.5,  C1: 58.5, A: 45, B: 57,  M: 'M8×1.25',  screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.59 },
+  'LSH30BK-F3N-N-D-M6':  { H1: 6.5, H: 42, F: 90,  C: 95.5,  C1: 70.5, A: 52, B: 72,  M: 'M10×1.5',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 1.09 },
+  'LSH35BK-F3N-N-D-M6':  { H1: 7, H: 48, F: 100, C: 109,   C1: 80,   A: 62, B: 82,  M: 'M10×1.5',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.32 },
+  'LSH45BK-F3N-N-D-P01': { H1: 10, H: 60, F: 120, C: 132,   C1: 98,   A: 80, B: 100, M: 'M12×1.75', screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.77 },
+  'LSH15BK-HN-N-D-M4':   { H1: 3.5, H: 28, F: 34,  C: 60,    C1: 40,   A: 26, B: 26,  M: 'M4×0.7',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-HN-N-D-M6':   { H1: 4.3, H: 30, F: 44,  C: 76.5,  C1: 52,   A: 36, B: 32,  M: 'M5×0.8',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.33 },
+  'LSH25BK-HN-N-D-M6':   { H1: 6.5, H: 40, F: 48,  C: 83.5,  C1: 58.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.53 },
+  'LSH30BK-HN-N-D-M6':   { H1: 6.5, H: 45, F: 60,  C: 95.5,  C1: 70.5, A: 40, B: 40,  M: 'M8×1.25',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 0.91 },
+  'LSH35BK-HN-N-D-M6':   { H1: 7, H: 55, F: 70,  C: 109,   C1: 80,   A: 50, B: 50,  M: 'M8×1.25',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.26 },
+  'LSH45BK-HN-N-D-P01':  { H1: 10, H: 70, F: 86,  C: 132,   C1: 98,   A: 60, B: 60,  M: 'M10×1.5',  screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.72 },
+  'LSD15BK-F3N-N-D-M4':  { H1: 4.5, H: 24, F: 52,  C: 57,    C1: 40,   A: 26, B: 41,  M: 'M5×0.8',   screw: 'M4',  dynC: 8.9,  statC: 16.5,  MR: 0.12, MP: 0.10, MY: 0.10, wt: 0.21 },
+  'LSD20BK-F3N-N-D-M6':  { H1: 6, H: 28, F: 59,  C: 65,    C1: 48,   A: 32, B: 49,  M: 'M6×1.0',   screw: 'M5',  dynC: 12.1, statC: 22.4,  MR: 0.20, MP: 0.15, MY: 0.15, wt: 0.31 },
+  'LSD25BK-F3N-N-D-M6':  { H1: 7, H: 33, F: 73,  C: 83,    C1: 60.5, A: 35, B: 60,  M: 'M8×1.25',  screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.60 },
+  'LSD25BK-HN-N-D-M6':   { H1: 7, H: 33, F: 48,  C: 83,    C1: 60.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.42 },
+};
+
+const SERIES_INFO = {
+  LSD: { label: 'LSD', desc: 'Low Profile Linear Guide', sizes: [15, 20, 25] },
+  LSH: { label: 'LSH', desc: 'Standard Linear Guide', sizes: [15, 20, 25, 30, 35, 45] },
+};
+
+// Published Airtac list prices for 4000mm stock rails.
+// Cost basis is deliberately NOT shipped here — quoting works off list, with an
+// optional discount that each user sets locally in Admin (localStorage only).
+const DEFAULT_RAILS = [
+  { series: 'LSD', size: 15, pn: 'LSD15RLX4000-N-D', list: 193.70 },
+  { series: 'LSD', size: 20, pn: 'LSD20RLX4000-N-D', list: 209.50 },
+  { series: 'LSD', size: 25, pn: 'LSD25RLX4000-N-D', list: 247.60 },
+  { series: 'LSH', size: 15, pn: 'LSH15RLX4000-N-D', list: 200.00 },
+  { series: 'LSH', size: 20, pn: 'LSH20RLX4000-N-D', list: 222.20 },
+  { series: 'LSH', size: 25, pn: 'LSH25RLX4000-N-D', list: 260.30 },
+  { series: 'LSH', size: 30, pn: 'LSH30RLX4000-N-D', list: 298.40 },
+  { series: 'LSH', size: 35, pn: 'LSH35RLX4000-N-D', list: 355.60 },
+  { series: 'LSH', size: 45, pn: 'LSH45RLX4000-N-D', list: 527.00 },
 ];
+
+// Published Airtac list prices for carriage blocks.
+const DEFAULT_BLOCKS = [
+  { family: 'LSH', type: 'Flange', size: 15, pn: 'LSH15BK-F3N-N-D-M4',  list: 25.40 },
+  { family: 'LSH', type: 'Flange', size: 20, pn: 'LSH20BK-F3N-N-D-M6',  list: 31.00 },
+  { family: 'LSH', type: 'Flange', size: 25, pn: 'LSH25BK-F3N-N-D-M6',  list: 38.90 },
+  { family: 'LSH', type: 'Flange', size: 30, pn: 'LSH30BK-F3N-N-D-M6',  list: 45.30 },
+  { family: 'LSH', type: 'Flange', size: 35, pn: 'LSH35BK-F3N-N-D-M6',  list: 57.20 },
+  { family: 'LSH', type: 'Flange', size: 45, pn: 'LSH45BK-F3N-N-D-P01', list: 82.50 },
+  { family: 'LSH', type: 'Square', size: 15, pn: 'LSH15BK-HN-N-D-M4',   list: 21.40 },
+  { family: 'LSH', type: 'Square', size: 20, pn: 'LSH20BK-HN-N-D-M6',   list: 26.20 },
+  { family: 'LSH', type: 'Square', size: 25, pn: 'LSH25BK-HN-N-D-M6',   list: 32.50 },
+  { family: 'LSH', type: 'Square', size: 30, pn: 'LSH30BK-HN-N-D-M6',   list: 38.10 },
+  { family: 'LSH', type: 'Square', size: 35, pn: 'LSH35BK-HN-N-D-M6',   list: 49.20 },
+  { family: 'LSH', type: 'Square', size: 45, pn: 'LSH45BK-HN-N-D-P01',  list: 71.40 },
+  { family: 'LSD', type: 'Flange', size: 15, pn: 'LSD15BK-F3N-N-D-M4',  list: 23.80 },
+  { family: 'LSD', type: 'Flange', size: 20, pn: 'LSD20BK-F3N-N-D-M6',  list: 29.40 },
+  { family: 'LSD', type: 'Flange', size: 25, pn: 'LSD25BK-F3N-N-D-M6',  list: 36.50 },
+  { family: 'LSD', type: 'Square', size: 25, pn: 'LSD25BK-HN-N-D-M6',   list: 31.70 },
+];
+
+// webMarkup is applied to list to give the advertised price, so the published
+// figure sits above list and leaves room to come down. Customer discounts then
+// come off that advertised price and default to 0.
+const DEFAULT_PRICING = { webMarkup: 150, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
+
+// list -> advertised web price (public figure, list plus markup)
+function webPrice(list) {
+  const p = getPricing();
+  return list * (1 + Math.max(0, p.webMarkup) / 100);
+}
+
+// Multiplier applied to list for the given product line.
+//
+// List is the anchor either way. With no discount configured — which is every
+// visitor, since discounts live in one browser's localStorage — the public web
+// markup applies. Setting a discount switches that line to internal quoting,
+// where the figure is a straight percentage off list.
+function priceFactor(kind) {
+  const p = getPricing();
+  const disc = kind === 'rail' ? p.railDiscount : p.blockDiscount;
+  if (disc > 0) return 1 - Math.min(95, disc) / 100;
+  return 1 + Math.max(0, p.webMarkup) / 100;
+}
 
 /* ── STATE ── */
 let state = {
-  currentTab: 'ai',
-  selectedFamilyId: null,
-  quoteMethod: null,
-  confidence: null,
-  aiNotes: '',
-  cutList: [],
-  uploadedImageB64: null,
-  dxfRawData: null,
+  series: 'LSD',
+  size: 20,
+  blockFilter: true,   // show only blocks that fit the selected rail
+  quoteLines: [],
 };
 
 /* ── ADMIN DATA ── */
 function getAdmin() {
-  try { return JSON.parse(localStorage.getItem('tslot_admin')) || null; } catch { return null; }
+  try { return JSON.parse(localStorage.getItem('airtac_admin')) || null; } catch { return null; }
 }
-function getFamilies() {
+function getPricing() {
   const a = getAdmin();
-  return (a && a.families) ? a.families : DEFAULT_FAMILIES;
+  return { ...DEFAULT_PRICING, ...(a?.pricing || {}) };
 }
-function getSelectedFamily() {
-  if (!state.selectedFamilyId) return null;
-  return getFamilies().find(f => f.id === state.selectedFamilyId) || null;
-}
-function getProfiles() {
-  const fam = getSelectedFamily();
-  if (fam) return fam.profiles;
-  // fallback: all profiles from all families
-  return getFamilies().flatMap(f => f.profiles);
-}
-function getMarkup() {
-  const a = getAdmin(); return (a && typeof a.markup === 'number') ? a.markup : 0;
-}
-function getShowMarkup() {
-  const a = getAdmin(); return a ? !!a.showMarkup : true;
-}
-function getRepInfo() {
-  const a = getAdmin(); return a ? (a.rep || {}) : {};
-}
-function getProfilePrice(name) {
-  const match = getProfiles().find(p => p.name.toLowerCase() === name.toLowerCase());
-  return match ? match.ppi : 0;
-}
+function getRails() { const a = getAdmin(); return a?.rails?.length ? a.rails : DEFAULT_RAILS; }
+function getBlocks() { const a = getAdmin(); return a?.blocks?.length ? a.blocks : DEFAULT_BLOCKS; }
+function getRepInfo() { const a = getAdmin(); return a?.rep || {}; }
 function getHistory() {
-  try { return JSON.parse(localStorage.getItem('tslot_history')) || []; } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('airtac_history')) || []; } catch { return []; }
 }
-function saveHistory(h) { localStorage.setItem('tslot_history', JSON.stringify(h)); }
+function saveHistory(h) { localStorage.setItem('airtac_history', JSON.stringify(h)); }
 
-/* ── PIN ── */
-async function hashPin(pin) {
-  const data = new TextEncoder().encode(pin + 'tslot_salt');
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+/* ════════════════════════════════════════════════════════════════
+   RAIL CALCULATOR — replicates v26 Calculator sheet formulas
+   L = (n−1)·P + S + E
+   ════════════════════════════════════════════════════════════════ */
+function computeRail({ series, size, L, S, E, autoN, manualN }) {
+  const spec = getSpec(series, size);
+  const rail = getRails().find(r => r.series === series && r.size === size);
+  if (!spec || !rail) return null;
+  const P = spec.P;
+
+  const p = getPricing();
+
+  // n: auto (v26 F7/D10) or manual override (B28)
+  const suggestedN = L > 0 ? Math.max(2, Math.round(1 + (L - (S + E)) / P)) : null;
+  const n = autoN ? suggestedN : Math.max(2, Math.round(manualN) || 2);
+  if (!n) return null;
+
+  // Priced/valid length on the pitch grid (v26 B23)
+  const pricedLen = (n - 1) * P + S + E;
+
+  // Exact-length mode: E floats so delivered length = L exactly (v26 B24/B25)
+  const exactN = L > 0 ? Math.max(2, Math.floor((L - S) / P) + 1) : null;
+  const floatE = exactN ? L - S - (exactN - 1) * P : null;
+  const eFloats = autoN && floatE !== null && Math.abs(E - floatE) >= 0.51;
+
+  // Delivered length & configured PN (v26 B27 uses desired L + floating E)
+  const deliveredLen = autoN ? L : pricedLen;
+  const pnLen = Math.round(deliveredLen);
+  const pnE = autoN ? floatE : E;
+  const pnN = autoN ? exactN : n;
+  const configuredPN = rail.pn.replace('4000', String(pnLen)) +
+    `- e=${pnE.toFixed(1)}/s=${S}`;
+
+  // Price model: list price per mm of usable stock (v26 B19-B20 scrap logic),
+  // times the rail price factor. Cut/handling are service charges, not marked
+  // up or discounted.
+  const scrap = S + E + p.buffer;
+  const usable = STOCK_LEN - scrap;
+  const factor = priceFactor('rail');
+  const listPerMm = rail.list / usable;
+  const materialList = listPerMm * pricedLen;
+  const material = materialList * factor;
+  const sellPrice = material + p.cutFee + p.handling;
+
+  // Spec validation against Airtac's published limits.
+  const errors = [], warnings = [];
+  if (S < spec.minE || S > spec.maxE) {
+    errors.push(`S = ${S} mm is outside the permitted ${spec.minE}–${spec.maxE} mm edge pitch for ${series}${size}.`);
+  }
+  if (pnE < spec.minE - 1e-9 || pnE > spec.maxE + 1e-9) {
+    errors.push(`E works out to ${pnE.toFixed(1)} mm, outside the permitted ${spec.minE}–${spec.maxE} mm edge pitch. Adjust the length or S — an out-of-range edge risks breaking through the bolt hole.`);
+  }
+  if (deliveredLen > spec.Lmax) {
+    errors.push(`${deliveredLen} mm exceeds the ${spec.Lmax} mm maximum for a single ${series}${size} rail. A joint rail is required.`);
+  } else if (deliveredLen > usable) {
+    warnings.push(`${deliveredLen} mm exceeds what one 4000 mm stock bar yields after scrap (${usable} mm).`);
+  }
+
+  return {
+    P, spec, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
+    configuredPN, basePN: rail.pn, listPerMm, sellPrice,
+    materialList, material, factor, S,
+    errors, warnings, valid: errors.length === 0,
+    minLen: P + S + E, // n=2 floor
+  };
 }
 
-/* ── FAMILY SELECTOR ── */
-function renderFamilyButtons() {
-  const families = getFamilies();
-  document.getElementById('family-buttons').innerHTML = families.map(f =>
-    `<button class="family-btn ${state.selectedFamilyId === f.id ? 'active' : ''}" onclick="selectFamily('${f.id}')">${f.label}</button>`
+function blockSellPrice(block) {
+  return block.list * priceFactor('block');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HOLE-PATTERN DIAGRAM
+   Live redraw of the Airtac rail specification drawing (L = (n-1)P + S + E)
+   using the values currently entered, so the dimensions shown are the ones
+   being quoted rather than a generic illustration.
+   ════════════════════════════════════════════════════════════════ */
+function renderDiagram(r, inputs) {
+  const svg = document.getElementById('rail-diagram');
+  if (!r) { svg.innerHTML = ''; return; }
+
+  const W = 520, PAD = 26, railY = 34, railH = 30;
+  const x0 = PAD, x1 = W - PAD, span = x1 - x0;
+  const L = r.deliveredLen || 1;
+  const mm = v => x0 + (v / L) * span;           // mm -> svg x
+  const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+  // Hole centres: S, S+P, S+2P ... (n of them)
+  const holes = [];
+  for (let i = 0; i < r.n; i++) holes.push(inputs.S + i * r.P);
+
+  // Draw at most ~14 holes, with a break symbol, so long rails stay legible
+  const MAXH = 14;
+  let shown = holes, broken = false;
+  if (holes.length > MAXH) {
+    shown = [...holes.slice(0, 6), ...holes.slice(-6)];
+    broken = true;
+  }
+
+  const hatch = `<pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="var(--diagram-hatch)" stroke-width="2.5"/></pattern>`;
+
+  const bar = `<rect x="${x0}" y="${railY}" width="${span}" height="${railH}" fill="url(#hatch)" stroke="var(--diagram-line)" stroke-width="1.5"/>`;
+
+  const holeMarks = shown.map(pos => {
+    const x = mm(pos);
+    return `<rect x="${x - 5}" y="${railY - 1}" width="10" height="12" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1.3"/>
+            <line x1="${x}" y1="${railY - 4}" x2="${x}" y2="${railY + railH + 4}" stroke="var(--diagram-line)" stroke-width="0.8" stroke-dasharray="3 2.5"/>`;
+  }).join('');
+
+  // Break symbol where holes were elided
+  let breakMark = '';
+  if (broken) {
+    const bx = (mm(shown[5]) + mm(shown[6])) / 2;
+    breakMark = `<path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--card-bg)" stroke-width="7"/>
+      <path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--diagram-line)" stroke-width="1.3"/>`;
+  }
+
+  // Dimension arrow between two mm positions at a given y
+  // Narrow spans put their label below the line so short S/E dimensions do not
+  // collide with the wider P label sitting above it.
+  const dim = (a, b, y, label, cls = '') => {
+    const xa = mm(a), xb = mm(b), mid = (xa + xb) / 2;
+    const ly = (xb - xa) < 40 ? y + 12 : y - 5;
+    return `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="var(--diagram-dim)" stroke-width="1.2" marker-start="url(#tick)" marker-end="url(#tick)"/>
+      <text x="${mid}" y="${ly}" class="dim-label ${cls}" text-anchor="middle">${esc(label)}</text>`;
+  };
+
+  const yS = railY + railH + 22, yL = railY + railH + 52;
+  let dims = dim(0, inputs.S, yS, 'S ' + inputs.S);
+  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yS, 'P ' + r.P);
+  dims += dim(holes[holes.length - 1], L, yS, 'E ' + r.floatE.toFixed(1));
+  dims += dim(0, L, yL, `L ${r.deliveredLen} mm`, 'dim-strong');
+
+  svg.innerHTML = `<defs>${hatch}
+    <marker id="tick" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.2"/>
+    </marker></defs>
+    ${bar}${holeMarks}${breakMark}
+    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${broken ? ' (centre section omitted)' : ''}</text>
+    ${dims}`;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CROSS-SECTION DIAGRAMS
+   Rail and carriage profiles drawn to scale from the catalog dimensions,
+   so picking a series and size shows that part's actual section.
+   Profile outline follows the Airtac drawings: full-width foot, concave
+   raceway waist, chamfered crown.
+   ════════════════════════════════════════════════════════════════ */
+
+// Rail outline, centred on cx, sitting on baseline y0, drawn upward.
+function railPath(cx, y0, w, h, k) {
+  const hw = w / 2 * k, ht = h * k;
+  const x = f => cx + hw * f, y = f => y0 - ht * f;
+  return [
+    `M ${x(-1)} ${y(0)}`,
+    `L ${x(1)} ${y(0)}`,               // foot
+    `L ${x(1)} ${y(0.20)}`,
+    `Q ${x(0.78)} ${y(0.42)} ${x(0.80)} ${y(0.55)}`,   // raceway waist
+    `Q ${x(0.82)} ${y(0.68)} ${x(1)} ${y(0.80)}`,
+    `L ${x(0.98)} ${y(0.92)}`,
+    `L ${x(0.86)} ${y(1)}`,            // chamfered crown
+    `L ${x(-0.86)} ${y(1)}`,
+    `L ${x(-0.98)} ${y(0.92)}`,
+    `L ${x(-1)} ${y(0.80)}`,
+    `Q ${x(-0.82)} ${y(0.68)} ${x(-0.80)} ${y(0.55)}`,
+    `Q ${x(-0.78)} ${y(0.42)} ${x(-1)} ${y(0.20)}`,
+    'Z',
+  ].join(' ');
+}
+
+// Horizontal / vertical dimension helpers (SVG user units).
+function dimH(xa, xb, y, label) {
+  return `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="var(--diagram-dim)" stroke-width="1" marker-start="url(#tick)" marker-end="url(#tick)"/>
+    <text x="${(xa + xb) / 2}" y="${y - 4}" class="dim-label" text-anchor="middle">${label}</text>`;
+}
+function dimV(x, ya, yb, label, side = 'right') {
+  const my = (ya + yb) / 2, left = side === 'left';
+  return `<line x1="${x}" y1="${ya}" x2="${x}" y2="${yb}" stroke="var(--diagram-dim)" stroke-width="1" marker-start="url(#tick)" marker-end="url(#tick)"/>
+    <text x="${x + (left ? -5 : 5)}" y="${my + 3}" class="dim-label" text-anchor="${left ? 'end' : 'start'}">${label}</text>`;
+}
+
+const SVG_DEFS = `<defs>
+  <pattern id="xhatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--diagram-hatch)" stroke-width="2"/></pattern>
+  <marker id="tick" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+    <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.1"/></marker>
+</defs>`;
+
+// Dimensioned rail cross-section for the currently selected rail.
+function renderRailSection() {
+  const el = document.getElementById('rail-section');
+  const spec = getSpec(state.series, state.size);
+  if (!el || !spec) return;
+
+  const W = 300, H = 200, cx = 132, y0 = 132;
+  const k = Math.min(120 / spec.W, 84 / spec.Hr);   // fit to box
+  const hw = spec.W / 2 * k, ht = spec.Hr * k;
+  const qh = spec.H3 * k, qw = spec.Q / 2 * k, uw = spec.U / 2 * k;
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img"
+      aria-label="${state.series}${state.size} rail cross-section">${SVG_DEFS}
+    <line x1="${cx - hw - 22}" y1="${y0}" x2="${cx + hw + 22}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="url(#xhatch)" stroke="var(--diagram-line)" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="${cx - qw}" y="${y0 - ht}" width="${qw * 2}" height="${qh}" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="3 2"/>
+    <rect x="${cx - uw}" y="${y0 - ht + qh}" width="${uw * 2}" height="${ht - qh}" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="3 2"/>
+    <line x1="${cx}" y1="${y0 - ht - 8}" x2="${cx}" y2="${y0 + 6}" stroke="var(--diagram-line)" stroke-width="0.7" stroke-dasharray="6 2 2 2"/>
+    ${dimH(cx - hw, cx + hw, y0 + 22, `G ${spec.W}`)}
+    ${dimV(cx + hw + 14, y0, y0 - ht, `H2 ${spec.Hr}`)}
+    ${dimH(cx - qw, cx + qw, y0 - ht - 10, `ΦQ ${spec.Q}`)}
+    <text x="${cx}" y="${y0 + 42}" class="xs-cap" text-anchor="middle">Countersink ΦQ ${spec.Q} × depth ${spec.H3} · through ΦU ${spec.U}</text>
+  </svg>`;
+}
+
+// LSD vs LSH at the same nominal size, drawn to one scale.
+function renderCompare() {
+  const el = document.getElementById('xs-compare');
+  if (!el) return;
+  const size = state.size;
+  const a = getSpec('LSD', size), b = getSpec('LSH', size);
+  if (!a || !b) { el.innerHTML = `<p class="xs-note">No LSD equivalent at size ${size} — LSD covers 15, 20 and 25.</p>`; return; }
+
+  const W = 300, H = 150, y0 = 104;
+  const k = Math.min(64 / Math.max(a.W, b.W), 62 / Math.max(a.Hr, b.Hr));
+  const pair = (spec, cx, name, on) => `
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="${on ? 'url(#xhatch)' : 'none'}"
+          stroke="${on ? 'var(--diagram-line)' : 'var(--gray-400)'}" stroke-width="${on ? 1.6 : 1.2}" stroke-linejoin="round"/>
+    <text x="${cx}" y="${y0 + 18}" class="xs-cap" text-anchor="middle">${name}${size}</text>
+    <text x="${cx}" y="${y0 + 31}" class="xs-cap dim" text-anchor="middle">${spec.W} × ${spec.Hr} mm · ${spec.kgm} kg/m</text>`;
+
+  const drop = (b.Hr - a.Hr).toFixed(1);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="LSD versus LSH rail section">${SVG_DEFS}
+    <line x1="18" y1="${y0}" x2="${W - 18}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="18" y1="${y0 - a.Hr * k}" x2="${W - 18}" y2="${y0 - a.Hr * k}" stroke="var(--orange)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6"/>
+    ${pair(a, 88, 'LSD', state.series === 'LSD')}
+    ${pair(b, 212, 'LSH', state.series === 'LSH')}
+    <text x="${W / 2}" y="16" class="xs-cap" text-anchor="middle">LSD sits ${drop} mm lower at size ${size}</text>
+  </svg>`;
+}
+
+// Carriage cross-section: block straddling its rail, drawn to scale.
+function blockSectionSVG(block, s) {
+  const spec = getSpec(block.family, block.size);
+  if (!spec || !s) return '';
+  const W = 300, H = 150, cx = 132, y0 = 112;
+  const k = Math.min(112 / s.F, 74 / s.H);
+  const bw = s.F / 2 * k, bh = (s.H - s.H1) * k, top = y0 - s.H * k;
+  const rw = spec.W / 2 * k, rh = spec.Hr * k;
+  const ch = rw + 3;                       // channel half-width in the underside
+  const chTop = y0 - Math.min(spec.Hr * k + 4, (s.H - s.H1) * k + 2);
+  const bBot = y0 - s.H1 * k;
+
+  // Block outline with a channel cut in the underside for the rail.
+  const body = `M ${cx - bw} ${bBot} L ${cx - ch} ${bBot} L ${cx - ch} ${chTop}
+    L ${cx + ch} ${chTop} L ${cx + ch} ${bBot} L ${cx + bw} ${bBot}
+    L ${cx + bw} ${top} L ${cx - bw} ${top} Z`;
+
+  const boltDx = s.A / 2 * k;
+  return `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="${block.pn} cross-section">${SVG_DEFS}
+    <line x1="${cx - bw - 14}" y1="${y0}" x2="${cx + bw + 14}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="url(#xhatch)" stroke="var(--diagram-line)" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="${body}" fill="var(--card-bg)" fill-opacity="0.94" stroke="var(--diagram-line)" stroke-width="1.6" stroke-linejoin="round"/>
+    <line x1="${cx - boltDx}" y1="${top}" x2="${cx - boltDx}" y2="${top + 9}" stroke="var(--diagram-line)" stroke-width="2.2"/>
+    <line x1="${cx + boltDx}" y1="${top}" x2="${cx + boltDx}" y2="${top + 9}" stroke="var(--diagram-line)" stroke-width="2.2"/>
+    ${dimH(cx - bw, cx + bw, y0 + 22, `F ${s.F}`)}
+    ${dimV(cx + bw + 12, y0, top, `H ${s.H}`)}
+    ${dimV(cx - bw - 12, y0, bBot, `H1 ${s.H1}`, 'left')}
+    <text x="${cx}" y="${top - 6}" class="xs-cap" text-anchor="middle">${s.M} × ${s.A} mm centres</text>
+  </svg>`;
+}
+
+/* ── RAIL UI ── */
+function renderSeriesButtons() {
+  document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
+    `<button class="picker-btn ${state.series === s ? 'active' : ''}" onclick="selectSeries('${s}')">${s}</button>`
+  ).join('');
+  document.getElementById('series-hint').textContent = SERIES_INFO[state.series].desc;
+  renderSizeButtons();
+}
+
+function renderSizeButtons() {
+  const sizes = SERIES_INFO[state.series].sizes;
+  if (!sizes.includes(state.size)) state.size = sizes[0];
+  document.getElementById('size-buttons').innerHTML = sizes.map(sz =>
+    `<button class="picker-btn ${state.size === sz ? 'active' : ''}" onclick="selectSize(${sz})">${sz}</button>`
   ).join('');
 }
 
-function selectFamily(id) {
-  state.selectedFamilyId = id;
-  renderFamilyButtons();
-  updateAnalyzeButton();
-  updateAIPromptVisibility();
-  // Update cut list prices if already showing
-  if (state.cutList.length > 0) renderCutList();
-}
+function selectSeries(s) { state.series = s; renderSeriesButtons(); useStandardEdges(); renderBlockCatalog(); }
+function selectSize(sz) { state.size = sz; renderSizeButtons(); useStandardEdges(); renderBlockCatalog(); }
 
-function updateAIPromptVisibility() {
-  const hasFamily = !!state.selectedFamilyId;
-  document.getElementById('ai-family-prompt').style.display = hasFamily ? 'none' : 'block';
-  document.getElementById('ai-upload-area').style.display = hasFamily ? 'block' : 'none';
-}
-
-function updateAnalyzeButton() {
-  const btn = document.getElementById('analyze-btn');
-  btn.disabled = !state.uploadedImageB64 || !state.selectedFamilyId;
-}
-
-/* ── TABS ── */
-function switchTab(tab) {
-  state.currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + tab).classList.add('active');
-  if (tab === 'manual' && state.cutList.length === 0) {
-    state.quoteMethod = 'manual';
-    addManualRow();
-    showQuoteOutput();
+// Reset S and E to Airtac's standard edge pitch for the selected rail.
+function useStandardEdges() {
+  const spec = getSpec(state.series, state.size);
+  if (spec) {
+    document.getElementById('rail-s').value = spec.stdE;
+    document.getElementById('rail-e').value = spec.stdE;
   }
+  recalc();
 }
 
-/* ── IMAGE UPLOAD ── */
-const aiUploadZone = document.getElementById('ai-upload-zone');
-['dragenter','dragover'].forEach(e => aiUploadZone.addEventListener(e, ev => { ev.preventDefault(); aiUploadZone.classList.add('dragover'); }));
-['dragleave','drop'].forEach(e => aiUploadZone.addEventListener(e, ev => { ev.preventDefault(); aiUploadZone.classList.remove('dragover'); }));
-aiUploadZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) processImageFile(f); });
-
-function handleAIUpload(e) { const f = e.target.files[0]; if (f) processImageFile(f); }
-
-function processImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    state.uploadedImageB64 = e.target.result;
-    document.getElementById('ai-preview-img').src = e.target.result;
-    document.getElementById('ai-preview').style.display = 'block';
-    document.getElementById('ai-error').classList.remove('active');
-    updateAnalyzeButton();
+function readRailInputs() {
+  const spec = getSpec(state.series, state.size);
+  return {
+    series: state.series,
+    size: state.size,
+    L: parseFloat(document.getElementById('rail-length').value) || 0,
+    S: parseFloat(document.getElementById('rail-s').value) || spec?.stdE || 20,
+    E: parseFloat(document.getElementById('rail-e').value) || spec?.stdE || 20,
+    autoN: document.getElementById('rail-auto-n').checked,
+    manualN: parseInt(document.getElementById('rail-manual-n').value) || 2,
+    qty: Math.max(1, parseInt(document.getElementById('rail-qty').value) || 1),
   };
-  reader.readAsDataURL(file);
 }
 
-function clearAIUpload() {
-  state.uploadedImageB64 = null;
-  document.getElementById('ai-preview').style.display = 'none';
-  document.getElementById('ai-file-input').value = '';
-  updateAnalyzeButton();
-}
+function recalc() {
+  const inputs = readRailInputs();
+  document.getElementById('manual-n-group').style.display = inputs.autoN ? 'none' : 'block';
+  document.getElementById('rail-length-in').textContent =
+    inputs.L > 0 ? `= ${(inputs.L / 25.4).toFixed(2)} in` : '';
 
-/* ── AI ANALYSIS ── */
-async function analyzeImage() {
-  if (!state.uploadedImageB64 || !state.selectedFamilyId) return;
-  document.getElementById('ai-error').classList.remove('active');
-  document.getElementById('loading').classList.add('active');
-
-  const parts = state.uploadedImageB64.split(',');
-  const mediaType = (parts[0].match(/data:([^;]+)/) || [])[1] || 'image/png';
-  const imageData = parts[1];
-  const family = getSelectedFamily();
-
-  try {
-    const response = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageData, mediaType, family }),
-    });
-
-    document.getElementById('loading').classList.remove('active');
-    const data = await response.json();
-
-    if (!response.ok) {
-      document.getElementById('ai-error-detail').textContent = data.error || 'Unknown error';
-      document.getElementById('ai-error').classList.add('active');
-      return;
-    }
-
-    state.quoteMethod = 'ai';
-    state.confidence = data.confidence || 'medium';
-    state.aiNotes = data.notes || '';
-    state.cutList = (data.members || []).map((m, i) => ({
-      id: Date.now() + i, profile: m.profile, qty: m.qty || 1,
-      length: m.length_in || 0, unitPrice: getProfilePrice(m.profile),
-    }));
-
-    showQuoteOutput();
-    showToast('Frame analyzed!', 'success');
-  } catch (err) {
-    document.getElementById('loading').classList.remove('active');
-    document.getElementById('ai-error-detail').textContent = err.message;
-    document.getElementById('ai-error').classList.add('active');
+  const spec = getSpec(inputs.series, inputs.size);
+  if (spec) {
+    const hint = `standard ${spec.stdE} · range ${spec.minE}–${spec.maxE}`;
+    document.getElementById('rail-s-hint').textContent = hint;
+    document.getElementById('rail-e-hint').textContent = hint;
+    document.getElementById('xs-title').textContent =
+      `${inputs.series}${inputs.size} rail cross-section`;
   }
-}
+  renderRailSection();
+  renderCompare();
 
-/* ── DXF ── */
-const dxfUploadZone = document.getElementById('dxf-upload-zone');
-['dragenter','dragover'].forEach(e => dxfUploadZone.addEventListener(e, ev => { ev.preventDefault(); dxfUploadZone.classList.add('dragover'); }));
-['dragleave','drop'].forEach(e => dxfUploadZone.addEventListener(e, ev => { ev.preventDefault(); dxfUploadZone.classList.remove('dragover'); }));
-dxfUploadZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f && f.name.toLowerCase().endsWith('.dxf')) processDXFFile(f); });
+  const warn = document.getElementById('res-warn');
+  const addBtn = document.getElementById('add-rail-btn');
 
-function handleDXFUpload(e) { const f = e.target.files[0]; if (f) processDXFFile(f); }
-
-function processDXFFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => { state.dxfRawData = e.target.result; parseDXF(state.dxfRawData); };
-  reader.readAsText(file);
-}
-
-function parseDXF(dxfText) {
-  document.getElementById('dxf-error').classList.remove('active');
-  try {
-    const lines = dxfText.split(/\r?\n/);
-    const entities = [];
-    let i = 0, inEntities = false;
-    while (i < lines.length) {
-      const code = lines[i]?.trim(), value = lines[i+1]?.trim();
-      if (code === '2' && value === 'ENTITIES') inEntities = true;
-      if (code === '0' && value === 'ENDSEC' && inEntities) break;
-      if (inEntities && code === '0' && value === 'LINE') {
-        let ent = { layer: '0' }, j = i + 2;
-        while (j < lines.length) {
-          const c = lines[j]?.trim(), v = lines[j+1]?.trim();
-          if (c === '0') break;
-          if (c === '8') ent.layer = v;
-          if (c === '10') ent.x1 = parseFloat(v);
-          if (c === '20') ent.y1 = parseFloat(v);
-          if (c === '11') ent.x2 = parseFloat(v);
-          if (c === '21') ent.y2 = parseFloat(v);
-          if (c === '30') ent.z1 = parseFloat(v) || 0;
-          if (c === '31') ent.z2 = parseFloat(v) || 0;
-          j += 2;
-        }
-        if (ent.x1 != null && ent.x2 != null) entities.push(ent);
-        i = j; continue;
-      }
-      i += 2;
-    }
-    if (entities.length === 0) throw new Error('No LINE entities found.');
-    const layerLengths = {}, layerCounts = {};
-    const conv = document.getElementById('dxf-units-mm').checked ? 1/25.4 : 1;
-    entities.forEach(ent => {
-      const layer = ent.layer || 'Default';
-      const len = Math.sqrt(Math.pow(ent.x2-ent.x1,2)+Math.pow(ent.y2-ent.y1,2)+Math.pow((ent.z2||0)-(ent.z1||0),2));
-      if (!layerLengths[layer]) { layerLengths[layer]=0; layerCounts[layer]=0; }
-      layerLengths[layer] += len; layerCounts[layer]++;
-    });
-    state.quoteMethod = 'dxf'; state.confidence = 'exact'; state.aiNotes = '';
-    state.cutList = Object.keys(layerLengths).map((layer, i) => ({
-      id: Date.now()+i, profile: layer, qty: layerCounts[layer],
-      length: Math.round(layerLengths[layer]*conv*100)/100, unitPrice: getProfilePrice(layer),
-    }));
-    showQuoteOutput();
-    showToast(`DXF parsed: ${entities.length} segments`, 'success');
-  } catch (err) {
-    document.getElementById('dxf-error-detail').textContent = err.message;
-    document.getElementById('dxf-error').classList.add('active');
+  const r = computeRail(inputs);
+  if (!r || (inputs.autoN && inputs.L <= 0)) {
+    document.getElementById('res-pn').textContent = '—';
+    document.getElementById('res-rows').innerHTML = '';
+    document.getElementById('res-price').textContent = '$0.00';
+    renderDiagram(null);
+    warn.style.display = 'none';
+    addBtn.disabled = true;
+    return;
   }
+  addBtn.disabled = !r.valid;
+
+  document.getElementById('res-pn').textContent = r.configuredPN;
+  renderDiagram(r, inputs);
+
+  const row = (k, v) => `<div class="result-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  document.getElementById('res-rows').innerHTML =
+    row('Delivered length', `${r.deliveredLen} mm`) +
+    row('Priced length', `${r.pricedLen} mm`) +
+    row('Pitch P', `${r.P} mm`) +
+    row('Mounting holes n', r.n) +
+    row('S / E offsets', `${inputs.S} / ${r.floatE.toFixed(1)} mm`) +
+    row('Rail section W×H', `${r.spec.W} × ${r.spec.Hr} mm`) +
+    row('Approx. weight', `${(r.spec.kgm * r.deliveredLen / 1000).toFixed(2)} kg`) +
+    row('Stock rail', r.basePN);
+
+  if (r.errors.length) {
+    warn.className = 'result-warn err';
+    warn.innerHTML = r.errors.map(e => `⛔ ${e}`).join('<br>');
+    warn.style.display = 'block';
+  } else if (r.warnings.length) {
+    warn.className = 'result-warn';
+    warn.innerHTML = r.warnings.map(e => `⚠ ${e}`).join('<br>');
+    warn.style.display = 'block';
+  } else if (inputs.autoN && inputs.L > 0 && inputs.L < r.minLen) {
+    warn.className = 'result-warn';
+    warn.textContent = `⚠ Minimum length for this configuration is ${r.minLen} mm (2 holes). Priced as ${r.pricedLen} mm.`;
+    warn.style.display = 'block';
+  } else if (r.eFloats) {
+    warn.className = 'result-warn';
+    warn.textContent = `E floats to ${r.floatE.toFixed(1)} mm to hit exact length (selected E = ${inputs.E} mm). Within the ${r.spec.minE}–${r.spec.maxE} mm permitted range.`;
+    warn.style.display = 'block';
+  } else {
+    warn.className = 'result-warn ok';
+    warn.textContent = '✓ Length sits on the standard pitch grid and within Airtac edge-pitch limits.';
+    warn.style.display = 'block';
+  }
+
+  document.getElementById('res-price').textContent = '$' + r.sellPrice.toFixed(2);
 }
 
-function reprocessDXF() {
-  document.getElementById('dxf-units-label').textContent = document.getElementById('dxf-units-mm').checked ? 'Millimeters → Inches' : 'Inches';
-  if (state.dxfRawData) parseDXF(state.dxfRawData);
+function addRailToQuote() {
+  const inputs = readRailInputs();
+  const r = computeRail(inputs);
+  if (!r) return;
+  state.quoteLines.push({
+    id: Date.now(),
+    kind: 'rail',
+    pn: r.configuredPN,
+    desc: `${inputs.series}${inputs.size} rail · ${r.deliveredLen} mm (${(r.deliveredLen / 25.4).toFixed(2)} in)`,
+    cut: { series: inputs.series, size: inputs.size, L: r.deliveredLen, P: r.P, n: r.n, S: inputs.S, E: r.floatE },
+    qty: inputs.qty,
+    unitPrice: Math.round(r.sellPrice * 100) / 100,
+  });
+  renderQuote();
+  showToast('Rail added to quote.', 'success');
 }
 
-/* ── MANUAL ── */
-function addManualRow() {
-  state.quoteMethod = 'manual'; state.confidence = null;
-  const profiles = getProfiles();
-  state.cutList.push({ id: Date.now(), profile: profiles[0]?.name || '40x40', qty: 1, length: 0, unitPrice: profiles[0]?.ppi || 0 });
-  showQuoteOutput();
+/* ── BLOCK CATALOG UI ── */
+function renderBlockCatalog() {
+  const all = getBlocks();
+  const filtering = state.blockFilter;
+  const blocks = filtering
+    ? all.filter(b => b.family === state.series && b.size === state.size)
+    : all;
+
+  const rail = `${state.series}${state.size}`;
+  document.getElementById('block-title').textContent =
+    filtering ? `Carriage Blocks for ${rail}` : 'Carriage Blocks — full catalog';
+  document.getElementById('block-filter-label').textContent =
+    filtering ? `Matching ${rail} only` : 'Matching my rail only';
+
+  const host = document.getElementById('block-catalog');
+
+  if (!blocks.length) {
+    host.innerHTML = `<div class="block-empty">
+      <strong>No ${rail} carriage blocks in the price list.</strong>
+      <p>Airtac builds blocks for this rail, but they are not on the TSI list loaded here.
+      Untick “Matching ${rail} only” to see the full catalog, or send a pricing request and
+      we will quote the block separately.</p>
+    </div>`;
+    return;
+  }
+
+  const groups = {};
+  blocks.forEach(b => {
+    const key = filtering
+      ? `${b.type} Blocks`
+      : `${b.family} Series — ${b.type} Blocks`;
+    (groups[key] = groups[key] || []).push(b);
+  });
+
+  const note = filtering
+    ? `<p class="block-filter-note">Showing only blocks that fit an <strong>${rail}</strong> rail —
+       block and rail must share both series and size. Untick above for the full catalog.</p>`
+    : '';
+
+  host.innerHTML = note + Object.entries(groups).map(([title, items]) => `
+    <div class="catalog-group-title">${title}</div>
+    <div style="overflow-x:auto;">
+    <table class="catalog-table">
+      <thead><tr><th>Size</th><th>Part Number</th><th style="text-align:right;">Load C / C₀ (kN)</th><th style="text-align:right;">Unit Price</th><th style="width:70px;">Qty</th><th style="width:70px;"></th><th style="width:60px;"></th></tr></thead>
+      <tbody>
+        ${items.map(b => {
+          const s = BLOCK_SPECS[b.pn];
+          return `<tr>
+          <td>${b.size}</td>
+          <td class="pn">${b.pn}</td>
+          <td class="price" style="font-weight:500;color:var(--gray-600);">${s ? `${s.dynC} / ${s.statC}` : '—'}</td>
+          <td class="price">$${blockSellPrice(b).toFixed(2)}</td>
+          <td><input class="qty-input" type="number" min="1" value="1" id="blk-qty-${b.pn}"></td>
+          <td><button class="btn btn-sm btn-primary" onclick="addBlockToQuote('${b.pn}')">Add</button></td>
+          <td>${s ? `<button class="spec-toggle" onclick="toggleSpec(this, '${b.pn}')">Specs ▸</button>` : ''}</td>
+        </tr>
+        ${s ? `<tr class="spec-row" data-spec-pn="${b.pn}" style="display:none;"><td colspan="7">${specDetailHTML(b, s)}</td></tr>` : ''}`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>
+  `).join('');
 }
 
-/* ── QUOTE OUTPUT ── */
-function showQuoteOutput() {
-  document.getElementById('quote-output').style.display = 'block';
-  const badge = document.getElementById('confidence-badge');
-  if (state.confidence) {
-    badge.style.display = 'inline-flex';
-    const labels = { high:'High Confidence', medium:'Medium Confidence', low:'Low Confidence', exact:'Exact (DXF)' };
-    const dots = { high:'●', medium:'●', low:'●', exact:'◆' };
-    badge.className = 'confidence-badge confidence-' + state.confidence;
-    badge.textContent = (dots[state.confidence]||'') + ' ' + (labels[state.confidence]||state.confidence);
-  } else { badge.style.display = 'none'; }
-  const notesSection = document.getElementById('ai-notes-section');
-  if (state.aiNotes) { notesSection.style.display='block'; document.getElementById('ai-notes-body').textContent=state.aiNotes; }
-  else { notesSection.style.display='none'; }
-  renderCutList();
+// Expanded dimension panel per block, symbols as printed in the Airtac catalog.
+function specDetailHTML(b, s) {
+  const cell = (k, v) => `<div class="spec-cell"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  return `<div class="spec-grid">
+    ${cell('Assembly height H', s.H + ' mm')}
+    ${cell('Block width F', s.F + ' mm')}
+    ${cell('Block length C', s.C + ' mm')}
+    ${cell('Bolt pattern C1 × B', `${s.C1} × ${s.B} mm`)}
+    ${cell(b.type === 'Flange' ? 'Bolt spacing A' : 'Bolt spacing A', s.A + ' mm')}
+    ${cell('Block thread M', s.M)}
+    ${cell('Rail bolt', s.screw)}
+    ${cell('Moments (kN·m)', `${s.MR}/${s.MP}/${s.MY}`)}
+    ${cell('Block weight', s.wt + ' kg')}
+  </div>
+  ${blockSectionSVG(b, s)}
+  <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
 }
 
-function renderCutList() {
-  const profiles = getProfiles();
-  document.getElementById('cut-list-body').innerHTML = state.cutList.map(row => {
-    const lineTotal = row.qty * row.length * row.unitPrice;
-    const options = profiles.map(p => `<option value="${p.name}" ${p.name===row.profile?'selected':''}>${p.name} — ${p.desc}</option>`).join('');
-    const hasMatch = profiles.find(p => p.name === row.profile);
+function toggleBlockFilter() {
+  state.blockFilter = document.getElementById('block-filter').checked;
+  renderBlockCatalog();
+}
+
+function toggleSpec(btn, pn) {
+  const row = document.querySelector(`[data-spec-pn="${pn}"]`);
+  const open = row.style.display !== 'none';
+  row.style.display = open ? 'none' : 'table-row';
+  btn.textContent = open ? 'Specs ▸' : 'Specs ▾';
+}
+
+function addBlockToQuote(pn) {
+  const block = getBlocks().find(b => b.pn === pn);
+  if (!block) return;
+  const qty = Math.max(1, parseInt(document.getElementById('blk-qty-' + pn)?.value) || 1);
+  const existing = state.quoteLines.find(l => l.kind === 'block' && l.pn === pn);
+  if (existing) { existing.qty += qty; }
+  else {
+    state.quoteLines.push({
+      id: Date.now(),
+      kind: 'block',
+      pn: block.pn,
+      desc: `${block.family}${block.size} ${block.type.toLowerCase()} carriage block`,
+      cut: null,
+      qty,
+      unitPrice: Math.round(blockSellPrice(block) * 100) / 100,
+    });
+  }
+  renderQuote();
+  showToast('Block added to quote.', 'success');
+}
+
+/* ── QUOTE ── */
+function renderQuote() {
+  const hasLines = state.quoteLines.length > 0;
+  document.getElementById('quote-output').style.display = hasLines ? 'block' : 'none';
+  if (!hasLines) return;
+
+  document.getElementById('quote-body').innerHTML = state.quoteLines.map(l => {
+    const lineTotal = l.qty * l.unitPrice;
+    const cutInfo = l.cut
+      ? `<div class="line-cutinfo">P=${l.cut.P} · n=${l.cut.n} · S=${l.cut.S} · E=${l.cut.E.toFixed(1)}</div>` : '';
     return `<tr>
-      <td><select onchange="updateRow(${row.id},'profile',this.value)">${options}${!hasMatch?`<option value="${row.profile}" selected>${row.profile}</option>`:''}</select></td>
-      <td><input type="number" min="1" value="${row.qty}" onchange="updateRow(${row.id},'qty',this.value)"></td>
-      <td><input type="number" min="0" step="0.25" value="${row.length}" onchange="updateRow(${row.id},'length',this.value)"></td>
-      <td><input type="number" min="0" step="0.01" value="${row.unitPrice.toFixed(2)}" onchange="updateRow(${row.id},'unitPrice',this.value)"></td>
+      <td><span class="kind-badge kind-${l.kind}">${l.kind}</span></td>
+      <td><div class="line-pn">${l.pn}</div><div class="line-desc">${l.desc}</div>${cutInfo}</td>
+      <td><input type="number" min="1" style="width:60px;" value="${l.qty}" onchange="updateLine(${l.id},'qty',this.value)"></td>
+      <td><input type="number" min="0" step="0.01" style="width:90px;" value="${l.unitPrice.toFixed(2)}" onchange="updateLine(${l.id},'unitPrice',this.value)"></td>
       <td class="line-total">$${lineTotal.toFixed(2)}</td>
-      <td><button class="row-delete" onclick="deleteRow(${row.id})">✕</button></td>
+      <td><button class="row-delete" onclick="deleteLine(${l.id})">✕</button></td>
     </tr>`;
   }).join('');
-  updateTotals();
+
+  const total = quoteTotal();
+  document.getElementById('grand-total-val').textContent = '$' + total.toFixed(2);
 }
 
-function updateRow(id, field, value) {
-  const row = state.cutList.find(r => r.id === id);
-  if (!row) return;
-  if (field === 'profile') { row.profile = value; row.unitPrice = getProfilePrice(value) || row.unitPrice; }
-  else if (field === 'qty') row.qty = Math.max(1, parseInt(value)||1);
-  else if (field === 'length') row.length = Math.max(0, parseFloat(value)||0);
-  else if (field === 'unitPrice') row.unitPrice = Math.max(0, parseFloat(value)||0);
-  renderCutList();
+function quoteTotal() {
+  return state.quoteLines.reduce((s, l) => s + l.qty * l.unitPrice, 0);
 }
 
-function deleteRow(id) {
-  state.cutList = state.cutList.filter(r => r.id !== id);
-  renderCutList();
-  if (state.cutList.length === 0) document.getElementById('quote-output').style.display = 'none';
+function updateLine(id, field, value) {
+  const l = state.quoteLines.find(x => x.id === id);
+  if (!l) return;
+  if (field === 'qty') l.qty = Math.max(1, parseInt(value) || 1);
+  else if (field === 'unitPrice') l.unitPrice = Math.max(0, parseFloat(value) || 0);
+  renderQuote();
 }
 
-function addQuoteRow() {
-  const profiles = getProfiles();
-  state.cutList.push({ id: Date.now(), profile: profiles[0]?.name||'40x40', qty:1, length:0, unitPrice: profiles[0]?.ppi||0 });
-  renderCutList();
+function deleteLine(id) {
+  state.quoteLines = state.quoteLines.filter(l => l.id !== id);
+  renderQuote();
 }
 
-function updateTotals() {
-  const subtotal = state.cutList.reduce((s,r) => s+r.qty*r.length*r.unitPrice, 0);
-  const markupPct = getMarkup(), markupAmt = subtotal*(markupPct/100);
-  document.getElementById('subtotal-val').textContent = '$'+subtotal.toFixed(2);
-  document.getElementById('markup-pct').textContent = markupPct;
-  document.getElementById('markup-val').textContent = '$'+markupAmt.toFixed(2);
-  document.getElementById('grand-total-val').textContent = '$'+(subtotal+markupAmt).toFixed(2);
-  document.getElementById('markup-row').style.display = markupPct > 0 ? 'flex' : 'none';
-}
-
-function clearQuote() {
-  state.cutList=[]; state.confidence=null; state.aiNotes=''; state.quoteMethod=null;
-  document.getElementById('quote-output').style.display='none';
-}
-
-function toggleNotes() {
-  document.querySelector('.ai-notes-toggle').classList.toggle('open');
-  document.getElementById('ai-notes-body').classList.toggle('open');
-}
+function clearQuote() { state.quoteLines = []; renderQuote(); }
 
 /* ── SEND QUOTE ── */
-function openSendModal() { document.getElementById('send-modal').classList.add('active'); }
+// mode: 'quote' (firm quote) | 'volume' (pricing request) | 'availability'
+// (asking about a size or length that is not stocked)
+const SEND_MODES = {
+  quote: {
+    title: 'Email Quote', btn: '✉️ Send My Quote',
+    subject: 'Your Linear Rail Quote', heading: 'Linear Rail Quote', note: '',
+  },
+  volume: {
+    title: 'Request Volume Pricing', btn: '💬 Send Pricing Request',
+    subject: 'Your Linear Rail Pricing Request', heading: 'Linear Rail Pricing Request',
+    note: `Tell us the quantities and how often you expect to reorder. We'll review
+           the build and come back with pricing below the list figures shown here.`,
+  },
+  availability: {
+    title: 'Ask About Another Size', btn: '✉️ Send Enquiry',
+    subject: 'Your Linear Rail Availability Enquiry', heading: 'Linear Rail Availability Enquiry',
+    note: `Describe the size, length or block style you need in the notes below. Anything
+           you have already added to the quote comes with the enquiry, and we'll reply with
+           availability, lead time and pricing.`,
+  },
+};
+
+function openSendModal(mode = 'quote') {
+  const m = SEND_MODES[mode] ? mode : 'quote';
+  state.sendMode = m;
+  const cfg = SEND_MODES[m];
+  document.getElementById('send-modal-title').textContent = cfg.title;
+  document.getElementById('send-btn').textContent = cfg.btn;
+  const noteEl = document.getElementById('volume-modal-note');
+  noteEl.style.display = cfg.note ? 'block' : 'none';
+  if (cfg.note) noteEl.querySelector('p').textContent = cfg.note.replace(/\s+/g, ' ').trim();
+  document.getElementById('send-modal').classList.add('active');
+}
 function closeSendModal() { document.getElementById('send-modal').classList.remove('active'); }
 
 function buildQuoteHTML() {
-  const rep = getRepInfo(), markupPct = getMarkup(), showMarkup = getShowMarkup();
-  const subtotal = state.cutList.reduce((s,r)=>s+r.qty*r.length*r.unitPrice,0);
-  const markupAmt = subtotal*(markupPct/100), grandTotal = subtotal+markupAmt;
+  const rep = getRepInfo();
+  const total = quoteTotal();
   const customerName = document.getElementById('send-customer').value;
   const projectName = document.getElementById('send-project').value;
   const notes = document.getElementById('send-notes').value;
-  const fam = getSelectedFamily();
 
-  let confidenceNote = '';
-  if (state.quoteMethod==='ai'&&state.confidence) {
-    const lt = state.confidence.charAt(0).toUpperCase()+state.confidence.slice(1);
-    confidenceNote = `<p style="color:#666;font-size:12px;margin-top:16px;padding:8px;background:#f5f5f5;border-radius:4px;">⚠️ AI-generated estimate with <strong>${lt}</strong> confidence. Verify dimensions before ordering.</p>`;
-  }
-
-  const rows = state.cutList.map(r => {
-    const lt = (r.qty*r.length*r.unitPrice).toFixed(2);
-    return `<tr><td style="padding:6px 12px;border:1px solid #eee;">${r.profile}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;">${r.qty}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;">${r.length}"</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;">$${r.unitPrice.toFixed(2)}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:right;font-weight:600;">$${lt}</td></tr>`;
+  const rows = state.quoteLines.map(l => {
+    const cutInfo = l.cut
+      ? `<div style="font-size:11px;color:#999;font-family:monospace;">Pitch ${l.cut.P}mm · ${l.cut.n} holes · S=${l.cut.S}mm · E=${l.cut.E.toFixed(1)}mm</div>` : '';
+    return `<tr>
+      <td style="padding:6px 12px;border:1px solid #eee;"><div style="font-family:monospace;font-weight:600;">${l.pn}</div><div style="font-size:12px;color:#666;">${l.desc}</div>${cutInfo}</td>
+      <td style="padding:6px 12px;border:1px solid #eee;text-align:center;">${l.qty}</td>
+      <td style="padding:6px 12px;border:1px solid #eee;text-align:right;">$${l.unitPrice.toFixed(2)}</td>
+      <td style="padding:6px 12px;border:1px solid #eee;text-align:right;font-weight:600;">$${(l.qty * l.unitPrice).toFixed(2)}</td>
+    </tr>`;
   }).join('');
 
-  let totalsHTML = `<tr><td colspan="4" style="padding:6px 12px;text-align:right;font-weight:600;">Subtotal:</td><td style="padding:6px 12px;text-align:right;">$${subtotal.toFixed(2)}</td></tr>`;
-  if (markupPct>0&&showMarkup) totalsHTML += `<tr><td colspan="4" style="padding:6px 12px;text-align:right;">Markup (${markupPct}%):</td><td style="padding:6px 12px;text-align:right;">$${markupAmt.toFixed(2)}</td></tr>`;
-  totalsHTML += `<tr style="background:#0B1929;color:white;"><td colspan="4" style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">Grand Total:</td><td style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">$${grandTotal.toFixed(2)}</td></tr>`;
-
+  const totalsHTML = `<tr style="background:#0B1929;color:white;"><td colspan="3" style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">Total:</td><td style="padding:10px 12px;text-align:right;font-weight:700;font-size:16px;">$${total.toFixed(2)}</td></tr>`;
   const logoHTML = rep.logoUrl ? `<img src="${rep.logoUrl}" alt="Logo" style="max-height:48px;">` : '';
-  const seriesNote = fam ? `<p style="color:#666;font-size:13px;margin-bottom:4px;">Profile Series: <strong>${fam.label}</strong></p>` : '';
+  const cfg = SEND_MODES[state.sendMode] || SEND_MODES.quote;
+  const heading = cfg.heading;
 
-  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-  <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">T-Slot Frame Quote</h1></div>
-  <div style="padding:20px;border:1px solid #eee;border-top:none;">
-    <p><strong>Customer:</strong> ${customerName||'—'}</p>
-    <p><strong>Project:</strong> ${projectName||'—'}</p>
-    ${seriesNote}
-    ${notes?`<p><strong>Notes:</strong> ${notes}</p>`:''}
+  // An availability enquiry often has nothing in the quote yet, so carry the
+  // rail currently configured in the calculator instead of an empty table.
+  const inputs = readRailInputs();
+  const configHTML = (state.sendMode === 'availability')
+    ? `<p style="margin-top:16px;"><strong>Currently configured:</strong>
+       ${inputs.series}${inputs.size} · ${inputs.L} mm · S ${inputs.S} / E ${inputs.E} · qty ${inputs.qty}</p>`
+    : '';
+
+  const volumeHTML = `<div style="margin-top:16px;padding:12px 16px;background:#FFF6F1;border:1px solid #F8D2BC;border-radius:6px;">
+      <p style="margin:0;color:#8A3A12;font-size:13px;"><strong>Prices shown are our published single-quantity price.</strong>
+      Repeat orders, multi-axis builds and higher quantities are quoted lower &mdash;
+      reply to this email with your quantities and reorder frequency and we'll price it for your requirement.</p>
+    </div>`;
+
+  // An enquiry may carry no line items at all; skip the table rather than
+  // sending an empty one with a $0.00 total.
+  const tableHTML = state.quoteLines.length === 0 ? '' : `
     <table style="width:100%;border-collapse:collapse;margin-top:16px;">
-      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:12px;">PROFILE</th><th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LENGTH</th><th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT $/IN</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th></tr></thead>
+      <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px;text-align:left;font-size:12px;">ITEM</th><th style="padding:8px 12px;text-align:center;font-size:12px;">QTY</th><th style="padding:8px 12px;text-align:right;font-size:12px;">UNIT PRICE</th><th style="padding:8px 12px;text-align:right;font-size:12px;">LINE TOTAL</th></tr></thead>
       <tbody>${rows}${totalsHTML}</tbody>
     </table>
-    ${confidenceNote}
+    ${volumeHTML}
+    <p style="color:#666;font-size:12px;margin-top:16px;">Cut rails are supplied from Airtac 4M stock, machined to the lengths and hole patterns listed above.</p>`;
+
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+  <div style="background:#0B1929;padding:20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;">${logoHTML}<h1 style="color:white;margin:0;font-size:20px;">${heading}</h1></div>
+  <div style="padding:20px;border:1px solid #eee;border-top:none;">
+    <p><strong>Customer:</strong> ${customerName || '—'}</p>
+    <p><strong>Project:</strong> ${projectName || '—'}</p>
+    ${notes ? `<p><strong>Notes:</strong> ${notes}</p>` : ''}
+    ${configHTML}
+    ${tableHTML}
   </div>
   <div style="padding:16px 20px;background:#f8fafc;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px;font-size:13px;color:#666;">
-    <strong>${rep.name||''}</strong>${rep.phone?` · ${rep.phone}`:''}<br>${rep.companyName||''}
+    <strong>${rep.name || ''}</strong>${rep.phone ? ` · ${rep.phone}` : ''}<br>${rep.companyName || ''}
   </div>
 </div>`;
 }
@@ -996,37 +1474,42 @@ function buildQuoteHTML() {
 async function sendQuote() {
   const toEmail = document.getElementById('send-to').value;
   const customerName = document.getElementById('send-customer').value;
-  if (!toEmail||!customerName) { showToast('Name and email are required.','error'); return; }
+  if (!toEmail || !customerName) { showToast('Name and email are required.', 'error'); return; }
   const btn = document.getElementById('send-btn');
-  btn.disabled=true; btn.textContent='Sending...';
+  const mode = state.sendMode || 'quote';
+  const cfg = SEND_MODES[mode] || SEND_MODES.quote;
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending...';
   try {
+    const projectName = document.getElementById('send-project').value;
     const response = await fetch('/api/send-quote', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         toEmail, customerName,
         company: document.getElementById('send-company').value,
         phone: document.getElementById('send-phone').value,
-        projectName: document.getElementById('send-project').value,
+        projectName,
         notes: document.getElementById('send-notes').value,
+        subject: `${cfg.subject}${projectName ? ` — ${projectName}` : ''}`,
         quoteHTML: buildQuoteHTML(),
       }),
     });
     const data = await response.json();
-    if (!response.ok) { showToast('Failed: '+(data.error||'Unknown error'),'error'); return; }
-    const subtotal = state.cutList.reduce((s,r)=>s+r.qty*r.length*r.unitPrice,0);
+    if (!response.ok) { showToast('Failed: ' + (data.error || 'Unknown error'), 'error'); return; }
     const history = getHistory();
-    history.unshift({ id:Date.now(), timestamp:new Date().toISOString(), customer:customerName, project:document.getElementById('send-project').value||'—', total:subtotal+subtotal*(getMarkup()/100), method:state.quoteMethod||'manual', cutList:[...state.cutList], confidence:state.confidence, aiNotes:state.aiNotes });
+    history.unshift({ id: Date.now(), timestamp: new Date().toISOString(), customer: customerName, project: projectName || '—', total: quoteTotal(), lines: [...state.quoteLines] });
     saveHistory(history);
-    closeSendModal(); showToast('Quote sent!','success');
-  } catch(err) { showToast('Failed: '+err.message,'error'); }
-  finally { btn.disabled=false; btn.textContent='✉️ Send My Quote'; }
+    closeSendModal();
+    showToast({ quote: 'Quote sent!', volume: 'Pricing request sent!',
+                availability: 'Enquiry sent!' }[mode], 'success');
+  } catch (err) { showToast('Failed: ' + err.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = originalLabel; }
 }
 
 function saveQuoteDraft() {
-  const subtotal = state.cutList.reduce((s,r)=>s+r.qty*r.length*r.unitPrice,0);
   const history = getHistory();
-  history.unshift({ id:Date.now(), timestamp:new Date().toISOString(), customer:'Draft', project:'—', total:subtotal+subtotal*(getMarkup()/100), method:state.quoteMethod||'manual', cutList:[...state.cutList], confidence:state.confidence, aiNotes:state.aiNotes });
-  saveHistory(history); showToast('Draft saved.','success');
+  history.unshift({ id: Date.now(), timestamp: new Date().toISOString(), customer: 'Draft', project: '—', total: quoteTotal(), lines: [...state.quoteLines] });
+  saveHistory(history); showToast('Draft saved.', 'success');
 }
 
 /* ── HISTORY ── */
@@ -1034,28 +1517,32 @@ function openHistory() {
   const history = getHistory();
   const tbody = document.getElementById('history-body');
   const empty = document.getElementById('history-empty');
-  if (history.length===0) { tbody.innerHTML=''; empty.style.display='block'; }
+  if (history.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; }
   else {
-    empty.style.display='none';
+    empty.style.display = 'none';
     tbody.innerHTML = history.map(h => {
-      const date = new Date(h.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      const mc = h.method==='ai'?'method-ai':h.method==='dxf'?'method-dxf':'method-manual';
-      const ml = h.method==='ai'?'AI':h.method==='dxf'?'DXF':'Manual';
-      return `<tr><td>${date}</td><td>${h.customer}</td><td>${h.project}</td><td style="font-family:var(--font-mono);font-weight:600;">$${h.total.toFixed(2)}</td><td><span class="method-badge ${mc}">${ml}</span></td><td><button class="btn btn-sm btn-secondary" onclick="reopenQuote(${h.id})">Open</button></td></tr>`;
+      const date = new Date(h.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return `<tr><td>${date}</td><td>${h.customer}</td><td>${h.project}</td><td style="font-family:var(--font-mono);font-weight:600;">$${h.total.toFixed(2)}</td><td><button class="btn btn-sm btn-secondary" onclick="reopenQuote(${h.id})">Open</button></td></tr>`;
     }).join('');
   }
   document.getElementById('history-modal').classList.add('active');
 }
 function closeHistory() { document.getElementById('history-modal').classList.remove('active'); }
 function reopenQuote(id) {
-  const entry = getHistory().find(h=>h.id===id); if (!entry) return;
-  state.cutList=entry.cutList||[]; state.quoteMethod=entry.method; state.confidence=entry.confidence; state.aiNotes=entry.aiNotes||'';
-  closeHistory(); showQuoteOutput(); showToast('Quote loaded.','success');
+  const entry = getHistory().find(h => h.id === id); if (!entry) return;
+  state.quoteLines = entry.lines || [];
+  closeHistory(); renderQuote(); showToast('Quote loaded.', 'success');
 }
 
-/* ── ADMIN ── */
+/* ── PIN ── */
+async function hashPin(pin) {
+  const data = new TextEncoder().encode(pin + 'airtac_salt');
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function promptAdmin() {
-  const pinHash = localStorage.getItem('tslot_pin_hash');
+  const pinHash = localStorage.getItem('airtac_pin_hash');
   document.getElementById('pin-prompt-text').textContent = pinHash ? 'Enter your 4-digit PIN' : 'Create a new 4-digit PIN';
   document.getElementById('pin-overlay').classList.add('active');
   document.getElementById('pin-input').value = '';
@@ -1068,91 +1555,97 @@ async function handlePinEntry(e) {
   const input = document.getElementById('pin-input');
   if (input.value.length < 4) return;
   const hash = await hashPin(input.value);
-  if (window._pinMode==='create') { localStorage.setItem('tslot_pin_hash',hash); closePinOverlay(); openAdmin(); showToast('PIN created.','success'); }
-  else if (window._pinMode==='verify') {
-    if (hash===localStorage.getItem('tslot_pin_hash')) { closePinOverlay(); openAdmin(); }
-    else { document.getElementById('pin-error').style.display='block'; input.value=''; input.focus(); }
-  } else if (window._pinMode==='reset') { localStorage.setItem('tslot_pin_hash',hash); closePinOverlay(); showToast('PIN updated.','success'); }
+  if (window._pinMode === 'create') { localStorage.setItem('airtac_pin_hash', hash); closePinOverlay(); openAdmin(); showToast('PIN created.', 'success'); }
+  else if (window._pinMode === 'verify') {
+    if (hash === localStorage.getItem('airtac_pin_hash')) { closePinOverlay(); openAdmin(); }
+    else { document.getElementById('pin-error').style.display = 'block'; input.value = ''; input.focus(); }
+  } else if (window._pinMode === 'reset') { localStorage.setItem('airtac_pin_hash', hash); closePinOverlay(); showToast('PIN updated.', 'success'); }
 }
 
 function closePinOverlay() { document.getElementById('pin-overlay').classList.remove('active'); }
 
+/* ── ADMIN ── */
 function openAdmin() {
-  const admin = getAdmin()||{};
-  document.getElementById('admin-markup').value = admin.markup||0;
-  document.getElementById('admin-show-markup').checked = admin.showMarkup!==false;
-  const rep = admin.rep||{};
-  document.getElementById('admin-rep-name').value = rep.name||'';
-  document.getElementById('admin-rep-phone').value = rep.phone||'';
-  document.getElementById('admin-company-name').value = rep.companyName||'';
-  document.getElementById('admin-logo-url').value = rep.logoUrl||'';
-  renderFamilyAdminList(getFamilies());
+  const p = getPricing();
+  document.getElementById('admin-web-markup').value = p.webMarkup;
+  document.getElementById('admin-rail-discount').value = p.railDiscount;
+  document.getElementById('admin-block-discount').value = p.blockDiscount;
+  document.getElementById('admin-cutfee').value = p.cutFee;
+  document.getElementById('admin-handling').value = p.handling;
+  document.getElementById('admin-buffer').value = p.buffer;
+  const rep = getRepInfo();
+  document.getElementById('admin-rep-name').value = rep.name || '';
+  document.getElementById('admin-rep-phone').value = rep.phone || '';
+  document.getElementById('admin-company-name').value = rep.companyName || '';
+  document.getElementById('admin-logo-url').value = rep.logoUrl || '';
+
+  document.getElementById('admin-rails-tbody').innerHTML = getRails().map((r, i) => `<tr>
+    <td class="pn-cell">${r.pn}</td>
+    <td><input type="number" step="0.01" min="0" value="${r.list}" data-rail-idx="${i}" oninput="refreshAdminPrices()"></td>
+    <td class="web-cell" data-web-rail="${i}"></td>
+  </tr>`).join('');
+
+  document.getElementById('admin-blocks-tbody').innerHTML = getBlocks().map((b, i) => `<tr>
+    <td class="pn-cell">${b.pn}</td>
+    <td><input type="number" step="0.01" min="0" value="${b.list}" data-block-list-idx="${i}" oninput="refreshAdminPrices()"></td>
+    <td class="web-cell" data-web-block="${i}"></td>
+  </tr>`).join('');
+
+  refreshAdminPrices();
   document.getElementById('admin-overlay').classList.add('active');
-  setTimeout(()=>document.getElementById('admin-panel').classList.add('active'),10);
+  setTimeout(() => document.getElementById('admin-panel').classList.add('active'), 10);
 }
 
 function closeAdmin() {
   document.getElementById('admin-panel').classList.remove('active');
-  setTimeout(()=>document.getElementById('admin-overlay').classList.remove('active'),300);
+  setTimeout(() => document.getElementById('admin-overlay').classList.remove('active'), 300);
 }
 
-function renderFamilyAdminList(families) {
-  document.getElementById('family-admin-list').innerHTML = families.map(fam => `
-    <div class="family-accordion" data-family-id="${fam.id}">
-      <div class="family-accordion-header" onclick="toggleFamilyAccordion('${fam.id}')">
-        <span class="family-accordion-title">${fam.label} Series</span>
-        <span class="family-accordion-arrow">▶</span>
-      </div>
-      <div class="family-accordion-body" id="accordion-body-${fam.id}">
-        <table class="admin-table">
-          <thead><tr><th>Profile</th><th>Description</th><th>$/Inch</th><th style="width:40px;"></th></tr></thead>
-          <tbody id="profile-tbody-${fam.id}">
-            ${fam.profiles.map(p => `<tr>
-              <td><input value="${p.name}" placeholder="e.g. 40x40"></td>
-              <td><input value="${p.desc}" placeholder="Description"></td>
-              <td><input type="number" step="0.001" min="0" value="${p.ppi}" style="width:80px;"></td>
-              <td><button class="row-delete" onclick="this.closest('tr').remove()">✕</button></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;" onclick="addProfileToFamily('${fam.id}')">+ Add Profile</button>
-      </div>
-    </div>
-  `).join('');
-}
+// Live-update the Web Price column as the markup or a list price is edited,
+// so the effect of a markup change is visible before saving.
+function refreshAdminPrices() {
+  const num = id => Math.max(0, parseFloat(document.getElementById(id)?.value) || 0);
+  const markup = num('admin-web-markup');
+  const webFactor = 1 + markup / 100;
 
-function toggleFamilyAccordion(id) {
-  const header = document.querySelector(`.family-accordion[data-family-id="${id}"] .family-accordion-header`);
-  const body = document.getElementById('accordion-body-'+id);
-  header.classList.toggle('open');
-  body.classList.toggle('open');
-}
-
-function addProfileToFamily(familyId) {
-  const tbody = document.getElementById('profile-tbody-'+familyId);
-  const row = document.createElement('tr');
-  row.innerHTML = `<td><input value="" placeholder="e.g. 40x40"></td><td><input value="" placeholder="Description"></td><td><input type="number" step="0.001" min="0" value="0" style="width:80px;"></td><td><button class="row-delete" onclick="this.closest('tr').remove()">✕</button></td>`;
-  tbody.appendChild(row);
-}
-
-function collectFamiliesFromAdmin() {
-  return getFamilies().map(fam => {
-    const tbody = document.getElementById('profile-tbody-'+fam.id);
-    if (!tbody) return fam;
-    const profiles = Array.from(tbody.querySelectorAll('tr')).map(row => {
-      const inputs = row.querySelectorAll('input');
-      const name = inputs[0]?.value?.trim();
-      return name ? { name, desc: inputs[1]?.value?.trim()||'', ppi: parseFloat(inputs[2]?.value)||0 } : null;
-    }).filter(Boolean);
-    return { ...fam, profiles };
+  document.querySelectorAll('[data-web-rail]').forEach(td => {
+    const v = parseFloat(document.querySelector(`[data-rail-idx="${td.dataset.webRail}"]`)?.value) || 0;
+    td.textContent = '$' + (v * webFactor).toFixed(2);
   });
+  document.querySelectorAll('[data-web-block]').forEach(td => {
+    const v = parseFloat(document.querySelector(`[data-block-list-idx="${td.dataset.webBlock}"]`)?.value) || 0;
+    td.textContent = '$' + (v * webFactor).toFixed(2);
+  });
+
+  // Spell out what each line is currently quoting at, relative to list.
+  const basis = (label, disc) => disc > 0
+    ? `<div class="internal"><strong>${label}</strong> quoting internally at
+       <strong>${(100 - disc).toFixed(1)}% of list</strong> — ${disc}% off list.</div>`
+    : `<div class="web"><strong>${label}</strong> quoting at the web price,
+       <strong>${(webFactor * 100).toFixed(1)}% of list</strong> — list plus ${markup}% markup.</div>`;
+  const el = document.getElementById('price-basis');
+  if (el) el.innerHTML = basis('Rails', num('admin-rail-discount')) + basis('Blocks', num('admin-block-discount'));
 }
 
 function saveAdminSettings() {
+  const rails = getRails().map((r, i) => ({
+    ...r,
+    list: parseFloat(document.querySelector(`[data-rail-idx="${i}"]`)?.value) || r.list,
+  }));
+  const blocks = getBlocks().map((b, i) => ({
+    ...b,
+    list: parseFloat(document.querySelector(`[data-block-list-idx="${i}"]`)?.value) || b.list,
+  }));
   const admin = {
-    families: collectFamiliesFromAdmin(),
-    markup: parseFloat(document.getElementById('admin-markup').value)||0,
-    showMarkup: document.getElementById('admin-show-markup').checked,
+    pricing: {
+      webMarkup: Math.min(500, Math.max(0, parseFloat(document.getElementById('admin-web-markup').value) || 0)),
+      railDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-rail-discount').value) || 0)),
+      blockDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-block-discount').value) || 0)),
+      cutFee: Math.max(0, parseFloat(document.getElementById('admin-cutfee').value) || 0),
+      handling: Math.max(0, parseFloat(document.getElementById('admin-handling').value) || 0),
+      buffer: Math.max(0, parseFloat(document.getElementById('admin-buffer').value) || 0),
+    },
+    rails, blocks,
     rep: {
       name: document.getElementById('admin-rep-name').value.trim(),
       phone: document.getElementById('admin-rep-phone').value.trim(),
@@ -1160,40 +1653,41 @@ function saveAdminSettings() {
       logoUrl: document.getElementById('admin-logo-url').value.trim(),
     },
   };
-  localStorage.setItem('tslot_admin', JSON.stringify(admin));
-  renderFamilyButtons();
-  if (state.cutList.length>0) renderCutList();
-  showToast('Settings saved.','success');
+  localStorage.setItem('airtac_admin', JSON.stringify(admin));
+  renderBlockCatalog();
+  recalc();
+  showToast('Settings saved.', 'success');
+}
+
+function resetPricing() {
+  const a = getAdmin() || {};
+  delete a.rails; delete a.blocks; delete a.pricing;
+  localStorage.setItem('airtac_admin', JSON.stringify(a));
+  openAdmin(); renderBlockCatalog(); recalc();
+  showToast('Prices reset to spreadsheet defaults.', 'success');
 }
 
 function resetPIN() {
-  document.getElementById('pin-prompt-text').textContent='Enter a new 4-digit PIN';
+  document.getElementById('pin-prompt-text').textContent = 'Enter a new 4-digit PIN';
   document.getElementById('pin-overlay').classList.add('active');
-  document.getElementById('pin-input').value='';
+  document.getElementById('pin-input').value = '';
   document.getElementById('pin-input').focus();
-  document.getElementById('pin-error').style.display='none';
-  window._pinMode='reset';
+  document.getElementById('pin-error').style.display = 'none';
+  window._pinMode = 'reset';
 }
 
 /* ── TOAST ── */
-function showToast(message, type='') {
+function showToast(message, type = '') {
   const toast = document.getElementById('toast');
-  toast.textContent=message; toast.className='toast '+type;
-  setTimeout(()=>toast.classList.add('active'),10);
-  setTimeout(()=>toast.classList.remove('active'),3500);
+  toast.textContent = message; toast.className = 'toast ' + type;
+  setTimeout(() => toast.classList.add('active'), 10);
+  setTimeout(() => toast.classList.remove('active'), 3500);
 }
 
-/* ── PASTE SUPPORT ── */
-document.addEventListener('paste', e => {
-  if (state.currentTab!=='ai') return;
-  for (const item of (e.clipboardData?.items||[])) {
-    if (item.type.startsWith('image/')) { e.preventDefault(); processImageFile(item.getAsFile()); break; }
-  }
-});
-
 /* ── INIT ── */
-renderFamilyButtons();
-updateAIPromptVisibility();
+renderSeriesButtons();
+renderBlockCatalog();
+useStandardEdges();
 </script>
 </body>
 </html>

@@ -132,7 +132,10 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .block-empty p { font-size: 13px; max-width: 460px; margin: 0 auto; line-height: 1.6; }
 
 /* CROSS-SECTION DIAGRAMS */
-.xs-panel { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); }
+.calc-output { display: flex; flex-direction: column; gap: 16px; }
+.xs-panel { padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); }
+.xs-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.xs-cols .xs-svg { max-width: 100%; }
 .xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
 .xs-svg { width: 100%; height: auto; display: block; max-width: 340px; }
 .xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600; }
@@ -256,6 +259,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 @media (max-width: 768px) {
   .main { padding: 16px 12px 80px; }
   .calc-grid { grid-template-columns: 1fr; }
+  .xs-cols { grid-template-columns: 1fr; }
   .tabs { flex-wrap: nowrap; }
   .tab { font-size: 13px; padding: 10px 12px; }
   .form-row { grid-template-columns: 1fr; }
@@ -297,15 +301,15 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       </div>
       <div class="card-body">
 
-        <div class="picker-label">Series</div>
-        <div class="picker-buttons" id="series-buttons"></div>
-        <div class="picker-hint" id="series-hint"></div>
-
-        <div class="picker-label">Rail Size (mm)</div>
-        <div class="picker-buttons" id="size-buttons"></div>
-
         <div class="calc-grid">
           <div class="calc-inputs">
+            <div class="picker-label">Series</div>
+            <div class="picker-buttons" id="series-buttons"></div>
+            <div class="picker-hint" id="series-hint"></div>
+
+            <div class="picker-label">Rail Size (mm)</div>
+            <div class="picker-buttons" id="size-buttons"></div>
+
             <div class="form-group">
               <label class="form-label">Desired Overall Length L (mm)</label>
               <input class="form-input" id="rail-length" type="number" min="0" step="1" value="900" oninput="recalc()">
@@ -339,14 +343,21 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <label class="form-label">Manual n Override (mounting holes)</label>
               <input class="form-input" id="rail-manual-n" type="number" min="2" step="1" value="10" oninput="recalc()">
             </div>
+          </div>
 
-            <div class="xs-panel">
-              <div class="xs-title" id="xs-title">Rail cross-section</div>
-              <div id="rail-section"></div>
-              <div class="xs-title" style="margin-top:14px;">LSD vs LSH at this size</div>
-              <div id="xs-compare"></div>
-              <p class="xs-note">Sections drawn to scale from the Airtac catalog dimensions.</p>
+          <div class="calc-output">
+          <div class="xs-panel">
+            <div class="xs-cols">
+              <div>
+                <div class="xs-title" id="xs-title">Rail cross-section</div>
+                <div id="rail-section"></div>
+              </div>
+              <div>
+                <div class="xs-title">LSD vs LSH at this size</div>
+                <div id="xs-compare"></div>
+              </div>
             </div>
+            <p class="xs-note">Sections drawn to scale from the Airtac catalog dimensions.</p>
           </div>
 
           <div class="result-box">
@@ -362,6 +373,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
             <div style="margin-top:16px;text-align:right;">
               <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
             </div>
+          </div>
           </div>
         </div>
 

@@ -123,6 +123,13 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
+/* ADMIN PRICE BASIS READOUT */
+.price-basis { display: grid; gap: 6px; margin-top: 4px; }
+.price-basis div { font-size: 12px; padding: 8px 12px; border-radius: 4px; background: var(--gray-50); border-left: 3px solid var(--gray-300); color: var(--gray-600); }
+.price-basis div.web { border-left-color: var(--orange); }
+.price-basis div.internal { border-left-color: var(--green); }
+.price-basis strong { font-family: var(--font-mono); color: var(--navy); }
+
 /* STOCK / LEAD-TIME NOTE */
 .stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
 .stock-note-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
@@ -558,22 +565,25 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       <input class="form-input" id="admin-web-markup" type="number" min="0" max="500" step="1" oninput="refreshAdminPrices()">
     </div>
 
-    <h3 style="margin-top:24px;">Customer Discount</h3>
+    <h3 style="margin-top:24px;">Internal Quoting — Discount Off List</h3>
     <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
-      Taken off the advertised price above. Stored <strong>in this browser only</strong>,
-      never published with the site, so visitors always see the full advertised price.
-      Leave at 0 to quote as advertised.
+      List stays the anchor for internal quoting: a discount here is a straight
+      percentage <strong>off Airtac list</strong>, not off the marked-up web figure.
+      Setting one switches that product line out of web pricing for this browser.
+      Stored <strong>in this browser only</strong> and never published with the site,
+      so visitors always see the web price. Leave at 0 to quote the web price.
     </p>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">Rail Discount (% off advertised)</label>
-        <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5">
+        <label class="form-label">Rail Discount (% off list)</label>
+        <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
       </div>
       <div class="form-group">
-        <label class="form-label">Block Discount (% off advertised)</label>
-        <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5">
+        <label class="form-label">Block Discount (% off list)</label>
+        <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
       </div>
     </div>
+    <div class="price-basis" id="price-basis"></div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Cut / Processing Fee ($)</label>
@@ -756,10 +766,23 @@ const DEFAULT_BLOCKS = [
 // come off that advertised price and default to 0.
 const DEFAULT_PRICING = { webMarkup: 20, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
 
-// list -> advertised web price
+// list -> advertised web price (public figure, list plus markup)
 function webPrice(list) {
   const p = getPricing();
   return list * (1 + Math.max(0, p.webMarkup) / 100);
+}
+
+// Multiplier applied to list for the given product line.
+//
+// List is the anchor either way. With no discount configured — which is every
+// visitor, since discounts live in one browser's localStorage — the public web
+// markup applies. Setting a discount switches that line to internal quoting,
+// where the figure is a straight percentage off list.
+function priceFactor(kind) {
+  const p = getPricing();
+  const disc = kind === 'rail' ? p.railDiscount : p.blockDiscount;
+  if (disc > 0) return 1 - Math.min(95, disc) / 100;
+  return 1 + Math.max(0, p.webMarkup) / 100;
 }
 
 /* ── STATE ── */
@@ -797,7 +820,6 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   const P = spec.P;
 
   const p = getPricing();
-  const discountFrac = Math.min(0.95, Math.max(0, p.railDiscount / 100));
 
   // n: auto (v26 F7/D10) or manual override (B28)
   const suggestedN = L > 0 ? Math.max(2, Math.round(1 + (L - (S + E)) / P)) : null;
@@ -821,13 +843,14 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
     `- e=${pnE.toFixed(1)}/s=${S}`;
 
   // Price model: list price per mm of usable stock (v26 B19-B20 scrap logic),
-  // less any locally-configured discount. Cut/handling fees are service charges
-  // and are not discounted.
+  // times the rail price factor. Cut/handling are service charges, not marked
+  // up or discounted.
   const scrap = S + E + p.buffer;
   const usable = STOCK_LEN - scrap;
-  const listPerMm = webPrice(rail.list) / usable;
+  const factor = priceFactor('rail');
+  const listPerMm = rail.list / usable;
   const materialList = listPerMm * pricedLen;
-  const material = materialList * (1 - discountFrac);
+  const material = materialList * factor;
   const sellPrice = material + p.cutFee + p.handling;
 
   // Spec validation against Airtac's published limits.
@@ -847,16 +870,14 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   return {
     P, spec, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
     configuredPN, basePN: rail.pn, listPerMm, sellPrice,
-    materialList, material, discountFrac, S,
+    materialList, material, factor, S,
     errors, warnings, valid: errors.length === 0,
     minLen: P + S + E, // n=2 floor
   };
 }
 
 function blockSellPrice(block) {
-  const p = getPricing();
-  const discountFrac = Math.min(0.95, Math.max(0, p.blockDiscount / 100));
-  return webPrice(block.list) * (1 - discountFrac);
+  return block.list * priceFactor('block');
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1581,16 +1602,27 @@ function closeAdmin() {
 // Live-update the Web Price column as the markup or a list price is edited,
 // so the effect of a markup change is visible before saving.
 function refreshAdminPrices() {
-  const pct = Math.max(0, parseFloat(document.getElementById('admin-web-markup')?.value) || 0);
-  const factor = 1 + pct / 100;
+  const num = id => Math.max(0, parseFloat(document.getElementById(id)?.value) || 0);
+  const markup = num('admin-web-markup');
+  const webFactor = 1 + markup / 100;
+
   document.querySelectorAll('[data-web-rail]').forEach(td => {
     const v = parseFloat(document.querySelector(`[data-rail-idx="${td.dataset.webRail}"]`)?.value) || 0;
-    td.textContent = '$' + (v * factor).toFixed(2);
+    td.textContent = '$' + (v * webFactor).toFixed(2);
   });
   document.querySelectorAll('[data-web-block]').forEach(td => {
     const v = parseFloat(document.querySelector(`[data-block-list-idx="${td.dataset.webBlock}"]`)?.value) || 0;
-    td.textContent = '$' + (v * factor).toFixed(2);
+    td.textContent = '$' + (v * webFactor).toFixed(2);
   });
+
+  // Spell out what each line is currently quoting at, relative to list.
+  const basis = (label, disc) => disc > 0
+    ? `<div class="internal"><strong>${label}</strong> quoting internally at
+       <strong>${(100 - disc).toFixed(1)}% of list</strong> — ${disc}% off list.</div>`
+    : `<div class="web"><strong>${label}</strong> quoting at the web price,
+       <strong>${(webFactor * 100).toFixed(1)}% of list</strong> — list plus ${markup}% markup.</div>`;
+  const el = document.getElementById('price-basis');
+  if (el) el.innerHTML = basis('Rails', num('admin-rail-discount')) + basis('Blocks', num('admin-block-discount'));
 }
 
 function saveAdminSettings() {

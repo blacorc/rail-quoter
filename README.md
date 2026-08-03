@@ -119,6 +119,15 @@ email button returns "Email service not configured".
 both emails set a reply-to: the customer's quote replies to `REPLY_TO` (or
 `REP_EMAIL`), and the lead notification replies straight to the customer.
 
+## Analytics
+
+Vercel Web Analytics is wired up with a script tag at the bottom of
+`index.html`. It is cookieless, so no consent banner is required, and Vercel
+serves the script itself — nothing to install. It only records anything once
+Analytics is enabled on the project (project → Analytics → Enable); until then
+the request 404s harmlessly and the page is unaffected. Delete the tag to turn
+it off.
+
 ## Local development
 
 Any static file server works for the UI; the email endpoint needs `vercel dev`.

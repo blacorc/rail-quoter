@@ -13,26 +13,38 @@ module.exports = async function handler(req, res) {
   const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
   const repEmail = process.env.REP_EMAIL;
 
+  // Quotes are sent from a domain that has no mailbox behind it, so a bare
+  // reply would bounce. Point replies at a monitored inbox instead.
+  const replyTo = process.env.REPLY_TO || repEmail;
+
   if (!resendKey) {
     return res.status(500).json({ error: 'Email service not configured on server' });
   }
 
-  const send = (to, subject, html) =>
+  const send = (to, subject, html, replyToAddr) =>
     fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${resendKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ from: fromEmail, to: [to], subject, html }),
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [to],
+        subject,
+        html,
+        ...(replyToAddr ? { reply_to: replyToAddr } : {}),
+      }),
     });
 
   try {
     // Send quote to customer
+    // Customer's copy: replies reach the rep, not the unattended send address.
     const customerRes = await send(
       toEmail,
-      subject || `Your T-Slot Frame Quote${projectName ? ` — ${projectName}` : ''}`,
+      subject || `Your Linear Rail Quote${projectName ? ` — ${projectName}` : ''}`,
       quoteHTML,
+      replyTo,
     );
 
     if (!customerRes.ok) {
@@ -58,7 +70,13 @@ module.exports = async function handler(req, res) {
           ${quoteHTML}
         </div>`;
 
-      await send(repEmail, `New Lead: ${customerName || toEmail}${company ? ` @ ${company}` : ''}`, leadHTML);
+      // Lead notification: replying goes straight back to the customer.
+      await send(
+        repEmail,
+        `New Lead: ${customerName || toEmail}${company ? ` @ ${company}` : ''}`,
+        leadHTML,
+        toEmail,
+      );
     }
 
     return res.json({ success: true });

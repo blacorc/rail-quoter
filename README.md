@@ -109,10 +109,15 @@ See `.env.example`.
 |---|---|
 | `RESEND_API_KEY` | Sending quote emails |
 | `FROM_EMAIL` | Sender address; must be a Resend-verified domain (`onboarding@resend.dev` works for testing) |
-| `REP_EMAIL` | Where lead notifications are sent |
+| `REP_EMAIL` | Where lead notifications are sent — must be a real mailbox |
+| `REPLY_TO` | Optional. Where customer replies land; defaults to `REP_EMAIL` |
 
 Without `RESEND_API_KEY` the app still calculates and quotes normally — only the
 email button returns "Email service not configured".
+
+`FROM_EMAIL` is typically a send-only address on a domain with no mailbox, so
+both emails set a reply-to: the customer's quote replies to `REPLY_TO` (or
+`REP_EMAIL`), and the lead notification replies straight to the customer.
 
 ## Local development
 

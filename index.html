@@ -94,7 +94,6 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .result-price { display: flex; align-items: baseline; justify-content: space-between; border-top: 2px solid var(--navy); padding-top: 14px; }
 .result-price .label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
 .result-price .value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--orange); }
-.result-breakdown { font-size: 11px; color: var(--gray-400); font-family: var(--font-mono); margin-top: 6px; text-align: right; }
 
 /* CATALOG TABLE */
 .catalog-group-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
@@ -324,7 +323,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <span class="label">Unit Price</span>
               <span class="value" id="res-price">$0.00</span>
             </div>
-            <div class="result-breakdown" id="res-breakdown"></div>
             <div style="margin-top:16px;text-align:right;">
               <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
             </div>
@@ -375,7 +373,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <span class="totals-label">Total</span>
               <span class="totals-value" id="grand-total-val">$0.00</span>
             </div>
-            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">List price · cut &amp; handling fees included</div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:4px;" id="totals-note">List price · cutting and handling included</div>
           </div>
         </div>
 
@@ -745,7 +743,6 @@ function recalc() {
     document.getElementById('res-pn').textContent = '—';
     document.getElementById('res-rows').innerHTML = '';
     document.getElementById('res-price').textContent = '$0.00';
-    document.getElementById('res-breakdown').textContent = '';
     warn.style.display = 'none';
     addBtn.disabled = true;
     return;
@@ -777,12 +774,7 @@ function recalc() {
     warn.style.display = 'block';
   }
 
-  const p = getPricing();
   document.getElementById('res-price').textContent = '$' + r.sellPrice.toFixed(2);
-  const disc = r.discountFrac > 0
-    ? ` − ${p.railDiscount}% = $${r.material.toFixed(2)}` : '';
-  document.getElementById('res-breakdown').textContent =
-    `${r.listPerMm.toFixed(4)} $/mm list × ${r.pricedLen}mm = $${r.materialList.toFixed(2)}${disc} + $${p.cutFee.toFixed(2)} cut + $${p.handling.toFixed(2)} handling`;
 }
 
 function addRailToQuote() {

@@ -61,13 +61,8 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 /* LAYOUT */
 .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
 
-/* TABS */
-.tabs { display: flex; gap: 4px; background: var(--white); border-radius: var(--radius-lg); padding: 4px; box-shadow: var(--shadow); margin-bottom: 24px; overflow-x: auto; }
-.tab { flex: 1; min-width: 120px; padding: 12px 16px; border: none; border-radius: var(--radius); background: transparent; color: var(--gray-500); font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); white-space: nowrap; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.tab:hover { color: var(--gray-700); background: var(--gray-50); }
-.tab.active { background: var(--navy); color: var(--white); box-shadow: 0 2px 8px rgba(11,25,41,0.3); }
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
+/* STACKED SECTIONS */
+.section-gap { margin-top: 24px; }
 
 /* CARDS */
 .card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
@@ -119,6 +114,14 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .catalog-table .price { font-family: var(--font-mono); font-weight: 600; text-align: right; }
 .catalog-table input.qty-input { width: 60px; padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; text-align: center; }
 .catalog-table input.qty-input:focus { outline: none; border-color: var(--orange); }
+.spec-toggle { border: none; background: transparent; color: var(--orange); font-family: var(--font-body); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
+.spec-toggle:hover { background: var(--orange-glow); }
+.spec-row td { background: var(--gray-50); padding: 14px 16px !important; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 20px; }
+.spec-cell { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; border-bottom: 1px dashed var(--gray-200); padding: 3px 0; }
+.spec-cell .k { color: var(--gray-500); }
+.spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
+.spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
 /* BUTTONS */
 .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -267,13 +270,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 <main class="main">
 
-  <div class="tabs">
-    <button class="tab active" data-tab="rail" onclick="switchTab('rail')">📏 Rail Builder</button>
-    <button class="tab" data-tab="blocks" onclick="switchTab('blocks')">🛒 Carriage Blocks</button>
-  </div>
-
   <!-- RAIL BUILDER -->
-  <div class="tab-panel active" id="panel-rail">
+  <section id="panel-rail">
     <div class="card">
       <div class="card-header">
         <div class="card-title">Cut-Length Rail Calculator</div>
@@ -343,10 +341,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- CARRIAGE BLOCKS -->
-  <div class="tab-panel" id="panel-blocks">
+  <section id="panel-blocks" class="section-gap">
     <div class="card">
       <div class="card-header">
         <div class="card-title">Carriage Blocks</div>
@@ -354,7 +352,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
       </div>
       <div class="card-body" id="block-catalog"></div>
     </div>
-  </div>
+  </section>
 
   <!-- QUOTE OUTPUT -->
   <div class="quote-section" id="quote-output" style="display:none;">
@@ -582,29 +580,57 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 const STOCK_LEN = 4000; // mm, fixed stock rail length
 
 // Rail specification per series and size, transcribed from the Airtac
-// "Rail Specification" tables (LSH brochure p.15, LSD brochure p.42):
+// brochures ("Rail Specification" + "Specifications and Dimensions" tables;
+// LSH p.15-18, LSD p.42-45):
 //   P     mounting-hole pitch
 //   stdE  standard edge pitch (S/E) — Airtac's default first/last hole offset
 //   minE  minimum permitted edge pitch; below this the bolt hole breaks out
 //   maxE  maximum permitted edge pitch
 //   Lmax  maximum length of a single rail (beyond this a joint rail is required)
+//   W/Hr  rail cross-section width x height (G x H2 in the catalog)
+//   kgm   rail weight, kg per metre
 const RAIL_SPEC = {
   LSH: {
-    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040 },
-    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040 },
-    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040 },
-    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030 },
-    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030 },
-    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020 },
+    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   kgm: 1.43 },
+    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   kgm: 3.32 },
+    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   kgm: 4.5 },
+    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   kgm: 6.37 },
+    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   kgm: 10.7 },
   },
   LSD: {
-    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040 },
-    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040 },
-    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040 },
+    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, kgm: 1.23 },
+    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, kgm: 2.11 },
+    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   kgm: 2.76 },
   },
 };
 
 function getSpec(series, size) { return RAIL_SPEC[series]?.[size] || null; }
+
+// Block dimensions and ratings, transcribed from the Airtac catalog pages for
+// the exact models sold here (normal-length universal-mount flange F3N and
+// square HN blocks; LSH p.16/18, LSD p.42/45). Keys follow Airtac's symbols:
+//   H assembly height · F block width · C block length (standard end caps) ·
+//   C1/A/B mounting bolt pattern · M block thread · screw rail bolt ·
+//   C/C0 dynamic/static load (kN) · MR/MP/MY static moments (kN.m) · wt kg
+const BLOCK_SPECS = {
+  'LSH15BK-F3N-N-D-M4':  { H: 24, F: 47,  C: 60,    C1: 40,   A: 30, B: 38,  M: 'M5×0.8',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-F3N-N-D-M6':  { H: 30, F: 63,  C: 76.5,  C1: 52,   A: 40, B: 53,  M: 'M6×1.0',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.40 },
+  'LSH25BK-F3N-N-D-M6':  { H: 36, F: 70,  C: 83.5,  C1: 58.5, A: 45, B: 57,  M: 'M8×1.25',  screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.59 },
+  'LSH30BK-F3N-N-D-M6':  { H: 42, F: 90,  C: 95.5,  C1: 70.5, A: 52, B: 72,  M: 'M10×1.5',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 1.09 },
+  'LSH35BK-F3N-N-D-M6':  { H: 48, F: 100, C: 109,   C1: 80,   A: 62, B: 82,  M: 'M10×1.5',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.32 },
+  'LSH45BK-F3N-N-D-P01': { H: 60, F: 120, C: 132,   C1: 98,   A: 80, B: 100, M: 'M12×1.75', screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.77 },
+  'LSH15BK-HN-N-D-M4':   { H: 28, F: 34,  C: 60,    C1: 40,   A: 26, B: 26,  M: 'M4×0.7',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-HN-N-D-M6':   { H: 30, F: 44,  C: 76.5,  C1: 52,   A: 36, B: 32,  M: 'M5×0.8',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.33 },
+  'LSH25BK-HN-N-D-M6':   { H: 40, F: 48,  C: 83.5,  C1: 58.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.53 },
+  'LSH30BK-HN-N-D-M6':   { H: 45, F: 60,  C: 95.5,  C1: 70.5, A: 40, B: 40,  M: 'M8×1.25',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 0.91 },
+  'LSH35BK-HN-N-D-M6':   { H: 55, F: 70,  C: 109,   C1: 80,   A: 50, B: 50,  M: 'M8×1.25',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.26 },
+  'LSH45BK-HN-N-D-P01':  { H: 70, F: 86,  C: 132,   C1: 98,   A: 60, B: 60,  M: 'M10×1.5',  screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.72 },
+  'LSD15BK-F3N-N-D-M4':  { H: 24, F: 52,  C: 57,    C1: 40,   A: 26, B: 41,  M: 'M5×0.8',   screw: 'M4',  dynC: 8.9,  statC: 16.5,  MR: 0.12, MP: 0.10, MY: 0.10, wt: 0.21 },
+  'LSD20BK-F3N-N-D-M6':  { H: 28, F: 59,  C: 65,    C1: 48,   A: 32, B: 49,  M: 'M6×1.0',   screw: 'M5',  dynC: 12.1, statC: 22.4,  MR: 0.20, MP: 0.15, MY: 0.15, wt: 0.31 },
+  'LSD25BK-F3N-N-D-M6':  { H: 33, F: 73,  C: 83,    C1: 60.5, A: 35, B: 60,  M: 'M8×1.25',  screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.60 },
+  'LSD25BK-HN-N-D-M6':   { H: 33, F: 48,  C: 83,    C1: 60.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.42 },
+};
 
 const SERIES_INFO = {
   LSD: { label: 'LSD', desc: 'Low Profile Linear Guide', sizes: [15, 20, 25] },
@@ -651,7 +677,6 @@ const DEFAULT_PRICING = { railDiscount: 0, blockDiscount: 0, cutFee: 10, handlin
 
 /* ── STATE ── */
 let state = {
-  currentTab: 'rail',
   series: 'LSD',
   size: 20,
   quoteLines: [],
@@ -900,6 +925,8 @@ function recalc() {
     row('Pitch P', `${r.P} mm`) +
     row('Mounting holes n', r.n) +
     row('S / E offsets', `${inputs.S} / ${r.floatE.toFixed(1)} mm`) +
+    row('Rail section W×H', `${r.spec.W} × ${r.spec.Hr} mm`) +
+    row('Approx. weight', `${(r.spec.kgm * r.deliveredLen / 1000).toFixed(2)} kg`) +
     row('Stock rail', r.basePN);
 
   if (r.errors.length) {
@@ -956,19 +983,49 @@ function renderBlockCatalog() {
     <div class="catalog-group-title">${title}</div>
     <div style="overflow-x:auto;">
     <table class="catalog-table">
-      <thead><tr><th>Size</th><th>Part Number</th><th style="text-align:right;">Unit Price</th><th style="width:70px;">Qty</th><th style="width:70px;"></th></tr></thead>
+      <thead><tr><th>Size</th><th>Part Number</th><th style="text-align:right;">Load C / C₀ (kN)</th><th style="text-align:right;">Unit Price</th><th style="width:70px;">Qty</th><th style="width:70px;"></th><th style="width:60px;"></th></tr></thead>
       <tbody>
-        ${items.map(b => `<tr>
+        ${items.map(b => {
+          const s = BLOCK_SPECS[b.pn];
+          return `<tr>
           <td>${b.size}</td>
           <td class="pn">${b.pn}</td>
+          <td class="price" style="font-weight:500;color:var(--gray-600);">${s ? `${s.dynC} / ${s.statC}` : '—'}</td>
           <td class="price">$${blockSellPrice(b).toFixed(2)}</td>
           <td><input class="qty-input" type="number" min="1" value="1" id="blk-qty-${b.pn}"></td>
           <td><button class="btn btn-sm btn-primary" onclick="addBlockToQuote('${b.pn}')">Add</button></td>
-        </tr>`).join('')}
+          <td>${s ? `<button class="spec-toggle" onclick="toggleSpec(this, '${b.pn}')">Specs ▸</button>` : ''}</td>
+        </tr>
+        ${s ? `<tr class="spec-row" data-spec-pn="${b.pn}" style="display:none;"><td colspan="7">${specDetailHTML(b, s)}</td></tr>` : ''}`;
+        }).join('')}
       </tbody>
     </table>
     </div>
   `).join('');
+}
+
+// Expanded dimension panel per block, symbols as printed in the Airtac catalog.
+function specDetailHTML(b, s) {
+  const cell = (k, v) => `<div class="spec-cell"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+  return `<div class="spec-grid">
+    ${cell('Assembly height H', s.H + ' mm')}
+    ${cell('Block width F', s.F + ' mm')}
+    ${cell('Block length C', s.C + ' mm')}
+    ${cell('Bolt pattern C1 × B', `${s.C1} × ${s.B} mm`)}
+    ${cell(b.type === 'Flange' ? 'Bolt spacing A' : 'Bolt spacing A', s.A + ' mm')}
+    ${cell('Block thread M', s.M)}
+    ${cell('Rail bolt', s.screw)}
+    ${cell('Moments (kN·m)', `${s.MR}/${s.MP}/${s.MY}`)}
+    ${cell('Block weight', s.wt + ' kg')}
+  </div>
+  <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
+}
+
+function toggleSpec(btn, pn) {
+  const row = document.querySelector(`[data-spec-pn="${pn}"]`);
+  const open = row.style.display !== 'none';
+  row.style.display = open ? 'none' : 'table-row';
+  btn.textContent = open ? 'Specs ▸' : 'Specs ▾';
 }
 
 function addBlockToQuote(pn) {
@@ -990,14 +1047,6 @@ function addBlockToQuote(pn) {
   }
   renderQuote();
   showToast('Block added to quote.', 'success');
-}
-
-/* ── TABS ── */
-function switchTab(tab) {
-  state.currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + tab).classList.add('active');
 }
 
 /* ── QUOTE ── */

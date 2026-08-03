@@ -557,8 +557,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     <h3>Web Markup</h3>
     <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
       Advertised prices are Airtac list plus this markup, so the published figure sits
-      above list and leaves room to come down on enquiry. At 20% a $209.50 rail
-      advertises at $251.40.
+      above list and leaves room to come down on enquiry. At 150% a $209.50 rail
+      advertises at $523.75. Benchmarked against AutomationDirect's WON H-series
+      (dimensionally identical to LSH): 150% puts rails at about 75% and blocks at
+      about 91% of their advertised price.
     </p>
     <div class="form-group">
       <label class="form-label">Web Markup (% above list)</label>
@@ -764,7 +766,7 @@ const DEFAULT_BLOCKS = [
 // webMarkup is applied to list to give the advertised price, so the published
 // figure sits above list and leaves room to come down. Customer discounts then
 // come off that advertised price and default to 0.
-const DEFAULT_PRICING = { webMarkup: 20, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
+const DEFAULT_PRICING = { webMarkup: 150, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
 
 // list -> advertised web price (public figure, list plus markup)
 function webPrice(list) {

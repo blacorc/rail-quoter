@@ -55,7 +55,7 @@ in the admin panel (gear icon, PIN-gated):
 
 | Configuration | Factor | Used by |
 |---|---|---|
-| No discount set | `1 + web markup` (default 20% → 1.20) | Any visitor — the public web price |
+| No discount set | `1 + web markup` (default 150% → 2.50) | Any visitor — the public web price |
 | Discount set | `1 - discount` (e.g. 15% → 0.85) | Internal quoting, straight off list |
 
 The two do **not** compound. Setting a rail discount switches that line out of web
@@ -65,6 +65,13 @@ blocks in as many words, and lists each part's web price beside its list price.
 
 Discounts live in one browser's localStorage and are never part of the deployed
 site, so a visitor with no configuration always sees the web price.
+
+The 150% default is benchmarked against AutomationDirect's WON H-series, which is
+dimensionally identical to Airtac LSH (same H, W, W1 and H1 at every size) and so
+directly substitutable. At 150% rails sit at roughly 75% and blocks at roughly
+91% of their advertised price. Two flange blocks — LSH20 and LSH30 — land 1-2%
+above their base (UU, no inside seal) price, though still under their sealed (SS)
+price; adjust those two list values or the markup if that matters.
 
 Note that list is not a uniform margin: the two source spreadsheets used different
 net conventions — rail net was 50% of list, block net 32%. **17% off rails and 47%

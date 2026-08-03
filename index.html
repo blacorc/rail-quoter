@@ -85,6 +85,7 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 
 /* RESULT BOX */
 .result-box { background: var(--gray-50); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: 20px; }
+.result-pn-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 5px; }
 .result-pn { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--navy); word-break: break-all; background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 16px; }
 .result-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; font-size: 13px; margin-bottom: 16px; }
 .result-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed var(--gray-200); }
@@ -99,9 +100,9 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 
 /* HOLE-PATTERN DIAGRAM */
 .rail-diagram { width: 100%; height: auto; display: block; margin-bottom: 14px; background: var(--card-bg); border: 1px solid var(--gray-200); border-radius: var(--radius); }
-.rail-diagram .dim-label { font-family: var(--font-mono); font-size: 10px; fill: var(--diagram-dim); font-weight: 600; }
-.rail-diagram .dim-label.dim-strong { font-size: 11.5px; font-weight: 700; fill: var(--navy); }
-.rail-diagram .dim-note { font-family: var(--font-body); font-size: 10px; fill: var(--gray-500); font-weight: 600; }
+.rail-diagram .dim-label { font-family: var(--font-mono); font-size: 12.5px; fill: var(--diagram-dim); font-weight: 700; }
+.rail-diagram .dim-label.dim-strong { font-size: 14px; font-weight: 700; fill: var(--navy); }
+.rail-diagram .dim-note { font-family: var(--font-body); font-size: 11.5px; fill: var(--gray-500); font-weight: 600; }
 
 /* CATALOG TABLE */
 .catalog-group-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
@@ -146,10 +147,10 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .xs-cols .xs-svg { max-width: 100%; }
 .xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
 .xs-svg { width: 100%; height: auto; display: block; max-width: 340px; }
-.xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600;
-  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3px; stroke-linejoin: round; }
-.xs-svg .xs-cap { font-family: var(--font-body); font-size: 9px; fill: var(--gray-600); font-weight: 600;
-  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3px; stroke-linejoin: round; }
+.xs-svg .dim-label { font-family: var(--font-mono); font-size: 12px; fill: var(--diagram-dim); font-weight: 700;
+  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3.5px; stroke-linejoin: round; }
+.xs-svg .xs-cap { font-family: var(--font-body); font-size: 11px; fill: var(--gray-600); font-weight: 600;
+  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3.5px; stroke-linejoin: round; }
 .xs-svg .xs-cap.dim { fill: var(--gray-400); font-weight: 500; }
 .xs-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; }
 .spec-row .xs-svg { max-width: 300px; margin-top: 6px; }
@@ -361,8 +362,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
           </div>
 
           <div class="result-box">
+            <div class="result-pn-label">Configured Part Number</div>
             <div class="result-pn" id="res-pn">—</div>
-            <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 150" role="img"
+            <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 172" role="img"
                  aria-label="Rail mounting hole pattern diagram"></svg>
             <div class="result-rows" id="res-rows"></div>
             <div class="result-warn" id="res-warn" style="display:none;"></div>
@@ -581,9 +583,10 @@ const BLOCK_SPECS = {
   'LSD25BK-HN-N-D-M6':   { H1: 7, H: 33, F: 48,  C: 83,    C1: 60.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.42 },
 };
 
+// Order here is the order the series buttons render in.
 const SERIES_INFO = {
-  LSD: { label: 'LSD', desc: 'Low Profile Linear Guide', sizes: [15, 20, 25] },
   LSH: { label: 'LSH', desc: 'Standard Linear Guide', sizes: [15, 20, 25, 30, 35, 45] },
+  LSD: { label: 'LSD', desc: 'Low Profile Linear Guide', sizes: [15, 20, 25] },
 };
 
 // Published Airtac list prices for 4000mm stock rails.
@@ -663,7 +666,7 @@ function itemFactor(item) {
 
 /* ── STATE ── */
 let state = {
-  series: 'LSD',
+  series: 'LSH',
   size: 20,
   blockFilter: true,   // show only blocks that fit the selected rail
   quoteLines: [],
@@ -760,7 +763,7 @@ function renderDiagram(r, inputs) {
   const svg = document.getElementById('rail-diagram');
   if (!r) { svg.innerHTML = ''; return; }
 
-  const W = 520, PAD = 26, railY = 34, railH = 30;
+  const W = 520, PAD = 26, railY = 30, railH = 30;
   const x0 = PAD, x1 = W - PAD, span = x1 - x0;
   const L = r.deliveredLen || 1;
   const mm = v => x0 + (v / L) * span;           // mm -> svg x
@@ -798,20 +801,21 @@ function renderDiagram(r, inputs) {
   }
 
   // Dimension arrow between two mm positions at a given y
-  // Narrow spans put their label below the line so short S/E dimensions do not
-  // collide with the wider P label sitting above it.
-  const dim = (a, b, y, label, cls = '') => {
+  // S, P and E sit close together on a long rail, so their labels are placed
+  // on explicit rows rather than all landing on one line and colliding.
+  const dim = (a, b, y, label, cls = '', dy = -6) => {
     const xa = mm(a), xb = mm(b), mid = (xa + xb) / 2;
-    const ly = (xb - xa) < 40 ? y + 12 : y - 5;
     return `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="var(--diagram-dim)" stroke-width="1.2" marker-start="url(#tick)" marker-end="url(#tick)"/>
-      <text x="${mid}" y="${ly}" class="dim-label ${cls}" text-anchor="middle">${esc(label)}</text>`;
+      <text x="${mid}" y="${y + dy}" class="dim-label ${cls}" text-anchor="middle">${esc(label)}</text>`;
   };
 
-  const yS = railY + railH + 22, yL = railY + railH + 52;
-  let dims = dim(0, inputs.S, yS, 'S ' + inputs.S);
-  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yS, 'P ' + r.P);
-  dims += dim(holes[holes.length - 1], L, yS, 'E ' + r.floatE.toFixed(1));
-  dims += dim(0, L, yL, `L ${r.deliveredLen} mm`, 'dim-strong');
+  // S below the line, P a row lower, E below — keeps the three clear of each
+  // other however short the spans get on a long rail.
+  const yS = railY + railH + 20, yL = railY + railH + 62;
+  let dims = dim(0, inputs.S, yS, 'S ' + inputs.S, '', 14);
+  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yS, 'P ' + r.P, '', 28);
+  dims += dim(holes[holes.length - 1], L, yS, 'E ' + r.floatE.toFixed(1), '', 14);
+  dims += dim(0, L, yL, `L ${r.deliveredLen} mm`, 'dim-strong', -8);
 
   svg.innerHTML = `<defs>${hatch}
     <marker id="tick" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
@@ -902,13 +906,14 @@ function renderCompare() {
   const a = getSpec('LSD', size), b = getSpec('LSH', size);
   if (!a || !b) { el.innerHTML = `<p class="xs-note">No LSD equivalent at size ${size} — LSD covers 15, 20 and 25.</p>`; return; }
 
-  const W = 300, H = 150, y0 = 104;
+  const W = 300, H = 172, y0 = 100;
   const k = Math.min(64 / Math.max(a.W, b.W), 62 / Math.max(a.Hr, b.Hr));
   const pair = (spec, cx, name, on) => `
     <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="${on ? 'url(#xhatch)' : 'none'}"
           stroke="${on ? 'var(--diagram-line)' : 'var(--gray-400)'}" stroke-width="${on ? 1.6 : 1.2}" stroke-linejoin="round"/>
-    <text x="${cx}" y="${y0 + 18}" class="xs-cap" text-anchor="middle">${name}${size}</text>
-    <text x="${cx}" y="${y0 + 31}" class="xs-cap dim" text-anchor="middle">${spec.W} × ${spec.Hr} mm · ${spec.kgm} kg/m</text>`;
+    <text x="${cx}" y="${y0 + 20}" class="xs-cap" text-anchor="middle">${name}${size}</text>
+    <text x="${cx}" y="${y0 + 34}" class="xs-cap dim" text-anchor="middle">${spec.W} × ${spec.Hr} mm</text>
+    <text x="${cx}" y="${y0 + 47}" class="xs-cap dim" text-anchor="middle">${spec.kgm} kg/m</text>`;
 
   const drop = (b.Hr - a.Hr).toFixed(1);
   el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="LSD versus LSH rail section">${SVG_DEFS}

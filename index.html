@@ -123,6 +123,14 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
+/* BLOCK FILTER */
+.filter-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--gray-600); cursor: pointer; white-space: nowrap; }
+.filter-toggle input { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
+.block-filter-note { font-size: 12px; color: var(--gray-500); background: var(--gray-50); border-left: 3px solid var(--orange); border-radius: 4px; padding: 8px 12px; margin-bottom: 4px; line-height: 1.5; }
+.block-empty { text-align: center; padding: 28px 20px; color: var(--gray-500); }
+.block-empty strong { display: block; color: var(--navy); font-size: 15px; margin-bottom: 6px; }
+.block-empty p { font-size: 13px; max-width: 460px; margin: 0 auto; line-height: 1.6; }
+
 /* CROSS-SECTION DIAGRAMS */
 .xs-panel { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); }
 .xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
@@ -365,8 +373,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   <section id="panel-blocks" class="section-gap">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Carriage Blocks</div>
-        <span style="font-size:12px;color:var(--gray-400);">Universal mount · normal accuracy · standard clearance</span>
+        <div>
+          <div class="card-title" id="block-title">Carriage Blocks</div>
+          <div style="font-size:12px;color:var(--gray-400);margin-top:2px;">Universal mount · normal accuracy · standard clearance</div>
+        </div>
+        <label class="filter-toggle">
+          <input type="checkbox" id="block-filter" checked onchange="toggleBlockFilter()">
+          <span id="block-filter-label">Matching my rail only</span>
+        </label>
       </div>
       <div class="card-body" id="block-catalog"></div>
     </div>
@@ -699,6 +713,7 @@ const DEFAULT_PRICING = { railDiscount: 0, blockDiscount: 0, cutFee: 10, handlin
 let state = {
   series: 'LSD',
   size: 20,
+  blockFilter: true,   // show only blocks that fit the selected rail
   quoteLines: [],
 };
 
@@ -1009,8 +1024,8 @@ function renderSizeButtons() {
   ).join('');
 }
 
-function selectSeries(s) { state.series = s; renderSeriesButtons(); useStandardEdges(); }
-function selectSize(sz) { state.size = sz; renderSizeButtons(); useStandardEdges(); }
+function selectSeries(s) { state.series = s; renderSeriesButtons(); useStandardEdges(); renderBlockCatalog(); }
+function selectSize(sz) { state.size = sz; renderSizeButtons(); useStandardEdges(); renderBlockCatalog(); }
 
 // Reset S and E to Airtac's standard edge pitch for the selected rail.
 function useStandardEdges() {
@@ -1126,13 +1141,44 @@ function addRailToQuote() {
 
 /* ── BLOCK CATALOG UI ── */
 function renderBlockCatalog() {
-  const blocks = getBlocks();
+  const all = getBlocks();
+  const filtering = state.blockFilter;
+  const blocks = filtering
+    ? all.filter(b => b.family === state.series && b.size === state.size)
+    : all;
+
+  const rail = `${state.series}${state.size}`;
+  document.getElementById('block-title').textContent =
+    filtering ? `Carriage Blocks for ${rail}` : 'Carriage Blocks — full catalog';
+  document.getElementById('block-filter-label').textContent =
+    filtering ? `Matching ${rail} only` : 'Matching my rail only';
+
+  const host = document.getElementById('block-catalog');
+
+  if (!blocks.length) {
+    host.innerHTML = `<div class="block-empty">
+      <strong>No ${rail} carriage blocks in the price list.</strong>
+      <p>Airtac builds blocks for this rail, but they are not on the TSI list loaded here.
+      Untick “Matching ${rail} only” to see the full catalog, or send a pricing request and
+      we will quote the block separately.</p>
+    </div>`;
+    return;
+  }
+
   const groups = {};
   blocks.forEach(b => {
-    const key = `${b.family} Series — ${b.type} Blocks`;
+    const key = filtering
+      ? `${b.type} Blocks`
+      : `${b.family} Series — ${b.type} Blocks`;
     (groups[key] = groups[key] || []).push(b);
   });
-  document.getElementById('block-catalog').innerHTML = Object.entries(groups).map(([title, items]) => `
+
+  const note = filtering
+    ? `<p class="block-filter-note">Showing only blocks that fit an <strong>${rail}</strong> rail —
+       block and rail must share both series and size. Untick above for the full catalog.</p>`
+    : '';
+
+  host.innerHTML = note + Object.entries(groups).map(([title, items]) => `
     <div class="catalog-group-title">${title}</div>
     <div style="overflow-x:auto;">
     <table class="catalog-table">
@@ -1173,6 +1219,11 @@ function specDetailHTML(b, s) {
   </div>
   ${blockSectionSVG(b, s)}
   <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
+}
+
+function toggleBlockFilter() {
+  state.blockFilter = document.getElementById('block-filter').checked;
+  renderBlockCatalog();
 }
 
 function toggleSpec(btn, pn) {

@@ -123,6 +123,16 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
+/* CROSS-SECTION DIAGRAMS */
+.xs-panel { margin-top: 20px; padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--gray-50); }
+.xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
+.xs-svg { width: 100%; height: auto; display: block; max-width: 340px; }
+.xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600; }
+.xs-svg .xs-cap { font-family: var(--font-body); font-size: 9px; fill: var(--gray-600); font-weight: 600; }
+.xs-svg .xs-cap.dim { fill: var(--gray-400); font-weight: 500; }
+.xs-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; }
+.spec-row .xs-svg { max-width: 300px; margin-top: 10px; }
+
 /* BUTTONS */
 .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 .btn-primary { background: var(--orange); color: var(--white); }
@@ -320,6 +330,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
             <div class="form-group" id="manual-n-group" style="display:none;margin-top:12px;">
               <label class="form-label">Manual n Override (mounting holes)</label>
               <input class="form-input" id="rail-manual-n" type="number" min="2" step="1" value="10" oninput="recalc()">
+            </div>
+
+            <div class="xs-panel">
+              <div class="xs-title" id="xs-title">Rail cross-section</div>
+              <div id="rail-section"></div>
+              <div class="xs-title" style="margin-top:14px;">LSD vs LSH at this size</div>
+              <div id="xs-compare"></div>
+              <p class="xs-note">Sections drawn to scale from the Airtac catalog dimensions.</p>
             </div>
           </div>
 
@@ -588,20 +606,22 @@ const STOCK_LEN = 4000; // mm, fixed stock rail length
 //   maxE  maximum permitted edge pitch
 //   Lmax  maximum length of a single rail (beyond this a joint rail is required)
 //   W/Hr  rail cross-section width x height (G x H2 in the catalog)
+//   Q/U   counterbore and through-hole diameter (ΦQ / ΦU)
+//   H3    counterbore depth
 //   kgm   rail weight, kg per metre
 const RAIL_SPEC = {
   LSH: {
-    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   kgm: 1.43 },
-    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, kgm: 2.23 },
-    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   kgm: 3.32 },
-    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   kgm: 4.5 },
-    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   kgm: 6.37 },
-    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   kgm: 10.7 },
+    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
+    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
+    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
+    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
+    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
   },
   LSD: {
-    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, kgm: 1.23 },
-    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, kgm: 2.11 },
-    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   kgm: 2.76 },
+    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
+    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
+    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
   },
 };
 
@@ -614,22 +634,22 @@ function getSpec(series, size) { return RAIL_SPEC[series]?.[size] || null; }
 //   C1/A/B mounting bolt pattern · M block thread · screw rail bolt ·
 //   C/C0 dynamic/static load (kN) · MR/MP/MY static moments (kN.m) · wt kg
 const BLOCK_SPECS = {
-  'LSH15BK-F3N-N-D-M4':  { H: 24, F: 47,  C: 60,    C1: 40,   A: 30, B: 38,  M: 'M5×0.8',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
-  'LSH20BK-F3N-N-D-M6':  { H: 30, F: 63,  C: 76.5,  C1: 52,   A: 40, B: 53,  M: 'M6×1.0',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.40 },
-  'LSH25BK-F3N-N-D-M6':  { H: 36, F: 70,  C: 83.5,  C1: 58.5, A: 45, B: 57,  M: 'M8×1.25',  screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.59 },
-  'LSH30BK-F3N-N-D-M6':  { H: 42, F: 90,  C: 95.5,  C1: 70.5, A: 52, B: 72,  M: 'M10×1.5',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 1.09 },
-  'LSH35BK-F3N-N-D-M6':  { H: 48, F: 100, C: 109,   C1: 80,   A: 62, B: 82,  M: 'M10×1.5',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.32 },
-  'LSH45BK-F3N-N-D-P01': { H: 60, F: 120, C: 132,   C1: 98,   A: 80, B: 100, M: 'M12×1.75', screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.77 },
-  'LSH15BK-HN-N-D-M4':   { H: 28, F: 34,  C: 60,    C1: 40,   A: 26, B: 26,  M: 'M4×0.7',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
-  'LSH20BK-HN-N-D-M6':   { H: 30, F: 44,  C: 76.5,  C1: 52,   A: 36, B: 32,  M: 'M5×0.8',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.33 },
-  'LSH25BK-HN-N-D-M6':   { H: 40, F: 48,  C: 83.5,  C1: 58.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.53 },
-  'LSH30BK-HN-N-D-M6':   { H: 45, F: 60,  C: 95.5,  C1: 70.5, A: 40, B: 40,  M: 'M8×1.25',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 0.91 },
-  'LSH35BK-HN-N-D-M6':   { H: 55, F: 70,  C: 109,   C1: 80,   A: 50, B: 50,  M: 'M8×1.25',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.26 },
-  'LSH45BK-HN-N-D-P01':  { H: 70, F: 86,  C: 132,   C1: 98,   A: 60, B: 60,  M: 'M10×1.5',  screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.72 },
-  'LSD15BK-F3N-N-D-M4':  { H: 24, F: 52,  C: 57,    C1: 40,   A: 26, B: 41,  M: 'M5×0.8',   screw: 'M4',  dynC: 8.9,  statC: 16.5,  MR: 0.12, MP: 0.10, MY: 0.10, wt: 0.21 },
-  'LSD20BK-F3N-N-D-M6':  { H: 28, F: 59,  C: 65,    C1: 48,   A: 32, B: 49,  M: 'M6×1.0',   screw: 'M5',  dynC: 12.1, statC: 22.4,  MR: 0.20, MP: 0.15, MY: 0.15, wt: 0.31 },
-  'LSD25BK-F3N-N-D-M6':  { H: 33, F: 73,  C: 83,    C1: 60.5, A: 35, B: 60,  M: 'M8×1.25',  screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.60 },
-  'LSD25BK-HN-N-D-M6':   { H: 33, F: 48,  C: 83,    C1: 60.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.42 },
+  'LSH15BK-F3N-N-D-M4':  { H1: 3.5, H: 24, F: 47,  C: 60,    C1: 40,   A: 30, B: 38,  M: 'M5×0.8',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-F3N-N-D-M6':  { H1: 4.3, H: 30, F: 63,  C: 76.5,  C1: 52,   A: 40, B: 53,  M: 'M6×1.0',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.40 },
+  'LSH25BK-F3N-N-D-M6':  { H1: 6.5, H: 36, F: 70,  C: 83.5,  C1: 58.5, A: 45, B: 57,  M: 'M8×1.25',  screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.59 },
+  'LSH30BK-F3N-N-D-M6':  { H1: 6.5, H: 42, F: 90,  C: 95.5,  C1: 70.5, A: 52, B: 72,  M: 'M10×1.5',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 1.09 },
+  'LSH35BK-F3N-N-D-M6':  { H1: 7, H: 48, F: 100, C: 109,   C1: 80,   A: 62, B: 82,  M: 'M10×1.5',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.32 },
+  'LSH45BK-F3N-N-D-P01': { H1: 10, H: 60, F: 120, C: 132,   C1: 98,   A: 80, B: 100, M: 'M12×1.75', screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.77 },
+  'LSH15BK-HN-N-D-M4':   { H1: 3.5, H: 28, F: 34,  C: 60,    C1: 40,   A: 26, B: 26,  M: 'M4×0.7',   screw: 'M4',  dynC: 11.3, statC: 17.9,  MR: 0.12, MP: 0.12, MY: 0.12, wt: 0.20 },
+  'LSH20BK-HN-N-D-M6':   { H1: 4.3, H: 30, F: 44,  C: 76.5,  C1: 52,   A: 36, B: 32,  M: 'M5×0.8',   screw: 'M5',  dynC: 18.6, statC: 28.6,  MR: 0.27, MP: 0.25, MY: 0.25, wt: 0.33 },
+  'LSH25BK-HN-N-D-M6':   { H1: 6.5, H: 40, F: 48,  C: 83.5,  C1: 58.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 26.9, statC: 39.4,  MR: 0.44, MP: 0.38, MY: 0.38, wt: 0.53 },
+  'LSH30BK-HN-N-D-M6':   { H1: 6.5, H: 45, F: 60,  C: 95.5,  C1: 70.5, A: 40, B: 40,  M: 'M8×1.25',  screw: 'M8',  dynC: 37.4, statC: 55.0,  MR: 0.66, MP: 0.67, MY: 0.67, wt: 0.91 },
+  'LSH35BK-HN-N-D-M6':   { H1: 7, H: 55, F: 70,  C: 109,   C1: 80,   A: 50, B: 50,  M: 'M8×1.25',  screw: 'M8',  dynC: 50.8, statC: 72.3,  MR: 1.05, MP: 0.92, MY: 0.92, wt: 1.26 },
+  'LSH45BK-HN-N-D-P01':  { H1: 10, H: 70, F: 86,  C: 132,   C1: 98,   A: 60, B: 60,  M: 'M10×1.5',  screw: 'M12', dynC: 80.7, statC: 110.3, MR: 1.95, MP: 1.62, MY: 1.62, wt: 2.72 },
+  'LSD15BK-F3N-N-D-M4':  { H1: 4.5, H: 24, F: 52,  C: 57,    C1: 40,   A: 26, B: 41,  M: 'M5×0.8',   screw: 'M4',  dynC: 8.9,  statC: 16.5,  MR: 0.12, MP: 0.10, MY: 0.10, wt: 0.21 },
+  'LSD20BK-F3N-N-D-M6':  { H1: 6, H: 28, F: 59,  C: 65,    C1: 48,   A: 32, B: 49,  M: 'M6×1.0',   screw: 'M5',  dynC: 12.1, statC: 22.4,  MR: 0.20, MP: 0.15, MY: 0.15, wt: 0.31 },
+  'LSD25BK-F3N-N-D-M6':  { H1: 7, H: 33, F: 73,  C: 83,    C1: 60.5, A: 35, B: 60,  M: 'M8×1.25',  screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.60 },
+  'LSD25BK-HN-N-D-M6':   { H1: 7, H: 33, F: 48,  C: 83,    C1: 60.5, A: 35, B: 35,  M: 'M6×1.0',   screw: 'M6',  dynC: 19.3, statC: 34.7,  MR: 0.36, MP: 0.31, MY: 0.31, wt: 0.42 },
 };
 
 const SERIES_INFO = {
@@ -843,6 +863,135 @@ function renderDiagram(r, inputs) {
     ${dims}`;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   CROSS-SECTION DIAGRAMS
+   Rail and carriage profiles drawn to scale from the catalog dimensions,
+   so picking a series and size shows that part's actual section.
+   Profile outline follows the Airtac drawings: full-width foot, concave
+   raceway waist, chamfered crown.
+   ════════════════════════════════════════════════════════════════ */
+
+// Rail outline, centred on cx, sitting on baseline y0, drawn upward.
+function railPath(cx, y0, w, h, k) {
+  const hw = w / 2 * k, ht = h * k;
+  const x = f => cx + hw * f, y = f => y0 - ht * f;
+  return [
+    `M ${x(-1)} ${y(0)}`,
+    `L ${x(1)} ${y(0)}`,               // foot
+    `L ${x(1)} ${y(0.20)}`,
+    `Q ${x(0.78)} ${y(0.42)} ${x(0.80)} ${y(0.55)}`,   // raceway waist
+    `Q ${x(0.82)} ${y(0.68)} ${x(1)} ${y(0.80)}`,
+    `L ${x(0.98)} ${y(0.92)}`,
+    `L ${x(0.86)} ${y(1)}`,            // chamfered crown
+    `L ${x(-0.86)} ${y(1)}`,
+    `L ${x(-0.98)} ${y(0.92)}`,
+    `L ${x(-1)} ${y(0.80)}`,
+    `Q ${x(-0.82)} ${y(0.68)} ${x(-0.80)} ${y(0.55)}`,
+    `Q ${x(-0.78)} ${y(0.42)} ${x(-1)} ${y(0.20)}`,
+    'Z',
+  ].join(' ');
+}
+
+// Horizontal / vertical dimension helpers (SVG user units).
+function dimH(xa, xb, y, label) {
+  return `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="var(--diagram-dim)" stroke-width="1" marker-start="url(#tick)" marker-end="url(#tick)"/>
+    <text x="${(xa + xb) / 2}" y="${y - 4}" class="dim-label" text-anchor="middle">${label}</text>`;
+}
+function dimV(x, ya, yb, label, side = 'right') {
+  const my = (ya + yb) / 2, left = side === 'left';
+  return `<line x1="${x}" y1="${ya}" x2="${x}" y2="${yb}" stroke="var(--diagram-dim)" stroke-width="1" marker-start="url(#tick)" marker-end="url(#tick)"/>
+    <text x="${x + (left ? -5 : 5)}" y="${my + 3}" class="dim-label" text-anchor="${left ? 'end' : 'start'}">${label}</text>`;
+}
+
+const SVG_DEFS = `<defs>
+  <pattern id="xhatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--diagram-hatch)" stroke-width="2"/></pattern>
+  <marker id="tick" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+    <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.1"/></marker>
+</defs>`;
+
+// Dimensioned rail cross-section for the currently selected rail.
+function renderRailSection() {
+  const el = document.getElementById('rail-section');
+  const spec = getSpec(state.series, state.size);
+  if (!el || !spec) return;
+
+  const W = 300, H = 200, cx = 132, y0 = 132;
+  const k = Math.min(120 / spec.W, 84 / spec.Hr);   // fit to box
+  const hw = spec.W / 2 * k, ht = spec.Hr * k;
+  const qh = spec.H3 * k, qw = spec.Q / 2 * k, uw = spec.U / 2 * k;
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img"
+      aria-label="${state.series}${state.size} rail cross-section">${SVG_DEFS}
+    <line x1="${cx - hw - 22}" y1="${y0}" x2="${cx + hw + 22}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="url(#xhatch)" stroke="var(--diagram-line)" stroke-width="1.6" stroke-linejoin="round"/>
+    <rect x="${cx - qw}" y="${y0 - ht}" width="${qw * 2}" height="${qh}" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="3 2"/>
+    <rect x="${cx - uw}" y="${y0 - ht + qh}" width="${uw * 2}" height="${ht - qh}" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="3 2"/>
+    <line x1="${cx}" y1="${y0 - ht - 8}" x2="${cx}" y2="${y0 + 6}" stroke="var(--diagram-line)" stroke-width="0.7" stroke-dasharray="6 2 2 2"/>
+    ${dimH(cx - hw, cx + hw, y0 + 22, `G ${spec.W}`)}
+    ${dimV(cx + hw + 14, y0, y0 - ht, `H2 ${spec.Hr}`)}
+    ${dimH(cx - qw, cx + qw, y0 - ht - 10, `ΦQ ${spec.Q}`)}
+    <text x="${cx}" y="${y0 + 42}" class="xs-cap" text-anchor="middle">Countersink ΦQ ${spec.Q} × depth ${spec.H3} · through ΦU ${spec.U}</text>
+  </svg>`;
+}
+
+// LSD vs LSH at the same nominal size, drawn to one scale.
+function renderCompare() {
+  const el = document.getElementById('xs-compare');
+  if (!el) return;
+  const size = state.size;
+  const a = getSpec('LSD', size), b = getSpec('LSH', size);
+  if (!a || !b) { el.innerHTML = `<p class="xs-note">No LSD equivalent at size ${size} — LSD covers 15, 20 and 25.</p>`; return; }
+
+  const W = 300, H = 150, y0 = 104;
+  const k = Math.min(64 / Math.max(a.W, b.W), 62 / Math.max(a.Hr, b.Hr));
+  const pair = (spec, cx, name, on) => `
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="${on ? 'url(#xhatch)' : 'none'}"
+          stroke="${on ? 'var(--diagram-line)' : 'var(--gray-400)'}" stroke-width="${on ? 1.6 : 1.2}" stroke-linejoin="round"/>
+    <text x="${cx}" y="${y0 + 18}" class="xs-cap" text-anchor="middle">${name}${size}</text>
+    <text x="${cx}" y="${y0 + 31}" class="xs-cap dim" text-anchor="middle">${spec.W} × ${spec.Hr} mm · ${spec.kgm} kg/m</text>`;
+
+  const drop = (b.Hr - a.Hr).toFixed(1);
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="LSD versus LSH rail section">${SVG_DEFS}
+    <line x1="18" y1="${y0}" x2="${W - 18}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="18" y1="${y0 - a.Hr * k}" x2="${W - 18}" y2="${y0 - a.Hr * k}" stroke="var(--orange)" stroke-width="0.8" stroke-dasharray="3 3" opacity="0.6"/>
+    ${pair(a, 88, 'LSD', state.series === 'LSD')}
+    ${pair(b, 212, 'LSH', state.series === 'LSH')}
+    <text x="${W / 2}" y="16" class="xs-cap" text-anchor="middle">LSD sits ${drop} mm lower at size ${size}</text>
+  </svg>`;
+}
+
+// Carriage cross-section: block straddling its rail, drawn to scale.
+function blockSectionSVG(block, s) {
+  const spec = getSpec(block.family, block.size);
+  if (!spec || !s) return '';
+  const W = 300, H = 150, cx = 132, y0 = 112;
+  const k = Math.min(112 / s.F, 74 / s.H);
+  const bw = s.F / 2 * k, bh = (s.H - s.H1) * k, top = y0 - s.H * k;
+  const rw = spec.W / 2 * k, rh = spec.Hr * k;
+  const ch = rw + 3;                       // channel half-width in the underside
+  const chTop = y0 - Math.min(spec.Hr * k + 4, (s.H - s.H1) * k + 2);
+  const bBot = y0 - s.H1 * k;
+
+  // Block outline with a channel cut in the underside for the rail.
+  const body = `M ${cx - bw} ${bBot} L ${cx - ch} ${bBot} L ${cx - ch} ${chTop}
+    L ${cx + ch} ${chTop} L ${cx + ch} ${bBot} L ${cx + bw} ${bBot}
+    L ${cx + bw} ${top} L ${cx - bw} ${top} Z`;
+
+  const boltDx = s.A / 2 * k;
+  return `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="${block.pn} cross-section">${SVG_DEFS}
+    <line x1="${cx - bw - 14}" y1="${y0}" x2="${cx + bw + 14}" y2="${y0}" stroke="var(--gray-300)" stroke-width="1" stroke-dasharray="4 3"/>
+    <path d="${railPath(cx, y0, spec.W, spec.Hr, k)}" fill="url(#xhatch)" stroke="var(--diagram-line)" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="${body}" fill="var(--card-bg)" fill-opacity="0.94" stroke="var(--diagram-line)" stroke-width="1.6" stroke-linejoin="round"/>
+    <line x1="${cx - boltDx}" y1="${top}" x2="${cx - boltDx}" y2="${top + 9}" stroke="var(--diagram-line)" stroke-width="2.2"/>
+    <line x1="${cx + boltDx}" y1="${top}" x2="${cx + boltDx}" y2="${top + 9}" stroke="var(--diagram-line)" stroke-width="2.2"/>
+    ${dimH(cx - bw, cx + bw, y0 + 22, `F ${s.F}`)}
+    ${dimV(cx + bw + 12, y0, top, `H ${s.H}`)}
+    ${dimV(cx - bw - 12, y0, bBot, `H1 ${s.H1}`, 'left')}
+    <text x="${cx}" y="${top - 6}" class="xs-cap" text-anchor="middle">${s.M} × ${s.A} mm centres</text>
+  </svg>`;
+}
+
 /* ── RAIL UI ── */
 function renderSeriesButtons() {
   document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
@@ -898,7 +1047,11 @@ function recalc() {
     const hint = `standard ${spec.stdE} · range ${spec.minE}–${spec.maxE}`;
     document.getElementById('rail-s-hint').textContent = hint;
     document.getElementById('rail-e-hint').textContent = hint;
+    document.getElementById('xs-title').textContent =
+      `${inputs.series}${inputs.size} rail cross-section`;
   }
+  renderRailSection();
+  renderCompare();
 
   const warn = document.getElementById('res-warn');
   const addBtn = document.getElementById('add-rail-btn');
@@ -1018,6 +1171,7 @@ function specDetailHTML(b, s) {
     ${cell('Moments (kN·m)', `${s.MR}/${s.MP}/${s.MY}`)}
     ${cell('Block weight', s.wt + ' kg')}
   </div>
+  ${blockSectionSVG(b, s)}
   <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
 }
 

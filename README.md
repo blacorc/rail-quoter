@@ -55,13 +55,17 @@ in the admin panel (gear icon, PIN-gated):
 
 | Configuration | Factor | Used by |
 |---|---|---|
-| No discount set | `1 + web markup` (default 150% → 2.50) | Any visitor — the public web price |
+| No discount set | `1 + that part's markup` (default 150% → 2.50) | Any visitor — the public web price |
 | Discount set | `1 - discount` (e.g. 15% → 0.85) | Internal quoting, straight off list |
+
+Markup is set **per part** in the admin price tables, so a single SKU can be
+repositioned without moving the rest. The Default Markup field seeds parts that
+have none, and "Apply to every part" overwrites them all at once.
 
 The two do **not** compound. Setting a rail discount switches that line out of web
 pricing rather than discounting the marked-up figure, so "15% off" means 85% of
 list and nothing else. The admin panel states the current factor for rails and
-blocks in as many words, and lists each part's web price beside its list price.
+blocks in as many words, and shows each part's web price beside its list price.
 
 Discounts live in one browser's localStorage and are never part of the deployed
 site, so a visitor with no configuration always sees the web price.

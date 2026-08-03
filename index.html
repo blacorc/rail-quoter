@@ -10,14 +10,20 @@
 
 <style>
 :root {
-  --navy: #0B1929;
-  --navy-light: #132D4A;
-  --orange: #F26522;
-  --orange-hover: #FF7A38;
-  --orange-glow: rgba(242, 101, 34, 0.15);
-  --green: #22C55E;
-  --red: #EF4444;
+  /* TSI Solutions palette — burgundy nav bar, crimson accent */
+  --navy: #5E0B24;          /* header / table headers (TSI nav burgundy) */
+  --navy-light: #7A1030;
+  --orange: #9E0E3A;        /* primary accent (TSI crimson) */
+  --orange-hover: #B81447;
+  --orange-glow: rgba(158, 14, 58, 0.15);
+  --charcoal: #333333;      /* TSI's dark "Go" button */
+  --green: #1F9D55;
+  --red: #C62828;
   --white: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --diagram-line: #5E0B24;
+  --diagram-hatch: #D9C2CA;
+  --diagram-dim: #9E0E3A;
   --gray-50: #F8FAFC;
   --gray-100: #F1F5F9;
   --gray-200: #E2E8F0;
@@ -90,10 +96,17 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .result-row .k { color: var(--gray-500); }
 .result-row .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); }
 .result-warn { font-size: 12px; color: #d97706; background: rgba(245,158,11,0.1); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px; }
-.result-warn.ok { color: #16a34a; background: rgba(34,197,94,0.1); }
+.result-warn.ok { color: #15803d; background: rgba(31,157,85,0.1); }
+.result-warn.err { color: #B3261E; background: rgba(198,40,40,0.1); border: 1px solid rgba(198,40,40,0.25); line-height: 1.5; }
 .result-price { display: flex; align-items: baseline; justify-content: space-between; border-top: 2px solid var(--navy); padding-top: 14px; }
 .result-price .label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--gray-500); }
 .result-price .value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--orange); }
+
+/* HOLE-PATTERN DIAGRAM */
+.rail-diagram { width: 100%; height: auto; display: block; margin-bottom: 14px; background: var(--card-bg); border: 1px solid var(--gray-200); border-radius: var(--radius); }
+.rail-diagram .dim-label { font-family: var(--font-mono); font-size: 10px; fill: var(--diagram-dim); font-weight: 600; }
+.rail-diagram .dim-label.dim-strong { font-size: 11.5px; font-weight: 700; fill: var(--navy); }
+.rail-diagram .dim-note { font-family: var(--font-body); font-size: 10px; fill: var(--gray-500); font-weight: 600; }
 
 /* CATALOG TABLE */
 .catalog-group-title { font-size: 13px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0 8px; }
@@ -285,19 +298,16 @@ textarea.form-input { resize: vertical; min-height: 80px; }
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">First Hole Offset S (mm)</label>
-                <select class="form-input" id="rail-s" onchange="recalc()">
-                  <option value="20">20</option>
-                  <option value="30">30</option>
-                </select>
+                <input class="form-input" id="rail-s" type="number" min="0" step="0.5" oninput="recalc()">
+                <div class="input-suffix" id="rail-s-hint"></div>
               </div>
               <div class="form-group">
                 <label class="form-label">Last Hole Offset E (mm)</label>
-                <select class="form-input" id="rail-e" onchange="recalc()">
-                  <option value="20">20</option>
-                  <option value="30">30</option>
-                </select>
+                <input class="form-input" id="rail-e" type="number" min="0" step="0.5" oninput="recalc()">
+                <div class="input-suffix" id="rail-e-hint"></div>
               </div>
             </div>
+            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Use Airtac standard edge pitch</button>
             <div class="form-group">
               <label class="form-label">Quantity</label>
               <input class="form-input" id="rail-qty" type="number" min="1" step="1" value="1" oninput="recalc()">
@@ -317,6 +327,8 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
           <div class="result-box">
             <div class="result-pn" id="res-pn">—</div>
+            <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 150" role="img"
+                 aria-label="Rail mounting hole pattern diagram"></svg>
             <div class="result-rows" id="res-rows"></div>
             <div class="result-warn" id="res-warn" style="display:none;"></div>
             <div class="result-price">
@@ -569,8 +581,30 @@ textarea.form-input { resize: vertical; min-height: 80px; }
    ════════════════════════════════════════════════════════════════ */
 const STOCK_LEN = 4000; // mm, fixed stock rail length
 
-// Mounting-hole pitch P per rail size (from v26 PitchP table)
-const PITCH = { 15: 60, 20: 60, 25: 60, 30: 80, 35: 80, 45: 105 };
+// Rail specification per series and size, transcribed from the Airtac
+// "Rail Specification" tables (LSH brochure p.15, LSD brochure p.42):
+//   P     mounting-hole pitch
+//   stdE  standard edge pitch (S/E) — Airtac's default first/last hole offset
+//   minE  minimum permitted edge pitch; below this the bolt hole breaks out
+//   maxE  maximum permitted edge pitch
+//   Lmax  maximum length of a single rail (beyond this a joint rail is required)
+const RAIL_SPEC = {
+  LSH: {
+    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040 },
+    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040 },
+    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040 },
+    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030 },
+    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030 },
+    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020 },
+  },
+  LSD: {
+    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040 },
+    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040 },
+    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040 },
+  },
+};
+
+function getSpec(series, size) { return RAIL_SPEC[series]?.[size] || null; }
 
 const SERIES_INFO = {
   LSD: { label: 'LSD', desc: 'Low Profile Linear Guide', sizes: [15, 20, 25] },
@@ -644,9 +678,10 @@ function saveHistory(h) { localStorage.setItem('airtac_history', JSON.stringify(
    L = (n−1)·P + S + E
    ════════════════════════════════════════════════════════════════ */
 function computeRail({ series, size, L, S, E, autoN, manualN }) {
-  const P = PITCH[size];
+  const spec = getSpec(series, size);
   const rail = getRails().find(r => r.series === series && r.size === size);
-  if (!P || !rail) return null;
+  if (!spec || !rail) return null;
+  const P = spec.P;
 
   const p = getPricing();
   const discountFrac = Math.min(0.95, Math.max(0, p.railDiscount / 100));
@@ -682,10 +717,25 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   const material = materialList * (1 - discountFrac);
   const sellPrice = material + p.cutFee + p.handling;
 
+  // Spec validation against Airtac's published limits.
+  const errors = [], warnings = [];
+  if (S < spec.minE || S > spec.maxE) {
+    errors.push(`S = ${S} mm is outside the permitted ${spec.minE}–${spec.maxE} mm edge pitch for ${series}${size}.`);
+  }
+  if (pnE < spec.minE - 1e-9 || pnE > spec.maxE + 1e-9) {
+    errors.push(`E works out to ${pnE.toFixed(1)} mm, outside the permitted ${spec.minE}–${spec.maxE} mm edge pitch. Adjust the length or S — an out-of-range edge risks breaking through the bolt hole.`);
+  }
+  if (deliveredLen > spec.Lmax) {
+    errors.push(`${deliveredLen} mm exceeds the ${spec.Lmax} mm maximum for a single ${series}${size} rail. A joint rail is required.`);
+  } else if (deliveredLen > usable) {
+    warnings.push(`${deliveredLen} mm exceeds what one 4000 mm stock bar yields after scrap (${usable} mm).`);
+  }
+
   return {
-    P, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
+    P, spec, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
     configuredPN, basePN: rail.pn, listPerMm, sellPrice,
-    materialList, material, discountFrac,
+    materialList, material, discountFrac, S,
+    errors, warnings, valid: errors.length === 0,
     minLen: P + S + E, // n=2 floor
   };
 }
@@ -694,6 +744,78 @@ function blockSellPrice(block) {
   const p = getPricing();
   const discountFrac = Math.min(0.95, Math.max(0, p.blockDiscount / 100));
   return block.list * (1 - discountFrac);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HOLE-PATTERN DIAGRAM
+   Live redraw of the Airtac rail specification drawing (L = (n-1)P + S + E)
+   using the values currently entered, so the dimensions shown are the ones
+   being quoted rather than a generic illustration.
+   ════════════════════════════════════════════════════════════════ */
+function renderDiagram(r, inputs) {
+  const svg = document.getElementById('rail-diagram');
+  if (!r) { svg.innerHTML = ''; return; }
+
+  const W = 520, PAD = 26, railY = 34, railH = 30;
+  const x0 = PAD, x1 = W - PAD, span = x1 - x0;
+  const L = r.deliveredLen || 1;
+  const mm = v => x0 + (v / L) * span;           // mm -> svg x
+  const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+  // Hole centres: S, S+P, S+2P ... (n of them)
+  const holes = [];
+  for (let i = 0; i < r.n; i++) holes.push(inputs.S + i * r.P);
+
+  // Draw at most ~14 holes, with a break symbol, so long rails stay legible
+  const MAXH = 14;
+  let shown = holes, broken = false;
+  if (holes.length > MAXH) {
+    shown = [...holes.slice(0, 6), ...holes.slice(-6)];
+    broken = true;
+  }
+
+  const hatch = `<pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="var(--diagram-hatch)" stroke-width="2.5"/></pattern>`;
+
+  const bar = `<rect x="${x0}" y="${railY}" width="${span}" height="${railH}" fill="url(#hatch)" stroke="var(--diagram-line)" stroke-width="1.5"/>`;
+
+  const holeMarks = shown.map(pos => {
+    const x = mm(pos);
+    return `<rect x="${x - 5}" y="${railY - 1}" width="10" height="12" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1.3"/>
+            <line x1="${x}" y1="${railY - 4}" x2="${x}" y2="${railY + railH + 4}" stroke="var(--diagram-line)" stroke-width="0.8" stroke-dasharray="3 2.5"/>`;
+  }).join('');
+
+  // Break symbol where holes were elided
+  let breakMark = '';
+  if (broken) {
+    const bx = (mm(shown[5]) + mm(shown[6])) / 2;
+    breakMark = `<path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--card-bg)" stroke-width="7"/>
+      <path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--diagram-line)" stroke-width="1.3"/>`;
+  }
+
+  // Dimension arrow between two mm positions at a given y
+  // Narrow spans put their label below the line so short S/E dimensions do not
+  // collide with the wider P label sitting above it.
+  const dim = (a, b, y, label, cls = '') => {
+    const xa = mm(a), xb = mm(b), mid = (xa + xb) / 2;
+    const ly = (xb - xa) < 40 ? y + 12 : y - 5;
+    return `<line x1="${xa}" y1="${y}" x2="${xb}" y2="${y}" stroke="var(--diagram-dim)" stroke-width="1.2" marker-start="url(#tick)" marker-end="url(#tick)"/>
+      <text x="${mid}" y="${ly}" class="dim-label ${cls}" text-anchor="middle">${esc(label)}</text>`;
+  };
+
+  const yS = railY + railH + 22, yL = railY + railH + 52;
+  let dims = dim(0, inputs.S, yS, 'S ' + inputs.S);
+  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yS, 'P ' + r.P);
+  dims += dim(holes[holes.length - 1], L, yS, 'E ' + r.floatE.toFixed(1));
+  dims += dim(0, L, yL, `L ${r.deliveredLen} mm`, 'dim-strong');
+
+  svg.innerHTML = `<defs>${hatch}
+    <marker id="tick" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.2"/>
+    </marker></defs>
+    ${bar}${holeMarks}${breakMark}
+    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${broken ? ' (centre section omitted)' : ''}</text>
+    ${dims}`;
 }
 
 /* ── RAIL UI ── */
@@ -713,16 +835,27 @@ function renderSizeButtons() {
   ).join('');
 }
 
-function selectSeries(s) { state.series = s; renderSeriesButtons(); recalc(); }
-function selectSize(sz) { state.size = sz; renderSizeButtons(); recalc(); }
+function selectSeries(s) { state.series = s; renderSeriesButtons(); useStandardEdges(); }
+function selectSize(sz) { state.size = sz; renderSizeButtons(); useStandardEdges(); }
+
+// Reset S and E to Airtac's standard edge pitch for the selected rail.
+function useStandardEdges() {
+  const spec = getSpec(state.series, state.size);
+  if (spec) {
+    document.getElementById('rail-s').value = spec.stdE;
+    document.getElementById('rail-e').value = spec.stdE;
+  }
+  recalc();
+}
 
 function readRailInputs() {
+  const spec = getSpec(state.series, state.size);
   return {
     series: state.series,
     size: state.size,
     L: parseFloat(document.getElementById('rail-length').value) || 0,
-    S: parseInt(document.getElementById('rail-s').value),
-    E: parseInt(document.getElementById('rail-e').value),
+    S: parseFloat(document.getElementById('rail-s').value) || spec?.stdE || 20,
+    E: parseFloat(document.getElementById('rail-e').value) || spec?.stdE || 20,
     autoN: document.getElementById('rail-auto-n').checked,
     manualN: parseInt(document.getElementById('rail-manual-n').value) || 2,
     qty: Math.max(1, parseInt(document.getElementById('rail-qty').value) || 1),
@@ -735,6 +868,13 @@ function recalc() {
   document.getElementById('rail-length-in').textContent =
     inputs.L > 0 ? `= ${(inputs.L / 25.4).toFixed(2)} in` : '';
 
+  const spec = getSpec(inputs.series, inputs.size);
+  if (spec) {
+    const hint = `standard ${spec.stdE} · range ${spec.minE}–${spec.maxE}`;
+    document.getElementById('rail-s-hint').textContent = hint;
+    document.getElementById('rail-e-hint').textContent = hint;
+  }
+
   const warn = document.getElementById('res-warn');
   const addBtn = document.getElementById('add-rail-btn');
 
@@ -743,13 +883,15 @@ function recalc() {
     document.getElementById('res-pn').textContent = '—';
     document.getElementById('res-rows').innerHTML = '';
     document.getElementById('res-price').textContent = '$0.00';
+    renderDiagram(null);
     warn.style.display = 'none';
     addBtn.disabled = true;
     return;
   }
-  addBtn.disabled = false;
+  addBtn.disabled = !r.valid;
 
   document.getElementById('res-pn').textContent = r.configuredPN;
+  renderDiagram(r, inputs);
 
   const row = (k, v) => `<div class="result-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
   document.getElementById('res-rows').innerHTML =
@@ -760,17 +902,25 @@ function recalc() {
     row('S / E offsets', `${inputs.S} / ${r.floatE.toFixed(1)} mm`) +
     row('Stock rail', r.basePN);
 
-  if (inputs.autoN && inputs.L > 0 && inputs.L < r.minLen) {
+  if (r.errors.length) {
+    warn.className = 'result-warn err';
+    warn.innerHTML = r.errors.map(e => `⛔ ${e}`).join('<br>');
+    warn.style.display = 'block';
+  } else if (r.warnings.length) {
+    warn.className = 'result-warn';
+    warn.innerHTML = r.warnings.map(e => `⚠ ${e}`).join('<br>');
+    warn.style.display = 'block';
+  } else if (inputs.autoN && inputs.L > 0 && inputs.L < r.minLen) {
     warn.className = 'result-warn';
     warn.textContent = `⚠ Minimum length for this configuration is ${r.minLen} mm (2 holes). Priced as ${r.pricedLen} mm.`;
     warn.style.display = 'block';
   } else if (r.eFloats) {
     warn.className = 'result-warn';
-    warn.textContent = `E floats to ${r.floatE.toFixed(1)} mm to hit exact length (selected E = ${inputs.E} mm).`;
+    warn.textContent = `E floats to ${r.floatE.toFixed(1)} mm to hit exact length (selected E = ${inputs.E} mm). Within the ${r.spec.minE}–${r.spec.maxE} mm permitted range.`;
     warn.style.display = 'block';
   } else {
     warn.className = 'result-warn ok';
-    warn.textContent = '✓ Length sits on the standard pitch grid.';
+    warn.textContent = '✓ Length sits on the standard pitch grid and within Airtac edge-pitch limits.';
     warn.style.display = 'block';
   }
 
@@ -1137,7 +1287,7 @@ function showToast(message, type = '') {
 /* ── INIT ── */
 renderSeriesButtons();
 renderBlockCatalog();
-recalc();
+useStandardEdges();
 </script>
 </body>
 </html>

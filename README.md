@@ -9,8 +9,8 @@ Single static page plus one serverless function for sending quotes by email.
 
 ## What it does
 
-**Rail Builder** — cut-length calculator using the geometry model from
-`TSI_Airtac_Rail_Calculator_v26`:
+**Rail Builder** — cut-length calculator using the geometry model published in
+the Airtac brochures (LSH p.15, LSD p.42) and `TSI_Airtac_Rail_Calculator_v26`:
 
 ```
 L = (n-1)·P + S + E
@@ -20,7 +20,22 @@ sell price = list/mm × priced length × (1 - rail discount) + cut fee + handlin
 
 Exact-length mode lets `E` float so the delivered rail matches the customer's
 requested length, and generates the configured part number
-(e.g. `LSD20RLX900-N-D- e=40.0/s=20`). Manual hole-count override is available.
+(e.g. `LSD20RLX900-N-D- e=20.0/s=40`). Manual hole-count override is available.
+A live diagram redraws the hole pattern with the entered values.
+
+### Rail specification and validation
+
+`RAIL_SPEC` in `index.html` holds Airtac's published limits per series and size —
+pitch `P`, standard edge pitch, minimum and maximum edge pitch, and maximum
+single-rail length. A configuration is blocked from being quoted when:
+
+- `S` falls outside the permitted edge-pitch range for that rail
+- the floating `E` lands outside that range (an over- or under-long edge risks
+  breaking through the bolt hole)
+- the length exceeds `Lmax`, where Airtac requires a joint rail
+
+Note that Airtac's standard edge pitch is 40 mm on size 15–25, 55 mm on 30/35 and
+67.5 mm on 45 — not the 20/30 mm the v26 spreadsheet offered.
 
 **Carriage Blocks** — LSH and LSD flange/square blocks, priced at list less any
 configured block discount.

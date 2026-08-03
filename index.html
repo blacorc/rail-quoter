@@ -123,12 +123,6 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-cell .v { font-family: var(--font-mono); font-weight: 600; color: var(--gray-800); white-space: nowrap; }
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
-/* ADMIN PRICE BASIS READOUT */
-.price-basis { display: grid; gap: 6px; margin-top: 4px; }
-.price-basis div { font-size: 12px; padding: 8px 12px; border-radius: 4px; background: var(--gray-50); border-left: 3px solid var(--gray-300); color: var(--gray-600); }
-.price-basis div.web { border-left-color: var(--orange); }
-.price-basis div.internal { border-left-color: var(--green); }
-.price-basis strong { font-family: var(--font-mono); color: var(--navy); }
 
 /* STOCK / LEAD-TIME NOTE */
 .stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
@@ -152,11 +146,14 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .xs-cols .xs-svg { max-width: 100%; }
 .xs-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-500); margin-bottom: 4px; }
 .xs-svg { width: 100%; height: auto; display: block; max-width: 340px; }
-.xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600; }
-.xs-svg .xs-cap { font-family: var(--font-body); font-size: 9px; fill: var(--gray-600); font-weight: 600; }
+.xs-svg .dim-label { font-family: var(--font-mono); font-size: 9px; fill: var(--diagram-dim); font-weight: 600;
+  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3px; stroke-linejoin: round; }
+.xs-svg .xs-cap { font-family: var(--font-body); font-size: 9px; fill: var(--gray-600); font-weight: 600;
+  paint-order: stroke; stroke: var(--card-bg); stroke-width: 3px; stroke-linejoin: round; }
 .xs-svg .xs-cap.dim { fill: var(--gray-400); font-weight: 500; }
 .xs-note { font-size: 11px; color: var(--gray-400); margin-top: 8px; }
-.spec-row .xs-svg { max-width: 300px; margin-top: 10px; }
+.spec-row .xs-svg { max-width: 300px; margin-top: 6px; }
+.spec-views { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 12px; }
 
 /* BUTTONS */
 .btn { padding: 10px 20px; border-radius: var(--radius); border: none; font-family: var(--font-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -226,31 +223,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .toggle-switch input:checked + .toggle-slider { background: var(--orange); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-/* ADMIN PANEL */
-.admin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.5); backdrop-filter: blur(4px); z-index: 400; }
-.admin-overlay.active { display: block; }
-.admin-panel { position: fixed; right: -600px; top: 0; bottom: 0; width: 600px; max-width: 100vw; background: var(--white); z-index: 401; box-shadow: -8px 0 32px rgba(0,0,0,0.15); overflow-y: auto; transition: right 300ms cubic-bezier(0.16, 1, 0.3, 1); }
-.admin-panel.active { right: 0; }
-.admin-header { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 1; }
-.admin-header h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
-.admin-section { padding: 20px 24px; border-bottom: 1px solid var(--gray-100); }
-.admin-section h3 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.admin-table th { background: var(--gray-50); padding: 8px 12px; text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
-.admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--gray-100); }
-.admin-table input { width: 100%; padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px; font-family: var(--font-mono); font-size: 12px; }
-.admin-table input:focus { outline: none; border-color: var(--orange); }
-.admin-table .pn-cell { font-family: var(--font-mono); font-size: 11px; color: var(--gray-600); }
 
-/* PIN */
-.pin-overlay { display: none; position: fixed; inset: 0; background: rgba(11,25,41,0.7); backdrop-filter: blur(8px); z-index: 500; align-items: center; justify-content: center; }
-.pin-overlay.active { display: flex; }
-.pin-card { background: var(--white); border-radius: var(--radius-lg); padding: 40px; text-align: center; box-shadow: var(--shadow-lg); max-width: 340px; width: 100%; }
-.pin-card h3 { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
-.pin-card p { font-size: 13px; color: var(--gray-500); margin-bottom: 20px; }
-.pin-input { width: 180px; padding: 12px; text-align: center; font-size: 24px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 8px; border: 2px solid var(--gray-200); border-radius: var(--radius); transition: var(--transition); }
-.pin-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
-.pin-error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
 
 /* HISTORY */
 .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -280,7 +253,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   .card-body { padding: 16px; }
   .cut-list-table { font-size: 12px; }
   .cut-list-table th, .cut-list-table td { padding: 8px; }
-  .admin-panel { width: 100vw; }
   .totals-box { min-width: auto; width: 100%; }
   .totals-section { justify-content: stretch; }
   .header-subtitle { display: none; }
@@ -300,7 +272,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
   <div class="header-actions">
     <button class="btn-icon" onclick="openHistory()" title="Quote History">🕒</button>
-    <button class="btn-icon" onclick="promptAdmin()" title="Admin Settings">⚙️</button>
   </div>
 </header>
 
@@ -545,126 +516,13 @@ textarea.form-input { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
-<!-- ADMIN -->
-<div class="admin-overlay" id="admin-overlay" onclick="closeAdmin()"></div>
-<div class="admin-panel" id="admin-panel">
-  <div class="admin-header">
-    <h2>⚙️ Admin Settings</h2>
-    <button class="modal-close" onclick="closeAdmin()">✕</button>
-  </div>
-
-  <div class="admin-section">
-    <h3>Web Markup</h3>
-    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
-      Advertised prices are Airtac list plus this markup, so the published figure sits
-      above list and leaves room to come down on enquiry. At 150% a $209.50 rail
-      advertises at $523.75. Benchmarked against AutomationDirect's WON H-series
-      (dimensionally identical to LSH): 150% puts rails at about 75% and blocks at
-      about 91% of their advertised price.
-    </p>
-    <div class="form-group">
-      <label class="form-label">Web Markup (% above list)</label>
-      <input class="form-input" id="admin-web-markup" type="number" min="0" max="500" step="1" oninput="refreshAdminPrices()">
-    </div>
-
-    <h3 style="margin-top:24px;">Internal Quoting — Discount Off List</h3>
-    <p style="font-size:12px;color:var(--gray-500);margin-bottom:16px;">
-      List stays the anchor for internal quoting: a discount here is a straight
-      percentage <strong>off Airtac list</strong>, not off the marked-up web figure.
-      Setting one switches that product line out of web pricing for this browser.
-      Stored <strong>in this browser only</strong> and never published with the site,
-      so visitors always see the web price. Leave at 0 to quote the web price.
-    </p>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Rail Discount (% off list)</label>
-        <input class="form-input" id="admin-rail-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Block Discount (% off list)</label>
-        <input class="form-input" id="admin-block-discount" type="number" min="0" max="95" step="0.5" oninput="refreshAdminPrices()">
-      </div>
-    </div>
-    <div class="price-basis" id="price-basis"></div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Cut / Processing Fee ($)</label>
-        <input class="form-input" id="admin-cutfee" type="number" min="0" step="0.5">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Handling / Packaging ($)</label>
-        <input class="form-input" id="admin-handling" type="number" min="0" step="0.5">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Extra Scrap Buffer (mm)</label>
-      <input class="form-input" id="admin-buffer" type="number" min="0" step="1">
-    </div>
-  </div>
-
-  <div class="admin-section">
-    <h3>Rail List Prices (4000mm stock)</h3>
-    <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
-      <tbody id="admin-rails-tbody"></tbody>
-    </table>
-  </div>
-
-  <div class="admin-section">
-    <h3>Carriage Block List Prices</h3>
-    <table class="admin-table">
-      <thead><tr><th>Part Number</th><th style="width:90px;">List ($)</th><th style="width:100px;">Web Price ($)</th></tr></thead>
-      <tbody id="admin-blocks-tbody"></tbody>
-    </table>
-  </div>
-
-  <div class="admin-section">
-    <h3>Sales Rep Info</h3>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Rep Name</label>
-        <input class="form-input" id="admin-rep-name" placeholder="John Smith">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Rep Phone</label>
-        <input class="form-input" id="admin-rep-phone" placeholder="(555) 123-4567">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Company Name</label>
-      <input class="form-input" id="admin-company-name" placeholder="TSI Solutions">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Logo URL</label>
-      <input class="form-input" id="admin-logo-url" placeholder="https://example.com/logo.png">
-    </div>
-  </div>
-
-  <div class="admin-section">
-    <button class="btn btn-primary" onclick="saveAdminSettings()">💾 Save Settings</button>
-    <button class="btn btn-secondary" onclick="resetPIN()" style="margin-left:8px;">🔑 Change PIN</button>
-    <button class="btn btn-danger" onclick="resetPricing()" style="margin-left:8px;">↺ Reset Prices to Defaults</button>
-  </div>
-</div>
-
-<!-- PIN -->
-<div class="pin-overlay" id="pin-overlay">
-  <div class="pin-card">
-    <h3>Admin Access</h3>
-    <p id="pin-prompt-text">Enter your 4-digit PIN</p>
-    <input class="pin-input" id="pin-input" type="password" inputmode="numeric" maxlength="4" oninput="handlePinEntry(event)">
-    <p class="pin-error" id="pin-error">Incorrect PIN. Try again.</p>
-    <br><button class="btn btn-secondary btn-sm" style="margin-top:16px;" onclick="closePinOverlay()">Cancel</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 /* ════════════════════════════════════════════════════════════════
    CATALOG DEFAULTS — from TSI_Airtac_Rail_Calculator_v26 PriceTable
    and TSI_Airtac_carriage_spreadsheet (TSI Net = 32% of list).
-   All prices admin-editable; stored in localStorage 'airtac_admin'.
+   Prices and markups are edited in this file and take effect on deploy.
    ════════════════════════════════════════════════════════════════ */
 const STOCK_LEN = 4000; // mm, fixed stock rail length
 
@@ -763,28 +621,44 @@ const DEFAULT_BLOCKS = [
   { family: 'LSD', type: 'Square', size: 25, pn: 'LSD25BK-HN-N-D-M6',   list: 31.70 },
 ];
 
-// webMarkup is applied to list to give the advertised price, so the published
-// figure sits above list and leaves room to come down. Customer discounts then
-// come off that advertised price and default to 0.
-const DEFAULT_PRICING = { webMarkup: 150, railDiscount: 0, blockDiscount: 0, cutFee: 10, handling: 0, buffer: 0 };
+/* ════════════════════════════════════════════════════════════════════════
+   PRICING AND CONTACT SETTINGS — edit here, then commit
+   ────────────────────────────────────────────────────────────────────────
+   These are the site's live settings. Change a value, commit it, and Vercel
+   redeploys within a minute or so — the new figure is then what every
+   visitor sees. You can edit this straight from GitHub in a browser: open
+   index.html, click the pencil, change the number, Commit changes.
 
-// list -> advertised web price (public figure, list plus markup)
-function webPrice(list) {
-  const p = getPricing();
-  return list * (1 + Math.max(0, p.webMarkup) / 100);
+   Per-part list prices and markups are in DEFAULT_RAILS and DEFAULT_BLOCKS
+   above. To quote one customer below list, edit the unit price on the quote
+   line itself — those fields are editable and do not change the site.
+   ════════════════════════════════════════════════════════════════════════ */
+const DEFAULT_PRICING = {
+  webMarkup: 150,   // default % above list, for any part without its own markup
+  cutFee: 10,       // $ per cut rail, charged as entered (never marked up)
+  handling: 0,      // $ per rail, charged as entered
+  buffer: 0,        // mm of extra scrap beyond S + E when costing a cut
+};
+
+// Shown in the footer of every quote email.
+const REP_INFO = {
+  name: '',                     // e.g. 'John Smith'
+  phone: '',                    // e.g. '(555) 123-4567'
+  companyName: 'TSI Solutions',
+  logoUrl: '',                  // absolute https:// URL to a logo image
+};
+
+// Markup for one catalog item: its own if set, otherwise the default above.
+function itemMarkup(item) {
+  return (item && typeof item.markup === 'number')
+    ? Math.max(0, item.markup)
+    : Math.max(0, DEFAULT_PRICING.webMarkup);
 }
 
-// Multiplier applied to list for the given product line.
-//
-// List is the anchor either way. With no discount configured — which is every
-// visitor, since discounts live in one browser's localStorage — the public web
-// markup applies. Setting a discount switches that line to internal quoting,
-// where the figure is a straight percentage off list.
-function priceFactor(kind) {
-  const p = getPricing();
-  const disc = kind === 'rail' ? p.railDiscount : p.blockDiscount;
-  if (disc > 0) return 1 - Math.min(95, disc) / 100;
-  return 1 + Math.max(0, p.webMarkup) / 100;
+// Multiplier applied to an item's list price. List is the anchor; the markup
+// lifts it to the advertised figure.
+function itemFactor(item) {
+  return 1 + itemMarkup(item) / 100;
 }
 
 /* ── STATE ── */
@@ -796,16 +670,10 @@ let state = {
 };
 
 /* ── ADMIN DATA ── */
-function getAdmin() {
-  try { return JSON.parse(localStorage.getItem('airtac_admin')) || null; } catch { return null; }
-}
-function getPricing() {
-  const a = getAdmin();
-  return { ...DEFAULT_PRICING, ...(a?.pricing || {}) };
-}
-function getRails() { const a = getAdmin(); return a?.rails?.length ? a.rails : DEFAULT_RAILS; }
-function getBlocks() { const a = getAdmin(); return a?.blocks?.length ? a.blocks : DEFAULT_BLOCKS; }
-function getRepInfo() { const a = getAdmin(); return a?.rep || {}; }
+function getPricing() { return DEFAULT_PRICING; }
+function getRails() { return DEFAULT_RAILS; }
+function getBlocks() { return DEFAULT_BLOCKS; }
+function getRepInfo() { return REP_INFO; }
 function getHistory() {
   try { return JSON.parse(localStorage.getItem('airtac_history')) || []; } catch { return []; }
 }
@@ -849,7 +717,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   // up or discounted.
   const scrap = S + E + p.buffer;
   const usable = STOCK_LEN - scrap;
-  const factor = priceFactor('rail');
+  const factor = itemFactor(rail);
   const listPerMm = rail.list / usable;
   const materialList = listPerMm * pricedLen;
   const material = materialList * factor;
@@ -879,7 +747,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
 }
 
 function blockSellPrice(block) {
-  return block.list * priceFactor('block');
+  return block.list * itemFactor(block);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1080,6 +948,44 @@ function blockSectionSVG(block, s) {
     ${dimV(cx + bw + 12, y0, top, `H ${s.H}`)}
     ${dimV(cx - bw - 12, y0, bBot, `H1 ${s.H1}`, 'left')}
     <text x="${cx}" y="${top - 6}" class="xs-cap" text-anchor="middle">${s.M} × ${s.A} mm centres</text>
+  </svg>`;
+}
+
+// Carriage seen from above: block body inside its end caps, the four mounting
+// bolts on their A x B pattern, and the rail running through underneath.
+// Symbols follow the catalog drawing — C overall length, C1 body length,
+// A bolt spacing along the rail, B bolt spacing across it.
+function blockTopViewSVG(block, s) {
+  const spec = getSpec(block.family, block.size);
+  if (!spec || !s) return '';
+  const W = 300, H = 176, cx = 138, cy = 84;
+  const k = Math.min(150 / s.C, 78 / s.F);
+
+  const halfL = s.C / 2 * k, halfW = s.F / 2 * k;      // outer block
+  const bodyL = s.C1 / 2 * k;                           // body inside end caps
+  const railW = spec.W / 2 * k;
+  const bx = s.A / 2 * k, by = s.B / 2 * k;             // bolt pattern
+  const r = Math.max(2.6, Math.min(5, 2.2 * k));
+
+  const bolts = [[-1,-1],[1,-1],[-1,1],[1,1]].map(([sx, sy]) => `
+    <circle cx="${cx + sx * bx}" cy="${cy + sy * by}" r="${r}" fill="var(--card-bg)" stroke="var(--diagram-line)" stroke-width="1.3"/>
+    <line x1="${cx + sx * bx - r - 2}" y1="${cy + sy * by}" x2="${cx + sx * bx + r + 2}" y2="${cy + sy * by}" stroke="var(--diagram-line)" stroke-width="0.6"/>
+    <line x1="${cx + sx * bx}" y1="${cy + sy * by - r - 2}" x2="${cx + sx * bx}" y2="${cy + sy * by + r + 2}" stroke="var(--diagram-line)" stroke-width="0.6"/>`).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" class="xs-svg" role="img" aria-label="${block.pn} top view">${SVG_DEFS}
+    <rect x="8" y="${cy - railW}" width="${W - 16}" height="${railW * 2}" fill="url(#xhatch)" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="4 3"/>
+    <rect x="${cx - halfL}" y="${cy - halfW}" width="${halfL * 2}" height="${halfW * 2}" rx="3"
+          fill="var(--card-bg)" fill-opacity="0.95" stroke="var(--diagram-line)" stroke-width="1.6"/>
+    <rect x="${cx - bodyL}" y="${cy - halfW}" width="${bodyL * 2}" height="${halfW * 2}"
+          fill="none" stroke="var(--diagram-line)" stroke-width="1" stroke-dasharray="3 2"/>
+    <line x1="${cx - halfL}" y1="${cy}" x2="${cx + halfL}" y2="${cy}" stroke="var(--diagram-line)" stroke-width="0.6" stroke-dasharray="6 2 2 2"/>
+    ${bolts}
+    ${dimH(cx - halfL, cx + halfL, cy - halfW - 26, `C ${s.C}`)}
+    ${dimH(cx - bodyL, cx + bodyL, cy - halfW - 12, `C1 ${s.C1}`)}
+    ${dimH(cx - bx, cx + bx, cy + halfW + 20, `A ${s.A}`)}
+    ${dimV(cx - halfL - 14, cy - by, cy + by, `B ${s.B}`, 'left')}
+    ${dimV(cx + halfL + 14, cy - halfW, cy + halfW, `F ${s.F}`)}
+    <text x="${W - 10}" y="${cy - railW - 6}" class="xs-cap" text-anchor="end">rail ${spec.W} mm</text>
   </svg>`;
 }
 
@@ -1293,7 +1199,10 @@ function specDetailHTML(b, s) {
     ${cell('Moments (kN·m)', `${s.MR}/${s.MP}/${s.MY}`)}
     ${cell('Block weight', s.wt + ' kg')}
   </div>
-  ${blockSectionSVG(b, s)}
+  <div class="spec-views">
+    <div><div class="xs-title">Cross-section</div>${blockSectionSVG(b, s)}</div>
+    <div><div class="xs-title">Top view</div>${blockTopViewSVG(b, s)}</div>
+  </div>
   <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
 }
 
@@ -1532,148 +1441,6 @@ function reopenQuote(id) {
   const entry = getHistory().find(h => h.id === id); if (!entry) return;
   state.quoteLines = entry.lines || [];
   closeHistory(); renderQuote(); showToast('Quote loaded.', 'success');
-}
-
-/* ── PIN ── */
-async function hashPin(pin) {
-  const data = new TextEncoder().encode(pin + 'airtac_salt');
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function promptAdmin() {
-  const pinHash = localStorage.getItem('airtac_pin_hash');
-  document.getElementById('pin-prompt-text').textContent = pinHash ? 'Enter your 4-digit PIN' : 'Create a new 4-digit PIN';
-  document.getElementById('pin-overlay').classList.add('active');
-  document.getElementById('pin-input').value = '';
-  document.getElementById('pin-input').focus();
-  document.getElementById('pin-error').style.display = 'none';
-  window._pinMode = pinHash ? 'verify' : 'create';
-}
-
-async function handlePinEntry(e) {
-  const input = document.getElementById('pin-input');
-  if (input.value.length < 4) return;
-  const hash = await hashPin(input.value);
-  if (window._pinMode === 'create') { localStorage.setItem('airtac_pin_hash', hash); closePinOverlay(); openAdmin(); showToast('PIN created.', 'success'); }
-  else if (window._pinMode === 'verify') {
-    if (hash === localStorage.getItem('airtac_pin_hash')) { closePinOverlay(); openAdmin(); }
-    else { document.getElementById('pin-error').style.display = 'block'; input.value = ''; input.focus(); }
-  } else if (window._pinMode === 'reset') { localStorage.setItem('airtac_pin_hash', hash); closePinOverlay(); showToast('PIN updated.', 'success'); }
-}
-
-function closePinOverlay() { document.getElementById('pin-overlay').classList.remove('active'); }
-
-/* ── ADMIN ── */
-function openAdmin() {
-  const p = getPricing();
-  document.getElementById('admin-web-markup').value = p.webMarkup;
-  document.getElementById('admin-rail-discount').value = p.railDiscount;
-  document.getElementById('admin-block-discount').value = p.blockDiscount;
-  document.getElementById('admin-cutfee').value = p.cutFee;
-  document.getElementById('admin-handling').value = p.handling;
-  document.getElementById('admin-buffer').value = p.buffer;
-  const rep = getRepInfo();
-  document.getElementById('admin-rep-name').value = rep.name || '';
-  document.getElementById('admin-rep-phone').value = rep.phone || '';
-  document.getElementById('admin-company-name').value = rep.companyName || '';
-  document.getElementById('admin-logo-url').value = rep.logoUrl || '';
-
-  document.getElementById('admin-rails-tbody').innerHTML = getRails().map((r, i) => `<tr>
-    <td class="pn-cell">${r.pn}</td>
-    <td><input type="number" step="0.01" min="0" value="${r.list}" data-rail-idx="${i}" oninput="refreshAdminPrices()"></td>
-    <td class="web-cell" data-web-rail="${i}"></td>
-  </tr>`).join('');
-
-  document.getElementById('admin-blocks-tbody').innerHTML = getBlocks().map((b, i) => `<tr>
-    <td class="pn-cell">${b.pn}</td>
-    <td><input type="number" step="0.01" min="0" value="${b.list}" data-block-list-idx="${i}" oninput="refreshAdminPrices()"></td>
-    <td class="web-cell" data-web-block="${i}"></td>
-  </tr>`).join('');
-
-  refreshAdminPrices();
-  document.getElementById('admin-overlay').classList.add('active');
-  setTimeout(() => document.getElementById('admin-panel').classList.add('active'), 10);
-}
-
-function closeAdmin() {
-  document.getElementById('admin-panel').classList.remove('active');
-  setTimeout(() => document.getElementById('admin-overlay').classList.remove('active'), 300);
-}
-
-// Live-update the Web Price column as the markup or a list price is edited,
-// so the effect of a markup change is visible before saving.
-function refreshAdminPrices() {
-  const num = id => Math.max(0, parseFloat(document.getElementById(id)?.value) || 0);
-  const markup = num('admin-web-markup');
-  const webFactor = 1 + markup / 100;
-
-  document.querySelectorAll('[data-web-rail]').forEach(td => {
-    const v = parseFloat(document.querySelector(`[data-rail-idx="${td.dataset.webRail}"]`)?.value) || 0;
-    td.textContent = '$' + (v * webFactor).toFixed(2);
-  });
-  document.querySelectorAll('[data-web-block]').forEach(td => {
-    const v = parseFloat(document.querySelector(`[data-block-list-idx="${td.dataset.webBlock}"]`)?.value) || 0;
-    td.textContent = '$' + (v * webFactor).toFixed(2);
-  });
-
-  // Spell out what each line is currently quoting at, relative to list.
-  const basis = (label, disc) => disc > 0
-    ? `<div class="internal"><strong>${label}</strong> quoting internally at
-       <strong>${(100 - disc).toFixed(1)}% of list</strong> — ${disc}% off list.</div>`
-    : `<div class="web"><strong>${label}</strong> quoting at the web price,
-       <strong>${(webFactor * 100).toFixed(1)}% of list</strong> — list plus ${markup}% markup.</div>`;
-  const el = document.getElementById('price-basis');
-  if (el) el.innerHTML = basis('Rails', num('admin-rail-discount')) + basis('Blocks', num('admin-block-discount'));
-}
-
-function saveAdminSettings() {
-  const rails = getRails().map((r, i) => ({
-    ...r,
-    list: parseFloat(document.querySelector(`[data-rail-idx="${i}"]`)?.value) || r.list,
-  }));
-  const blocks = getBlocks().map((b, i) => ({
-    ...b,
-    list: parseFloat(document.querySelector(`[data-block-list-idx="${i}"]`)?.value) || b.list,
-  }));
-  const admin = {
-    pricing: {
-      webMarkup: Math.min(500, Math.max(0, parseFloat(document.getElementById('admin-web-markup').value) || 0)),
-      railDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-rail-discount').value) || 0)),
-      blockDiscount: Math.min(95, Math.max(0, parseFloat(document.getElementById('admin-block-discount').value) || 0)),
-      cutFee: Math.max(0, parseFloat(document.getElementById('admin-cutfee').value) || 0),
-      handling: Math.max(0, parseFloat(document.getElementById('admin-handling').value) || 0),
-      buffer: Math.max(0, parseFloat(document.getElementById('admin-buffer').value) || 0),
-    },
-    rails, blocks,
-    rep: {
-      name: document.getElementById('admin-rep-name').value.trim(),
-      phone: document.getElementById('admin-rep-phone').value.trim(),
-      companyName: document.getElementById('admin-company-name').value.trim(),
-      logoUrl: document.getElementById('admin-logo-url').value.trim(),
-    },
-  };
-  localStorage.setItem('airtac_admin', JSON.stringify(admin));
-  renderBlockCatalog();
-  recalc();
-  showToast('Settings saved.', 'success');
-}
-
-function resetPricing() {
-  const a = getAdmin() || {};
-  delete a.rails; delete a.blocks; delete a.pricing;
-  localStorage.setItem('airtac_admin', JSON.stringify(a));
-  openAdmin(); renderBlockCatalog(); recalc();
-  showToast('Prices reset to spreadsheet defaults.', 'success');
-}
-
-function resetPIN() {
-  document.getElementById('pin-prompt-text').textContent = 'Enter a new 4-digit PIN';
-  document.getElementById('pin-overlay').classList.add('active');
-  document.getElementById('pin-input').value = '';
-  document.getElementById('pin-input').focus();
-  document.getElementById('pin-error').style.display = 'none';
-  window._pinMode = 'reset';
 }
 
 /* ── TOAST ── */

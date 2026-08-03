@@ -40,8 +40,8 @@ Note that Airtac's standard edge pitch is 40 mm on size 15–25, 55 mm on 30/35 
 **Carriage Blocks** — LSH and LSD flange/square blocks, filtered to those that fit
 the selected rail.
 
-**Quote** — combined rail + block line items, editable qty and price, emailed to
-the customer with a copy of the lead to the rep. A "Request Volume Pricing"
+**Quote** — combined rail + block line items with editable quantity and unit
+price, emailed to the customer with a copy of the lead to the rep. A "Request Volume Pricing"
 action sends the same build as a pricing enquiry instead of a firm quote.
 
 ## Pricing model — list-based, published above list
@@ -50,21 +50,27 @@ action sends the same build as a pricing enquiry instead of a firm quote.
 list prices only, so neither the source nor the browser reveals what stock is
 bought for.
 
-**List is the anchor.** Every price is list times a factor, set per product line
-in the admin panel (gear icon, PIN-gated):
+**List is the anchor.** Every price is that part's Airtac list price times
+`1 + markup`. There is no admin panel and no runtime configuration — the settings
+are constants near the top of `index.html`:
 
-| Configuration | Factor | Used by |
-|---|---|---|
-| No discount set | `1 + web markup` (default 150% → 2.50) | Any visitor — the public web price |
-| Discount set | `1 - discount` (e.g. 15% → 0.85) | Internal quoting, straight off list |
+| Constant | What it sets |
+|---|---|
+| `DEFAULT_RAILS` / `DEFAULT_BLOCKS` | Per-part list price and markup |
+| `DEFAULT_PRICING` | Default markup, cut fee, handling, scrap buffer |
+| `REP_INFO` | Name, phone, company and logo on the quote email |
 
-The two do **not** compound. Setting a rail discount switches that line out of web
-pricing rather than discounting the marked-up figure, so "15% off" means 85% of
-list and nothing else. The admin panel states the current factor for rails and
-blocks in as many words, and lists each part's web price beside its list price.
+Markup is per part, so one SKU can be repositioned without moving the rest;
+anything without its own `markup` inherits `DEFAULT_PRICING.webMarkup`.
 
-Discounts live in one browser's localStorage and are never part of the deployed
-site, so a visitor with no configuration always sees the web price.
+**To change a price:** edit the value, commit, and Vercel redeploys — the new
+figure is then what every visitor sees. This works from GitHub in a browser
+(open `index.html`, pencil icon, edit, Commit changes), so no local checkout is
+needed. Every change is versioned, so `git log` shows when a price moved and why.
+
+**To quote one customer below list**, edit the unit price on the quote line
+itself. Those fields are editable and affect only that quote, never the site.
+
 
 The 150% default is benchmarked against AutomationDirect's WON H-series, which is
 dimensionally identical to Airtac LSH (same H, W, W1 and H1 at every size) and so

@@ -141,6 +141,15 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 
 
 /* ACCOUNT PRICING */
+.code-input { width: 100%; max-width: 260px; padding: 14px 16px; text-align: center; font-family: var(--font-mono); font-size: 20px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; border: 2px solid var(--gray-200); border-radius: var(--radius); background: var(--white); color: var(--navy); transition: var(--transition); }
+.code-input::placeholder { color: var(--gray-300); letter-spacing: 3px; font-weight: 500; }
+.code-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-glow); }
+.code-error { display: none; color: var(--red); font-size: 12.5px; margin-top: 12px; }
+@keyframes priceFlash { 0% { background: rgba(31,157,85,0.35); } 100% { background: transparent; } }
+.price-flash { animation: priceFlash 1.4s ease-out; border-radius: 4px; }
+.account-prompt { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--gray-200); font-size: 13px; color: var(--gray-600); }
+.account-prompt button { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--orange); cursor: pointer; text-decoration: underline; }
+.account-prompt button:hover { color: var(--orange-hover); }
 .account-banner { margin-bottom: 20px; background: rgba(31,157,85,0.07); border: 1px solid rgba(31,157,85,0.3); border-left: 4px solid var(--green); border-radius: var(--radius); padding: 12px 18px; }
 .account-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .account-name { font-size: 14px; font-weight: 700; color: #15803d; }
@@ -383,6 +392,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <button class="btn btn-sm btn-secondary" onclick="openSendModal('availability')">
                 ✉️ Ask about another size
               </button>
+              <div class="account-prompt" id="account-prompt">
+                Been issued an account code?
+                <button onclick="promptAccountCode()">Enter it to see your pricing</button>
+              </div>
             </div>
           </div>
 
@@ -640,6 +653,30 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeSendModal()">Cancel</button>
       <button class="btn btn-primary" id="send-btn" onclick="sendQuote()">✉️ Send My Quote</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT CODE MODAL -->
+<div class="modal-overlay" id="account-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Account Pricing</div>
+      <button class="modal-close" onclick="closeAccountModal()">✕</button>
+    </div>
+    <div class="modal-body" style="text-align:center;">
+      <p style="font-size:13.5px;color:var(--gray-600);line-height:1.6;margin-bottom:18px;">
+        If TSI Solutions has issued you an account code, enter it below to see
+        your pricing on every rail and carriage block.
+      </p>
+      <input class="code-input" id="account-code-input" type="text" maxlength="16"
+             placeholder="ACME-7K2F" autocomplete="off" spellcheck="false"
+             oninput="onAccountCodeInput()" onkeydown="if(event.key==='Enter')submitAccountCode()">
+      <p class="code-error" id="account-code-error">That code was not recognised. Check it and try again.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAccountModal()">Cancel</button>
+      <button class="btn btn-primary" id="account-code-btn" onclick="submitAccountCode()">Apply my pricing</button>
     </div>
   </div>
 </div>
@@ -1213,13 +1250,21 @@ function clearAccount() {
 function renderAccountBanner() {
   const el = document.getElementById('account-banner');
   const c = state.customer;
-  if (!c) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  if (!c) {
+    el.style.display = 'none'; el.innerHTML = '';
+    const prompt = document.getElementById('account-prompt');
+    if (prompt) prompt.style.display = '';
+    return;
+  }
 
   const rates = [];
   if (c.rail > 0) rates.push(`rails ${c.rail}% off list`);
   if (c.block > 0) rates.push(`blocks ${c.block}% off list`);
   const nParts = Object.keys(c.parts || {}).length;
   if (nParts) rates.push(`${nParts} part${nParts > 1 ? 's' : ''} at a negotiated rate`);
+
+  const prompt = document.getElementById('account-prompt');
+  if (prompt) prompt.style.display = 'none';
 
   el.innerHTML = `<div class="account-inner">
       <div>
@@ -1232,8 +1277,58 @@ function renderAccountBanner() {
 }
 
 function promptAccountCode() {
-  const entered = window.prompt('Enter your account code');
-  if (entered) resolveAccount(entered.trim());
+  document.getElementById('account-code-error').style.display = 'none';
+  const input = document.getElementById('account-code-input');
+  input.value = '';
+  document.getElementById('account-modal').classList.add('active');
+  setTimeout(() => input.focus(), 60);
+}
+
+function closeAccountModal() {
+  document.getElementById('account-modal').classList.remove('active');
+}
+
+// Codes are issued uppercase, so type them that way whatever the caps lock.
+function onAccountCodeInput() {
+  const input = document.getElementById('account-code-input');
+  const at = input.selectionStart;
+  input.value = input.value.toUpperCase();
+  input.setSelectionRange(at, at);
+  document.getElementById('account-code-error').style.display = 'none';
+}
+
+async function submitAccountCode() {
+  const input = document.getElementById('account-code-input');
+  const code = input.value.trim();
+  if (!code) { input.focus(); return; }
+
+  const btn = document.getElementById('account-code-btn');
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  const ok = await resolveAccount(code, { quiet: true });
+
+  btn.disabled = false; btn.textContent = label;
+  if (ok) {
+    closeAccountModal();
+    flashPrices();
+    showToast(`${state.customer.name} pricing applied.`, 'success');
+  } else {
+    document.getElementById('account-code-error').style.display = 'block';
+    input.value = ''; input.focus();
+  }
+}
+
+// Briefly highlight the figures that just changed, so applying a code reads
+// as something that happened rather than a silent swap.
+function flashPrices() {
+  const targets = [document.getElementById('res-price'), ...document.querySelectorAll('.catalog-table td.price')];
+  targets.forEach(el => {
+    if (!el) return;
+    el.classList.remove('price-flash');
+    void el.offsetWidth;          // restart the animation
+    el.classList.add('price-flash');
+  });
 }
 
 // On load: ?c=CODE wins, otherwise resume the code held for this session.

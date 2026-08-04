@@ -140,6 +140,16 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .spec-note { margin-top: 10px; font-size: 11px; color: var(--gray-400); }
 
 
+/* ACCOUNT PRICING */
+.account-banner { margin-bottom: 20px; background: rgba(31,157,85,0.07); border: 1px solid rgba(31,157,85,0.3); border-left: 4px solid var(--green); border-radius: var(--radius); padding: 12px 18px; }
+.account-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.account-name { font-size: 14px; font-weight: 700; color: #15803d; }
+.account-rates { font-size: 12.5px; color: var(--gray-600); margin-top: 2px; }
+.result-was { text-align: right; font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+.result-was s { color: var(--gray-400); }
+.result-was strong { color: #15803d; }
+.catalog-table .was { color: var(--gray-400); font-weight: 400; margin-right: 5px; }
+
 /* REFERENCE SECTION */
 .reference h2 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 12px; letter-spacing: -0.2px; }
 .reference h3 { font-size: 16px; font-weight: 700; color: var(--navy); margin: 28px 0 10px; }
@@ -299,11 +309,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
     </div>
   </div>
   <div class="header-actions">
+    <a class="header-link" href="#" onclick="promptAccountCode();return false;">Account code</a>
     <button class="btn-icon" onclick="openHistory()" title="Quote History">🕒</button>
   </div>
 </header>
 
 <main class="main">
+
+  <div class="account-banner" id="account-banner" style="display:none;"></div>
 
   <!-- RAIL BUILDER -->
   <section id="panel-rail">
@@ -396,9 +409,10 @@ textarea.form-input { resize: vertical; min-height: 80px; }
             <div class="result-rows" id="res-rows"></div>
             <div class="result-warn" id="res-warn" style="display:none;"></div>
             <div class="result-price">
-              <span class="label">Unit Price</span>
+              <span class="label" id="res-price-label">Unit Price</span>
               <span class="value" id="res-price">$0.00</span>
             </div>
+            <div class="result-was" id="res-was" style="display:none;"></div>
             <div style="margin-top:16px;text-align:right;">
               <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
             </div>
@@ -790,14 +804,33 @@ function itemMarkup(item) {
     : Math.max(0, DEFAULT_PRICING.webMarkup);
 }
 
-// Multiplier applied to an item's list price. List is the anchor; the markup
-// lifts it to the advertised figure.
-function itemFactor(item) {
+// Multiplier applied to an item's list price. List is the anchor throughout.
+//
+// Published price is list plus that part's markup. An account code switches
+// to that customer's rate, which is a percentage OFF list, resolved in this
+// order: a per-part override, then the rail or block line rate, then the
+// published price if the account has no rate for that line.
+function publishedFactor(item) {
   return 1 + itemMarkup(item) / 100;
+}
+
+function itemFactor(item, kind) {
+  const c = state.customer;
+  if (c) {
+    const override = (item && item.pn && c.parts) ? c.parts[item.pn] : undefined;
+    const disc = (typeof override === 'number' && override > 0)
+      ? override
+      : (kind === 'rail' ? c.rail : c.block);
+    if (typeof disc === 'number' && disc > 0) {
+      return 1 - Math.min(95, disc) / 100;
+    }
+  }
+  return publishedFactor(item);
 }
 
 /* ── STATE ── */
 let state = {
+  customer: null,      // resolved account pricing, when an access code is in play
   series: 'LSH',
   size: 20,
   blockFilter: true,   // show only blocks that fit the selected rail
@@ -852,11 +885,13 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
   // up or discounted.
   const scrap = S + E + p.buffer;
   const usable = STOCK_LEN - scrap;
-  const factor = itemFactor(rail);
+  const factor = itemFactor(rail, 'rail');
   const listPerMm = rail.list / usable;
   const materialList = listPerMm * pricedLen;
   const material = materialList * factor;
   const sellPrice = material + p.cutFee + p.handling;
+  // What this rail costs without an account, so the saving can be shown.
+  const publishedPrice = materialList * publishedFactor(rail) + p.cutFee + p.handling;
 
   // Spec validation against Airtac's published limits.
   const errors = [], warnings = [];
@@ -874,7 +909,7 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
 
   return {
     P, spec, n: pnN, pricedLen, deliveredLen, floatE: pnE, eFloats,
-    configuredPN, basePN: rail.pn, listPerMm, sellPrice,
+    configuredPN, basePN: rail.pn, listPerMm, sellPrice, publishedPrice,
     materialList, material, factor, S,
     errors, warnings, valid: errors.length === 0,
     minLen: P + S + E, // n=2 floor
@@ -882,7 +917,11 @@ function computeRail({ series, size, L, S, E, autoN, manualN }) {
 }
 
 function blockSellPrice(block) {
-  return block.list * itemFactor(block);
+  return block.list * itemFactor(block, 'block');
+}
+
+function blockPublishedPrice(block) {
+  return block.list * publishedFactor(block);
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1126,6 +1165,93 @@ function blockTopViewSVG(block, s) {
   </svg>`;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   ACCOUNT PRICING
+   An access code sent to an OEM resolves server-side to their rates, so
+   the code list and everyone's discounts stay off the page. The code is
+   read from ?c= on the URL, or entered by hand, and held for the session.
+   ════════════════════════════════════════════════════════════════ */
+const ACCOUNT_KEY = 'airtac_account_code';
+
+async function resolveAccount(code, { quiet = false } = {}) {
+  if (!code) return false;
+  try {
+    const r = await fetch('/api/customer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    if (!r.ok) {
+      sessionStorage.removeItem(ACCOUNT_KEY);
+      if (!quiet) showToast('That account code was not recognised.', 'error');
+      return false;
+    }
+    state.customer = await r.json();
+    sessionStorage.setItem(ACCOUNT_KEY, state.customer.code);
+    renderAccountBanner();
+    renderBlockCatalog();
+    renderQuote();
+    recalc();
+    if (!quiet) showToast(`${state.customer.name} pricing applied.`, 'success');
+    return true;
+  } catch {
+    if (!quiet) showToast('Could not check that code. Try again.', 'error');
+    return false;
+  }
+}
+
+function clearAccount() {
+  state.customer = null;
+  sessionStorage.removeItem(ACCOUNT_KEY);
+  renderAccountBanner();
+  renderBlockCatalog();
+  renderQuote();
+  recalc();
+  showToast('Showing published pricing.', 'success');
+}
+
+function renderAccountBanner() {
+  const el = document.getElementById('account-banner');
+  const c = state.customer;
+  if (!c) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  const rates = [];
+  if (c.rail > 0) rates.push(`rails ${c.rail}% off list`);
+  if (c.block > 0) rates.push(`blocks ${c.block}% off list`);
+  const nParts = Object.keys(c.parts || {}).length;
+  if (nParts) rates.push(`${nParts} part${nParts > 1 ? 's' : ''} at a negotiated rate`);
+
+  el.innerHTML = `<div class="account-inner">
+      <div>
+        <div class="account-name">✓ ${c.name} account pricing</div>
+        <div class="account-rates">${rates.join(' · ') || 'Published pricing'}</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="clearAccount()">Show published prices</button>
+    </div>`;
+  el.style.display = 'block';
+}
+
+function promptAccountCode() {
+  const entered = window.prompt('Enter your account code');
+  if (entered) resolveAccount(entered.trim());
+}
+
+// On load: ?c=CODE wins, otherwise resume the code held for this session.
+async function initAccount() {
+  const fromUrl = new URLSearchParams(location.search).get('c');
+  if (fromUrl) {
+    const ok = await resolveAccount(fromUrl.trim(), { quiet: true });
+    if (ok) {
+      // Keep the code out of the visible URL once it has been applied.
+      history.replaceState({}, '', location.pathname);
+      showToast(`${state.customer.name} pricing applied.`, 'success');
+    }
+    return;
+  }
+  const saved = sessionStorage.getItem(ACCOUNT_KEY);
+  if (saved) await resolveAccount(saved, { quiet: true });
+}
+
 /* ── RAIL UI ── */
 function renderSeriesButtons() {
   document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
@@ -1239,6 +1365,12 @@ function recalc() {
   }
 
   document.getElementById('res-price').textContent = '$' + r.sellPrice.toFixed(2);
+  const wasEl = document.getElementById('res-was');
+  if (state.customer && r.publishedPrice - r.sellPrice > 0.005) {
+    wasEl.innerHTML = `<s>$${r.publishedPrice.toFixed(2)}</s> published ·
+      <strong>save $${(r.publishedPrice - r.sellPrice).toFixed(2)}</strong>`;
+    wasEl.style.display = 'block';
+  } else { wasEl.style.display = 'none'; }
 }
 
 function addRailToQuote() {
@@ -1309,7 +1441,12 @@ function renderBlockCatalog() {
           <td>${b.size}</td>
           <td class="pn">${b.pn}</td>
           <td class="price" style="font-weight:500;color:var(--gray-600);">${s ? `${s.dynC} / ${s.statC}` : '—'}</td>
-          <td class="price">$${blockSellPrice(b).toFixed(2)}</td>
+          <td class="price">${(() => {
+            const now = blockSellPrice(b), pub = blockPublishedPrice(b);
+            return (state.customer && pub - now > 0.005)
+              ? `<s class="was">$${pub.toFixed(2)}</s> $${now.toFixed(2)}`
+              : `$${now.toFixed(2)}`;
+          })()}</td>
           <td><input class="qty-input" type="number" min="1" value="1" id="blk-qty-${b.pn}"></td>
           <td><button class="btn btn-sm btn-primary" onclick="addBlockToQuote('${b.pn}')">Add</button></td>
           <td>${s ? `<button class="spec-toggle" onclick="toggleSpec(this, '${b.pn}')">Specs ▸</button>` : ''}</td>
@@ -1537,6 +1674,7 @@ async function sendQuote() {
         projectName,
         notes: document.getElementById('send-notes').value,
         subject: `${cfg.subject}${projectName ? ` — ${projectName}` : ''}`,
+        accessCode: state.customer ? state.customer.code : undefined,
         quoteHTML: buildQuoteHTML(),
       }),
     });
@@ -1592,6 +1730,7 @@ function showToast(message, type = '') {
 renderSeriesButtons();
 renderBlockCatalog();
 useStandardEdges();
+initAccount();
 </script>
 
 <!-- Vercel Web Analytics — page views and visitors, cookieless, no consent

@@ -1,9 +1,16 @@
+const { lookupCustomer } = require('../lib/customers');
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { toEmail, customerName, company, phone, projectName, quoteHTML, notes, subject } = req.body || {};
+  const { toEmail, customerName, company, phone, projectName, quoteHTML, notes, subject,
+          accessCode } = req.body || {};
+
+  // Re-resolve the code here rather than trusting a name from the browser, so
+  // the account shown on a lead notification is always the real one.
+  const account = lookupCustomer(accessCode);
 
   if (!toEmail) {
     return res.status(400).json({ error: 'Missing recipient email' });
@@ -64,6 +71,7 @@ module.exports = async function handler(req, res) {
             <tr><td style="padding:6px 0;color:#666;">Phone</td><td style="padding:6px 0;font-weight:600;">${phone || '—'}</td></tr>
             <tr><td style="padding:6px 0;color:#666;">Project</td><td style="padding:6px 0;font-weight:600;">${projectName || '—'}</td></tr>
             ${notes ? `<tr><td style="padding:6px 0;color:#666;">Notes</td><td style="padding:6px 0;">${notes}</td></tr>` : ''}
+            ${account ? `<tr><td style="padding:6px 0;color:#666;">Account</td><td style="padding:6px 0;font-weight:600;color:#15803d;">${account.name} (${account.code}) — quoted at account rates</td></tr>` : ''}
           </table>
           <hr style="border:none;border-top:1px solid #eee;margin-bottom:24px;">
           <p style="color:#666;font-size:13px;margin-bottom:16px;">Quote sent to customer:</p>
@@ -73,7 +81,8 @@ module.exports = async function handler(req, res) {
       // Lead notification: replying goes straight back to the customer.
       await send(
         repEmail,
-        `New Lead: ${customerName || toEmail}${company ? ` @ ${company}` : ''}`,
+        `New Lead: ${customerName || toEmail}${company ? ` @ ${company}` : ''}` +
+          (account ? ` [${account.name}]` : ''),
         leadHTML,
         toEmail,
       );

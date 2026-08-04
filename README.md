@@ -111,6 +111,7 @@ See `.env.example`.
 | `FROM_EMAIL` | Sender address; must be a Resend-verified domain (`onboarding@resend.dev` works for testing) |
 | `REP_EMAIL` | Where lead notifications are sent — must be a real mailbox |
 | `REPLY_TO` | Optional. Where customer replies land; defaults to `REP_EMAIL` |
+| `CUSTOMER_CODES` | Optional. Customer account pricing as JSON; see `.env.example` |
 
 Without `RESEND_API_KEY` the app still calculates and quotes normally — only the
 email button returns "Email service not configured".
@@ -118,6 +119,26 @@ email button returns "Email service not configured".
 `FROM_EMAIL` is typically a send-only address on a domain with no mailbox, so
 both emails set a reply-to: the customer's quote replies to `REPLY_TO` (or
 `REP_EMAIL`), and the lead notification replies straight to the customer.
+
+## Customer account pricing
+
+An OEM given a link like `https://industriallinearrail.com/?c=ACME-7K2F` sees
+their negotiated rates instead of published pricing, with the published figure
+shown alongside so the saving is visible. The code can also be typed via the
+"Account code" link in the header, and is held for the browser session.
+
+Rates live in the `CUSTOMER_CODES` environment variable and are resolved by
+`/api/customer`, which returns only the matching account — so the code list and
+everyone else's rates are never sent to a browser and cannot be enumerated.
+Precedence is per-part override, then the rail or block line rate, then the
+published web price.
+
+Quotes from a coded session are tagged on the lead notification
+(`New Lead: Jane Smith @ Acme [Acme Automation]`), with the code re-resolved
+server-side rather than trusted from the client.
+
+See `lib/customers.js` for the margin guardrail: rails and blocks are bought at
+different fractions of list, so they are not equally discountable.
 
 ## Analytics
 

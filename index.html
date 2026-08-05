@@ -977,7 +977,7 @@ function renderDiagram(r, inputs) {
   const mm = v => x0 + (v / L) * span;           // mm -> svg x
   const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 
-  // Hole centres: S, S+P, S+2P ... (n of them)
+  // Hole centers: S, S+P, S+2P ... (n of them)
   const holes = [];
   for (let i = 0; i < r.n; i++) holes.push(inputs.S + i * r.P);
 
@@ -1030,7 +1030,7 @@ function renderDiagram(r, inputs) {
       <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.2"/>
     </marker></defs>
     ${bar}${holeMarks}${breakMark}
-    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${broken ? ' (centre section omitted)' : ''}</text>
+    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${broken ? ' (center section omitted)' : ''}</text>
     ${dims}`;
 }
 
@@ -1042,7 +1042,7 @@ function renderDiagram(r, inputs) {
    raceway waist, chamfered crown.
    ════════════════════════════════════════════════════════════════ */
 
-// Rail outline, centred on cx, sitting on baseline y0, drawn upward.
+// Rail outline, centered on cx, sitting on baseline y0, drawn upward.
 function railPath(cx, y0, w, h, k) {
   const hw = w / 2 * k, ht = h * k;
   const x = f => cx + hw * f, y = f => y0 - ht * f;
@@ -1160,7 +1160,7 @@ function blockSectionSVG(block, s) {
     ${dimH(cx - bw, cx + bw, y0 + 22, `F ${s.F}`)}
     ${dimV(cx + bw + 12, y0, top, `H ${s.H}`)}
     ${dimV(cx - bw - 12, y0, bBot, `H1 ${s.H1}`, 'left')}
-    <text x="${cx}" y="${top - 6}" class="xs-cap" text-anchor="middle">${s.M} × ${s.A} mm centres</text>
+    <text x="${cx}" y="${top - 6}" class="xs-cap" text-anchor="middle">${s.M} × ${s.A} mm centers</text>
   </svg>`;
 }
 

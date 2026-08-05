@@ -1256,7 +1256,7 @@ function clearAccount() {
   renderBlockCatalog();
   renderQuote();
   recalc();
-  showToast('Showing published pricing.', 'success');
+  showToast('Showing web pricing.', 'success');
 }
 
 function renderAccountBanner() {
@@ -1269,21 +1269,15 @@ function renderAccountBanner() {
     return;
   }
 
-  const rates = [];
-  if (c.rail > 0) rates.push(`rails ${c.rail}% off list`);
-  if (c.block > 0) rates.push(`blocks ${c.block}% off list`);
-  const nParts = Object.keys(c.parts || {}).length;
-  if (nParts) rates.push(`${nParts} part${nParts > 1 ? 's' : ''} at a negotiated rate`);
-
   const prompt = document.getElementById('account-prompt');
   if (prompt) prompt.style.display = 'none';
 
   el.innerHTML = `<div class="account-inner">
       <div>
         <div class="account-name">✓ ${c.name} account pricing</div>
-        <div class="account-rates">${rates.join(' · ') || 'Published pricing'}</div>
+        <div class="account-rates">Your account pricing is applied to every rail and block below.</div>
       </div>
-      <button class="btn btn-sm btn-secondary" onclick="clearAccount()">Show published prices</button>
+      <button class="btn btn-sm btn-secondary" onclick="clearAccount()">Show web pricing</button>
     </div>`;
   el.style.display = 'block';
 }
@@ -1356,8 +1350,8 @@ async function initAccount() {
       // A bad link previously did nothing at all, which looked like working
       // account pricing at the wrong numbers. Say what happened instead.
       showToast(lastAccountError === 'unknown'
-        ? 'That account link is not valid — showing published pricing.'
-        : 'Could not load account pricing — showing published pricing.', 'error');
+        ? 'That account link is not valid — showing web pricing.'
+        : 'Could not load account pricing — showing web pricing.', 'error');
     }
     return;
   }
@@ -1480,7 +1474,7 @@ function recalc() {
   document.getElementById('res-price').textContent = '$' + r.sellPrice.toFixed(2);
   const wasEl = document.getElementById('res-was');
   if (state.customer && r.publishedPrice - r.sellPrice > 0.005) {
-    wasEl.innerHTML = `<s>$${r.publishedPrice.toFixed(2)}</s> published ·
+    wasEl.innerHTML = `<s>$${r.publishedPrice.toFixed(2)}</s> web pricing ·
       <strong>save $${(r.publishedPrice - r.sellPrice).toFixed(2)}</strong>`;
     wasEl.style.display = 'block';
   } else { wasEl.style.display = 'none'; }

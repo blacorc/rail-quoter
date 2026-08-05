@@ -1210,7 +1210,13 @@ function blockTopViewSVG(block, s) {
    ════════════════════════════════════════════════════════════════ */
 const ACCOUNT_KEY = 'airtac_account_code';
 
+// Returns true on success. On failure, `lastAccountError` says whether the
+// code was genuinely rejected or the request never completed, so a network
+// problem is not reported to the customer as a bad code.
+let lastAccountError = null;
+
 async function resolveAccount(code, { quiet = false } = {}) {
+  lastAccountError = null;
   if (!code) return false;
   try {
     const r = await fetch('/api/customer', {
@@ -1219,8 +1225,13 @@ async function resolveAccount(code, { quiet = false } = {}) {
       body: JSON.stringify({ code }),
     });
     if (!r.ok) {
+      lastAccountError = (r.status === 404) ? 'unknown' : 'server';
       sessionStorage.removeItem(ACCOUNT_KEY);
-      if (!quiet) showToast('That account code was not recognised.', 'error');
+      if (!quiet) {
+        showToast(r.status === 404
+          ? 'That account code was not recognised.'
+          : 'Pricing lookup is unavailable right now. Please try again.', 'error');
+      }
       return false;
     }
     state.customer = await r.json();
@@ -1232,6 +1243,7 @@ async function resolveAccount(code, { quiet = false } = {}) {
     if (!quiet) showToast(`${state.customer.name} pricing applied.`, 'success');
     return true;
   } catch {
+    lastAccountError = 'network';
     if (!quiet) showToast('Could not check that code. Try again.', 'error');
     return false;
   }
@@ -1340,6 +1352,12 @@ async function initAccount() {
       // Keep the code out of the visible URL once it has been applied.
       history.replaceState({}, '', location.pathname);
       showToast(`${state.customer.name} pricing applied.`, 'success');
+    } else {
+      // A bad link previously did nothing at all, which looked like working
+      // account pricing at the wrong numbers. Say what happened instead.
+      showToast(lastAccountError === 'unknown'
+        ? 'That account link is not valid — showing published pricing.'
+        : 'Could not load account pricing — showing published pricing.', 'error');
     }
     return;
   }

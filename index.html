@@ -170,6 +170,12 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .ref-table th { background: var(--gray-50); padding: 9px 12px; text-align: left; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); border-bottom: 2px solid var(--gray-200); }
 .ref-table td { padding: 9px 12px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); }
 .ref-table tr:hover td { background: var(--gray-50); }
+.ref-links { list-style: none; margin: 12px 0 16px; padding: 0; }
+.ref-links li { padding: 10px 14px; border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 8px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: var(--white); }
+.ref-links a { color: var(--orange); font-weight: 700; font-size: 14px; text-decoration: none; }
+.ref-links a:hover { text-decoration: underline; }
+.ref-links a::after { content: ' ↗'; font-weight: 400; }
+.ref-links span { font-size: 12px; color: var(--gray-400); font-family: var(--font-mono); }
 
 /* STOCK / LEAD-TIME NOTE */
 .stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
@@ -607,6 +613,18 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         </table>
         <p class="ref-note">Use the configurator above for the full range, including every size
         and both block forms, with dimensioned cross-section and top-view drawings.</p>
+
+        <h3>Full Airtac catalogs</h3>
+        <p>The figures on this page are taken from Airtac's own catalogs. For accuracy classes,
+        preload options, dust-proofing, lubrication and installation guidance, go to the source:</p>
+        <ul class="ref-links">
+          <li><a href="https://us-en.airtac.com/upload/LSH-Series-Standard-Linear-Guide-202512121156198216.PDF"
+                 target="_blank" rel="noopener">LSH Series — Standard Linear Guide</a>
+              <span>PDF · airtac.com</span></li>
+          <li><a href="https://us-en.airtac.com/upload/LSD-Series-Low-Profile-Type-Linear-Guide-202512121154266256.PDF"
+                 target="_blank" rel="noopener">LSD Series — Low Profile Linear Guide</a>
+              <span>PDF · airtac.com</span></li>
+        </ul>
 
         <h3>Common questions</h3>
         <h4>What if I need a rail longer than 4 metres?</h4>

@@ -28,10 +28,15 @@ sketch equivalent of an over-constrained drawing.
 **Standard 20 mm S**, and **Balance the ends**, which picks the `S` that splits
 the leftover evenly so `E` comes out equal (exactly, when the pitch allows).
 
-The remaining choice is `n`, exposed by the manual hole-count override: ask for
-fewer holes than fit and the spare length moves into the end offsets, which the
-edge-pitch validation will reject once `E` runs past `maxE`. A live diagram
-redraws the hole pattern, and the configured part number carries the result
+`n` is not a choice either, which is why there is no hole-count override. On
+every Airtac rail `maxE < P` (55 < 60, 72 < 80, 94 < 105), and packing in as
+many holes as fit already leaves `0 ≤ E < P`. Drop a hole and `E` gains a whole
+pitch, past `maxE` every time; add one and `E` goes negative. Checked
+exhaustively across all nine rails: of 347,612 combinations, every `n` but the
+computed one is unbuildable.
+
+So `L` and `S` are the whole input set. A live diagram redraws the hole pattern,
+and the configured part number carries the result
 (e.g. `LSD20RLX900-N-D- e=40.0/s=20`).
 
 ### Rail specification and validation

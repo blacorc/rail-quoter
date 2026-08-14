@@ -285,13 +285,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 /* TOGGLE */
-.toggle-group { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; color: var(--gray-600); }
-.toggle-switch { position: relative; width: 44px; height: 24px; }
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider { position: absolute; inset: 0; background: var(--gray-300); border-radius: 12px; cursor: pointer; transition: var(--transition); }
-.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--white); left: 3px; top: 3px; transition: var(--transition); }
-.toggle-switch input:checked + .toggle-slider { background: var(--orange); }
-.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
 
 
@@ -393,18 +386,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <label class="form-label">Quantity</label>
               <input class="form-input" id="rail-qty" type="number" min="1" step="1" value="1" oninput="recalc()">
             </div>
-            <div class="toggle-group">
-              <label class="toggle-switch">
-                <input type="checkbox" id="rail-auto-n" checked onchange="recalc()">
-                <span class="toggle-slider"></span>
-              </label>
-              <span>Auto-fill hole count n from length (exact length, E floats)</span>
-            </div>
-            <div class="form-group" id="manual-n-group" style="display:none;margin-top:12px;">
-              <label class="form-label">Manual n Override (mounting holes)</label>
-              <input class="form-input" id="rail-manual-n" type="number" min="2" step="1" value="10" oninput="recalc()">
-            </div>
-
             <div class="stock-note">
               <div class="stock-note-head">
                 <span class="stock-dot"></span>
@@ -976,9 +957,12 @@ function saveHistory(h) { localStorage.setItem('airtac_history', JSON.stringify(
    the sketch equivalent of an over-constrained drawing. Now it is computed
    and shown as reference.
 
-   The one genuine choice left is n, which the manual override exposes: ask
-   for fewer holes than fit and the spare length goes into the end offsets. */
-function computeRail({ series, size, L, S, autoN, manualN }) {
+   n is not a choice either. On every Airtac rail maxE < P (55 < 60, 72 < 80,
+   94 < 105), and packing in as many holes as fit already leaves 0 <= E < P.
+   Drop a hole and E gains a whole pitch, past maxE every time; add one and E
+   goes negative. So any n but this one is unbuildable, which is why the
+   manual override that used to sit here is gone. */
+function computeRail({ series, size, L, S }) {
   const spec = getSpec(series, size);
   const rail = getRails().find(r => r.series === series && r.size === size);
   if (!spec || !rail) return null;
@@ -986,9 +970,8 @@ function computeRail({ series, size, L, S, autoN, manualN }) {
 
   const p = getPricing();
 
-  // n: as many holes as the length carries, or the manual override.
-  const autoCount = L > 0 ? Math.max(2, Math.floor((L - S) / P) + 1) : null;
-  const n = autoN ? autoCount : Math.max(2, Math.round(manualN) || 2);
+  // n: as many holes as the length carries.
+  const n = L > 0 ? Math.max(2, Math.floor((L - S) / P) + 1) : null;
   if (!n) return null;
 
   const E = L - S - (n - 1) * P;
@@ -1636,15 +1619,12 @@ function readRailInputs() {
     size: state.size,
     L: parseFloat(document.getElementById('rail-length').value) || 0,
     S: parseFloat(document.getElementById('rail-s').value) || spec?.stdE || 20,
-    autoN: document.getElementById('rail-auto-n').checked,
-    manualN: parseInt(document.getElementById('rail-manual-n').value) || 2,
     qty: Math.max(1, parseInt(document.getElementById('rail-qty').value) || 1),
   };
 }
 
 function recalc() {
   const inputs = readRailInputs();
-  document.getElementById('manual-n-group').style.display = inputs.autoN ? 'none' : 'block';
   document.getElementById('rail-length-in').textContent =
     inputs.L > 0 ? `= ${(inputs.L / 25.4).toFixed(2)} in` : '';
 
@@ -1664,7 +1644,7 @@ function recalc() {
   const addBtn = document.getElementById('add-rail-btn');
 
   const r = computeRail(inputs);
-  if (!r || (inputs.autoN && inputs.L <= 0)) {
+  if (!r || inputs.L <= 0) {
     document.getElementById('res-pn').textContent = '—';
     document.getElementById('res-rows').innerHTML = '';
     document.getElementById('res-price').textContent = '$0.00';
@@ -1720,7 +1700,7 @@ function recalc() {
     warn.className = 'result-warn';
     warn.innerHTML = r.warnings.map(e => `⚠ ${e}`).join('<br>');
     warn.style.display = 'block';
-  } else if (inputs.autoN && inputs.L > 0 && inputs.L < r.minLen) {
+  } else if (inputs.L > 0 && inputs.L < r.minLen) {
     warn.className = 'result-warn';
     warn.textContent = `⚠ Minimum length for this configuration is ${r.minLen} mm (2 holes).`;
     warn.style.display = 'block';

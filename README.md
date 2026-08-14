@@ -41,14 +41,20 @@ and the configured part number carries the result
 
 ### Rail specification and validation
 
-`RAIL_SPEC` in `index.html` holds Airtac's published limits per series and size —
-pitch `P`, standard edge pitch, minimum and maximum edge pitch, and maximum
-single-rail length. A configuration is blocked from being quoted when:
+`RAIL_SPEC` in `index.html` holds Airtac's limits per series and size — pitch
+`P`, standard edge pitch, minimum and maximum edge pitch, and maximum
+single-rail length. These come from Airtac's own `rail_dimension_calculator`
+workbook, which supersedes the values first transcribed from the brochures:
+those were rounded conservatively (rejecting a ~1 mm sliver at each end that
+Airtac permits) and their maximum lengths were wrong. `maxE` is always
+`P − minE`. A configuration is blocked from being quoted when:
 
 - `S` falls outside the permitted edge-pitch range for that rail
-- the floating `E` lands outside that range (an over- or under-long edge risks
+- the driven `E` lands outside that range (an over- or under-long edge risks
   breaking through the bolt hole)
-- the length exceeds `Lmax`, where Airtac requires a joint rail
+- the length exceeds `Lmax − |S − stdE|`, where Airtac requires a joint rail.
+  The ceiling drops as `S` moves off standard because shifting the hole pattern
+  eats into the usable bar; at the standard offset it is just `Lmax`.
 
 A blocked edge pitch is never a dead end: the calculator offers the nearby
 configurations that do work as one-click chips — a different `S` at the same
@@ -57,11 +63,12 @@ snapped to round numbers (`S = 30 mm`, `890 mm`) rather than to whatever value
 sits first inside the limit. An over-`Lmax` length gets no suggestion, since it
 needs a joint rail rather than a different number.
 
-`stdE` is the edge pitch TSI supplies as standard, which is **20 mm at every
-size**. Airtac's catalog calls 40 mm standard on sizes 15–25, 55 mm on 30/35 and
-67.5 mm on 45, but 20 mm sits inside the permitted range throughout and matches
+`stdE` is the edge pitch supplied as standard: **20 mm at every size except
+LSH45, which is 22.5 mm** — both taken from Airtac's calculator. 20 mm matches
 the Hiwin HG hole pattern, so a rail drops into an existing HG installation
-without re-drilling. The `minE`/`maxE` limits are Airtac's and are still enforced.
+without re-drilling. (The catalog's nominal 40/55/67.5 mm is a different figure
+and is not what Airtac's own calculator or TSI cuts to.) The `minE`/`maxE`
+limits are Airtac's and are enforced regardless.
 
 **Carriage Blocks** — LSH and LSD flange/square blocks, filtered to those that fit
 the selected rail.

@@ -776,34 +776,36 @@ textarea.form-input { resize: vertical; min-height: 80px; }
    ════════════════════════════════════════════════════════════════ */
 const STOCK_LEN = 4000; // mm, fixed stock rail length
 
-// Rail specification per series and size, transcribed from the Airtac
-// brochures ("Rail Specification" + "Specifications and Dimensions" tables;
-// LSH p.15-18, LSD p.42-45):
+// Rail specification per series and size. The limits come from Airtac's own
+// rail_dimension_calculator workbook, which supersedes the values first
+// transcribed from the brochures (LSH p.15-18, LSD p.42-45) — the brochure
+// figures were rounded conservatively and the maximum lengths were wrong.
 //   P     mounting-hole pitch
-//   stdE  the edge pitch TSI supplies as standard. Airtac's catalog calls 40mm
-//         standard on sizes 15-25, 55 on 30/35 and 67.5 on 45, but we cut at 20,
-//         which is inside the permitted range at every size and matches the HG
-//         hole pattern so rails drop into existing installations.
+//   stdE  the edge pitch supplied as standard: 20mm, which matches the HG hole
+//         pattern so rails drop into existing installations. LSH45 is Airtac's
+//         own 22.5mm. (The catalog's nominal 40/55/67.5 is a different figure
+//         and is not what either Airtac's calculator or TSI cuts to.)
 //   minE  minimum permitted edge pitch; below this the bolt hole breaks out
-//   maxE  maximum permitted edge pitch
-//   Lmax  maximum length of a single rail (beyond this a joint rail is required)
+//   maxE  maximum permitted edge pitch, always P - minE
+//   Lmax  maximum length of a single rail, before the offset allowance below
+//         (beyond this a joint rail is required)
 //   W/Hr  rail cross-section width x height (G x H2 in the catalog)
 //   Q/U   counterbore and through-hole diameter (ΦQ / ΦU)
 //   H3    counterbore depth
 //   kgm   rail weight, kg per metre
 const RAIL_SPEC = {
   LSH: {
-    15: { P: 60,  stdE: 20,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
-    20: { P: 60,  stdE: 20,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
-    25: { P: 60,  stdE: 20,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
-    30: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
-    35: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
-    45: { P: 105, stdE: 20, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
+    15: { P: 60,  stdE: 20,   minE: 4,   maxE: 56,   Lmax: 4000, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
+    20: { P: 60,  stdE: 20,   minE: 4.8, maxE: 55.2, Lmax: 4000, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 20,   minE: 5.6, maxE: 54.4, Lmax: 4000, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
+    30: { P: 80,  stdE: 20,   minE: 7.1, maxE: 72.9, Lmax: 4000, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
+    35: { P: 80,  stdE: 20,   minE: 7.1, maxE: 72.9, Lmax: 4000, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
+    45: { P: 105, stdE: 22.5, minE: 10,  maxE: 95,   Lmax: 4000, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
   },
   LSD: {
-    15: { P: 60, stdE: 20, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
-    20: { P: 60, stdE: 20, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
-    25: { P: 60, stdE: 20, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
+    15: { P: 60, stdE: 20, minE: 4,    maxE: 56,    Lmax: 4000, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
+    20: { P: 60, stdE: 20, minE: 4.75, maxE: 55.25, Lmax: 4000, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
+    25: { P: 60, stdE: 20, minE: 5.6,  maxE: 54.4,  Lmax: 4000, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
   },
 };
 
@@ -1016,8 +1018,14 @@ function computeRail({ series, size, L, S }) {
   if (E < spec.minE - 1e-9 || E > spec.maxE + 1e-9) {
     errors.push(`E works out to ${E.toFixed(1)} mm, outside the permitted ${spec.minE}–${spec.maxE} mm edge pitch. Adjust the length or S — an out-of-range edge risks breaking through the bolt hole.`);
   }
-  if (deliveredLen > spec.Lmax) {
-    errors.push(`${deliveredLen} mm exceeds the ${spec.Lmax} mm maximum for a single ${series}${size} rail. A joint rail is required.`);
+  // Airtac's calculator shrinks the maximum length by however far S sits from
+  // standard, because shifting the hole pattern eats into the usable bar. At
+  // the standard offset this is just Lmax.
+  const maxLen = spec.Lmax - Math.abs(S - spec.stdE);
+  if (deliveredLen > maxLen) {
+    errors.push(maxLen < spec.Lmax
+      ? `${deliveredLen} mm exceeds the ${maxLen} mm maximum for a single ${series}${size} rail at S = ${S} mm — the limit drops from ${spec.Lmax} mm by however far S sits from the standard ${spec.stdE} mm. A joint rail is required.`
+      : `${deliveredLen} mm exceeds the ${spec.Lmax} mm maximum for a single ${series}${size} rail. A joint rail is required.`);
   } else if (deliveredLen > usable) {
     warnings.push(`${deliveredLen} mm exceeds what one 4000 mm stock bar yields after scrap (${usable} mm).`);
   }
@@ -1462,7 +1470,10 @@ function suggestFixes(L, S, spec) {
   for (const step of [5, 1]) {
     const from = step === 5 ? Math.ceil(minE / 5) * 5 : Math.ceil(minE);
     for (let s = from; s <= Math.floor(maxE); s += step) {
-      if (s !== S && ok(edgeFor(L, s)) && !sOptions.some(o => o.s === s)) {
+      // A far-from-standard offset also lowers the length ceiling, so an
+      // otherwise-legal S can still be unusable at this length.
+      if (s !== S && ok(edgeFor(L, s)) && L <= spec.Lmax - Math.abs(s - stdE)
+          && !sOptions.some(o => o.s === s)) {
         sOptions.push({ s, e: edgeFor(L, s) });
       }
     }
@@ -1483,7 +1494,9 @@ function suggestFixes(L, S, spec) {
         ? Math.floor((L - 1) / step) * step
         : Math.ceil((L + 1) / step) * step;
       for (let len = first; Math.abs(len - L) <= P; len += dir * step) {
-        if (len > P && len <= spec.Lmax && ok(edgeFor(len, S))) return len;
+        // Same offset-dependent ceiling computeRail enforces, so a suggested
+        // length is never one the calculator will then reject.
+        if (len > P && len <= spec.Lmax - Math.abs(S - spec.stdE) && ok(edgeFor(len, S))) return len;
       }
     }
     return null;

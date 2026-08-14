@@ -368,7 +368,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
                 <div class="input-suffix" id="rail-e-hint"></div>
               </div>
             </div>
-            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Use Airtac standard edge pitch</button>
+            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Reset to standard 20 mm edges</button>
             <div class="form-group">
               <label class="form-label">Quantity</label>
               <input class="form-input" id="rail-qty" type="number" min="1" step="1" value="1" oninput="recalc()">
@@ -643,10 +643,11 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         assembly height, block width, bolt pattern, rail section and mounting-hole pitch at every
         size from 15 to 45&nbsp;mm — so it fits designs built around that standard, including Hiwin
         HGH and equivalents from THK, NSK and others.</p>
-        <p>One detail matters for a retrofit: HG rails are normally supplied with the first and last
-        mounting holes <strong>20&nbsp;mm</strong> from each end, where the Airtac standard is
-        40&nbsp;mm. Enter 20 in the S and E fields above and the hole pattern matches your existing
-        rail exactly &mdash; no re-drilling.</p>
+        <p>The hole pattern matches too. HG rails are normally supplied with the first and last
+        mounting holes <strong>20&nbsp;mm</strong> from each end, and that is how we cut ours as
+        standard — so a replacement rail lands on the holes already in your machine. No
+        re-drilling, and nothing to specify. If your existing rail uses different end distances,
+        enter them in the S and E fields above and we will cut to match.</p>
         <p>Load ratings differ between manufacturers even where dimensions are identical, so check
         the rating shown here against your application before switching.</p>
 
@@ -767,7 +768,10 @@ const STOCK_LEN = 4000; // mm, fixed stock rail length
 // brochures ("Rail Specification" + "Specifications and Dimensions" tables;
 // LSH p.15-18, LSD p.42-45):
 //   P     mounting-hole pitch
-//   stdE  standard edge pitch (S/E) — Airtac's default first/last hole offset
+//   stdE  the edge pitch TSI supplies as standard. Airtac's catalog calls 40mm
+//         standard on sizes 15-25, 55 on 30/35 and 67.5 on 45, but we cut at 20,
+//         which is inside the permitted range at every size and matches the HG
+//         hole pattern so rails drop into existing installations.
 //   minE  minimum permitted edge pitch; below this the bolt hole breaks out
 //   maxE  maximum permitted edge pitch
 //   Lmax  maximum length of a single rail (beyond this a joint rail is required)
@@ -777,17 +781,17 @@ const STOCK_LEN = 4000; // mm, fixed stock rail length
 //   kgm   rail weight, kg per metre
 const RAIL_SPEC = {
   LSH: {
-    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
-    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
-    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
-    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
-    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
-    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
+    15: { P: 60,  stdE: 20,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
+    20: { P: 60,  stdE: 20,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 20,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
+    30: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
+    35: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
+    45: { P: 105, stdE: 20, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
   },
   LSD: {
-    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
-    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
-    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
+    15: { P: 60, stdE: 20, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
+    20: { P: 60, stdE: 20, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
+    25: { P: 60, stdE: 20, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
   },
 };
 

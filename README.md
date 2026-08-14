@@ -34,8 +34,11 @@ single-rail length. A configuration is blocked from being quoted when:
   breaking through the bolt hole)
 - the length exceeds `Lmax`, where Airtac requires a joint rail
 
-Note that Airtac's standard edge pitch is 40 mm on size 15–25, 55 mm on 30/35 and
-67.5 mm on 45 — not the 20/30 mm the v26 spreadsheet offered.
+`stdE` is the edge pitch TSI supplies as standard, which is **20 mm at every
+size**. Airtac's catalog calls 40 mm standard on sizes 15–25, 55 mm on 30/35 and
+67.5 mm on 45, but 20 mm sits inside the permitted range throughout and matches
+the Hiwin HG hole pattern, so a rail drops into an existing HG installation
+without re-drilling. The `minE`/`maxE` limits are Airtac's and are still enforced.
 
 **Carriage Blocks** — LSH and LSD flange/square blocks, filtered to those that fit
 the selected rail.

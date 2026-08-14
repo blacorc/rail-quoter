@@ -74,8 +74,11 @@ action sends the same build as a pricing enquiry instead of a firm quote.
 
 Airtac publishes configurable CAD for these parts on CADENAS PARTcommunity,
 so nothing is hosted here and the models stay revised by the manufacturer. The
-calculator deep-links into them: a valid rail gets an "Open this rail in 3D"
-link, and each expanded block panel links to that block.
+calculator deep-links into them: a valid rail gets a link in the price footer,
+and each expanded block panel links to that block. Both are labelled "Airtac's
+PARTcommunity portal" rather than something generic about CAD — many engineers
+already hold a PARTcommunity login, so naming the platform tells them the
+download costs them nothing.
 
 Links carry a `varset` that pre-selects the configuration, so a customer who
 has just configured a 900 mm rail lands on that rail rather than a family page.

@@ -154,6 +154,12 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .account-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .account-name { font-size: 14px; font-weight: 700; color: #15803d; }
 .account-rates { font-size: 12.5px; color: var(--gray-600); margin-top: 2px; }
+/* The price row leaves a wide gap under its label; the CAD link lives there
+   rather than adding height above the diagram. */
+.result-actions { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.result-actions-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; margin-left: auto; }
+.result-actions .cad-link, .result-actions .result-was { margin-top: 0; }
+@media (max-width: 560px) { .result-actions { flex-direction: column; align-items: stretch; } .result-actions-right { align-items: stretch; } }
 .result-was { text-align: right; font-size: 12px; color: var(--gray-500); margin-top: 4px; }
 .result-was s { color: var(--gray-400); }
 .result-was strong { color: #15803d; }
@@ -424,9 +430,6 @@ textarea.form-input { resize: vertical; min-height: 80px; }
           <div class="result-box">
             <div class="result-pn-label">Configured Part Number</div>
             <div class="result-pn" id="res-pn">—</div>
-            <a class="cad-link" id="res-cad" target="_blank" rel="noopener noreferrer"
-               style="display:none;">⬡ Open this rail in 3D
-              <span>Airtac's CAD portal — free sign-in to download</span></a>
             <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 172" role="img"
                  aria-label="Rail mounting hole pattern diagram"></svg>
             <div class="result-rows" id="res-rows"></div>
@@ -435,9 +438,14 @@ textarea.form-input { resize: vertical; min-height: 80px; }
               <span class="label" id="res-price-label">Unit Price</span>
               <span class="value" id="res-price">$0.00</span>
             </div>
-            <div class="result-was" id="res-was" style="display:none;"></div>
-            <div style="margin-top:16px;text-align:right;">
-              <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
+            <div class="result-actions">
+              <a class="cad-link" id="res-cad" target="_blank" rel="noopener noreferrer"
+                 style="display:none;">⬡ Airtac's PARTcommunity portal
+                <span>3D CAD, pre-set to this rail</span></a>
+              <div class="result-actions-right">
+                <div class="result-was" id="res-was" style="display:none;"></div>
+                <button class="btn btn-primary" id="add-rail-btn" onclick="addRailToQuote()">+ Add to Quote</button>
+              </div>
             </div>
           </div>
           </div>
@@ -1824,8 +1832,8 @@ function specDetailHTML(b, s) {
     <div><div class="xs-title">Top view</div>${blockTopViewSVG(b, s)}</div>
   </div>
   <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>
-  <a class="cad-link" href="${blockCadURL(b)}" target="_blank" rel="noopener noreferrer">⬡ Open ${b.pn} in 3D
-    <span>Airtac's CAD portal — free sign-in to download</span></a>`;
+  <a class="cad-link" href="${blockCadURL(b)}" target="_blank" rel="noopener noreferrer">⬡ Airtac's PARTcommunity portal
+    <span>3D CAD, pre-set to ${b.pn}</span></a>`;
 }
 
 function toggleBlockFilter() {

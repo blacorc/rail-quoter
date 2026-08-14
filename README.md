@@ -34,6 +34,13 @@ single-rail length. A configuration is blocked from being quoted when:
   breaking through the bolt hole)
 - the length exceeds `Lmax`, where Airtac requires a joint rail
 
+A blocked edge pitch is never a dead end: the calculator offers the nearby
+configurations that do work as one-click chips — a different `S` at the same
+length, or the nearest workable length either side at the same `S`. Both are
+snapped to round numbers (`S = 30 mm`, `890 mm`) rather than to whatever value
+sits first inside the limit. An over-`Lmax` length gets no suggestion, since it
+needs a joint rail rather than a different number.
+
 `stdE` is the edge pitch TSI supplies as standard, which is **20 mm at every
 size**. Airtac's catalog calls 40 mm standard on sizes 15–25, 55 mm on 30/35 and
 67.5 mm on 45, but 20 mm sits inside the permitted range throughout and matches

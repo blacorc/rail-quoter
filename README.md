@@ -34,8 +34,18 @@ single-rail length. A configuration is blocked from being quoted when:
   breaking through the bolt hole)
 - the length exceeds `Lmax`, where Airtac requires a joint rail
 
-Note that Airtac's standard edge pitch is 40 mm on size 15–25, 55 mm on 30/35 and
-67.5 mm on 45 — not the 20/30 mm the v26 spreadsheet offered.
+A blocked edge pitch is never a dead end: the calculator offers the nearby
+configurations that do work as one-click chips — a different `S` at the same
+length, or the nearest workable length either side at the same `S`. Both are
+snapped to round numbers (`S = 30 mm`, `890 mm`) rather than to whatever value
+sits first inside the limit. An over-`Lmax` length gets no suggestion, since it
+needs a joint rail rather than a different number.
+
+`stdE` is the edge pitch TSI supplies as standard, which is **20 mm at every
+size**. Airtac's catalog calls 40 mm standard on sizes 15–25, 55 mm on 30/35 and
+67.5 mm on 45, but 20 mm sits inside the permitted range throughout and matches
+the Hiwin HG hole pattern, so a rail drops into an existing HG installation
+without re-drilling. The `minE`/`maxE` limits are Airtac's and are still enforced.
 
 **Carriage Blocks** — LSH and LSD flange/square blocks, filtered to those that fit
 the selected rail.
@@ -43,6 +53,30 @@ the selected rail.
 **Quote** — combined rail + block line items with editable quantity and unit
 price, emailed to the customer with a copy of the lead to the rep. A "Request Volume Pricing"
 action sends the same build as a pricing enquiry instead of a firm quote.
+
+## 3D CAD
+
+Airtac publishes configurable CAD for these parts on CADENAS PARTcommunity,
+so nothing is hosted here and the models stay revised by the manufacturer. The
+calculator deep-links into them: a valid rail gets an "Open this rail in 3D"
+link, and each expanded block panel links to that block.
+
+Links carry a `varset` that pre-selects the configuration, so a customer who
+has just configured a 900 mm rail lands on that rail rather than a family page.
+The slots are the ones Airtac's own part numbers are built from, and
+`railCadURL`/`blockCadURL` in `index.html` derive them from the part number:
+
+```
+LSH25BK-F3N-N-D-M6  ->  WOR=25, BS=F3, BT=N, ACCE=N, PL=D, MT=M6
+LSH30RLX900-N-D     ->  WOR=30, L=900, ACCE=N, PL=D, plus S for the cut
+```
+
+**Linking, not embedding, is deliberate.** PARTcommunity requires a free
+registration before it releases a file. Framing it would put that wall inside
+the quote page and hand the lead to CADENAS rather than TSI, so the link is
+labelled with the sign-in up front and opens in a new tab. If Airtac ever
+grants a whitelabel portal, `airtac-embedded.partcommunity.com` is the host
+built for framing.
 
 ## Pricing model — list-based, published above list
 

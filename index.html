@@ -177,6 +177,19 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .ref-links a::after { content: ' ↗'; font-weight: 400; }
 .ref-links span { font-size: 12px; color: var(--gray-400); font-family: var(--font-mono); }
 
+/* SUGGESTED FIXES */
+.cad-link { display: inline-block; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); color: var(--navy); text-decoration: none; font-size: 13px; font-weight: 600; line-height: 1.3; transition: var(--transition); }
+.cad-link:hover { border-color: var(--orange); color: var(--orange); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.cad-link span { display: block; font-size: 11px; font-weight: 500; color: var(--gray-400); margin-top: 2px; }
+.cad-link:hover span { color: var(--gray-500); }
+.fix-suggest { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(198,40,40,0.2); }
+.fix-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--gray-500); margin-bottom: 7px; }
+.fix-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fix-chip { border: 1px solid var(--gray-200); background: var(--white); border-radius: var(--radius); padding: 7px 12px; cursor: pointer; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--navy); text-align: left; line-height: 1.3; transition: var(--transition); }
+.fix-chip:hover { border-color: var(--orange); color: var(--orange); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.fix-chip span { display: block; font-family: var(--font-body); font-size: 11px; font-weight: 500; color: var(--gray-400); margin-top: 1px; }
+.fix-chip:hover span { color: var(--gray-500); }
+
 /* STOCK / LEAD-TIME NOTE */
 .stock-note { margin-top: 22px; padding: 16px 18px; border: 1px solid var(--gray-200); border-left: 3px solid var(--green); border-radius: var(--radius); background: var(--white); }
 .stock-note-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
@@ -368,7 +381,7 @@ textarea.form-input { resize: vertical; min-height: 80px; }
                 <div class="input-suffix" id="rail-e-hint"></div>
               </div>
             </div>
-            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Use Airtac standard edge pitch</button>
+            <button class="btn btn-sm btn-secondary" style="margin-bottom:14px;" onclick="useStandardEdges()">↺ Reset to standard 20 mm edges</button>
             <div class="form-group">
               <label class="form-label">Quantity</label>
               <input class="form-input" id="rail-qty" type="number" min="1" step="1" value="1" oninput="recalc()">
@@ -423,6 +436,9 @@ textarea.form-input { resize: vertical; min-height: 80px; }
           <div class="result-box">
             <div class="result-pn-label">Configured Part Number</div>
             <div class="result-pn" id="res-pn">—</div>
+            <a class="cad-link" id="res-cad" target="_blank" rel="noopener noreferrer"
+               style="display:none;">⬡ Open this rail in 3D
+              <span>Airtac's CAD portal — free sign-in to download</span></a>
             <svg id="rail-diagram" class="rail-diagram" viewBox="0 0 520 172" role="img"
                  aria-label="Rail mounting hole pattern diagram"></svg>
             <div class="result-rows" id="res-rows"></div>
@@ -643,10 +659,11 @@ textarea.form-input { resize: vertical; min-height: 80px; }
         assembly height, block width, bolt pattern, rail section and mounting-hole pitch at every
         size from 15 to 45&nbsp;mm — so it fits designs built around that standard, including Hiwin
         HGH and equivalents from THK, NSK and others.</p>
-        <p>One detail matters for a retrofit: HG rails are normally supplied with the first and last
-        mounting holes <strong>20&nbsp;mm</strong> from each end, where the Airtac standard is
-        40&nbsp;mm. Enter 20 in the S and E fields above and the hole pattern matches your existing
-        rail exactly &mdash; no re-drilling.</p>
+        <p>The hole pattern matches too. HG rails are normally supplied with the first and last
+        mounting holes <strong>20&nbsp;mm</strong> from each end, and that is how we cut ours as
+        standard — so a replacement rail lands on the holes already in your machine. No
+        re-drilling, and nothing to specify. If your existing rail uses different end distances,
+        enter them in the S and E fields above and we will cut to match.</p>
         <p>Load ratings differ between manufacturers even where dimensions are identical, so check
         the rating shown here against your application before switching.</p>
 
@@ -767,7 +784,10 @@ const STOCK_LEN = 4000; // mm, fixed stock rail length
 // brochures ("Rail Specification" + "Specifications and Dimensions" tables;
 // LSH p.15-18, LSD p.42-45):
 //   P     mounting-hole pitch
-//   stdE  standard edge pitch (S/E) — Airtac's default first/last hole offset
+//   stdE  the edge pitch TSI supplies as standard. Airtac's catalog calls 40mm
+//         standard on sizes 15-25, 55 on 30/35 and 67.5 on 45, but we cut at 20,
+//         which is inside the permitted range at every size and matches the HG
+//         hole pattern so rails drop into existing installations.
 //   minE  minimum permitted edge pitch; below this the bolt hole breaks out
 //   maxE  maximum permitted edge pitch
 //   Lmax  maximum length of a single rail (beyond this a joint rail is required)
@@ -777,17 +797,17 @@ const STOCK_LEN = 4000; // mm, fixed stock rail length
 //   kgm   rail weight, kg per metre
 const RAIL_SPEC = {
   LSH: {
-    15: { P: 60,  stdE: 40,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
-    20: { P: 60,  stdE: 40,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
-    25: { P: 60,  stdE: 40,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
-    30: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
-    35: { P: 80,  stdE: 55,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
-    45: { P: 105, stdE: 67.5, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
+    15: { P: 60,  stdE: 20,   minE: 5,  maxE: 55, Lmax: 4040, W: 15, Hr: 15,   Q: 8,    U: 4.8, H3: 5.3, kgm: 1.43 },
+    20: { P: 60,  stdE: 20,   minE: 6,  maxE: 54, Lmax: 4040, W: 20, Hr: 17.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.23 },
+    25: { P: 60,  stdE: 20,   minE: 7,  maxE: 53, Lmax: 4040, W: 23, Hr: 22,   Q: 11.2, U: 7,   H3: 9,   kgm: 3.32 },
+    30: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 28, Hr: 26,   Q: 14.2, U: 9,   H3: 12,  kgm: 4.5 },
+    35: { P: 80,  stdE: 20,   minE: 8,  maxE: 72, Lmax: 4030, W: 34, Hr: 29,   Q: 14.2, U: 9,   H3: 12,  kgm: 6.37 },
+    45: { P: 105, stdE: 20, minE: 11, maxE: 94, Lmax: 4020, W: 45, Hr: 38,   Q: 20,   U: 14,  H3: 17,  kgm: 10.7 },
   },
   LSD: {
-    15: { P: 60, stdE: 40, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
-    20: { P: 60, stdE: 40, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
-    25: { P: 60, stdE: 40, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
+    15: { P: 60, stdE: 20, minE: 5, maxE: 55, Lmax: 4040, W: 15, Hr: 12.5, Q: 8,    U: 4.8, H3: 5.3, kgm: 1.23 },
+    20: { P: 60, stdE: 20, minE: 6, maxE: 54, Lmax: 4040, W: 20, Hr: 15.5, Q: 9.5,  U: 5.8, H3: 8.5, kgm: 2.11 },
+    25: { P: 60, stdE: 20, minE: 7, maxE: 53, Lmax: 4040, W: 23, Hr: 18,   Q: 11.2, U: 7,   H3: 9,   kgm: 2.76 },
   },
 };
 
@@ -1411,6 +1431,140 @@ async function initAccount() {
   if (saved) await resolveAccount(saved, { quiet: true });
 }
 
+/* ════════════════════════════════════════════════════════════════
+   SUGGESTED FIXES
+   When a length and edge pitch put the last hole outside Airtac's limits,
+   refusing it is right but unhelpful on its own. Offer the nearby
+   configurations that do work.
+
+   Changing S is preferred over changing the length: the length is usually
+   set by the machine, while the edge distance rarely matters to the
+   customer as long as it is legal.
+   ════════════════════════════════════════════════════════════════ */
+function suggestFixes(L, S, spec) {
+  const { P, minE, maxE, stdE } = spec;
+  const edgeFor = (len, s) => {
+    const n = Math.max(2, Math.floor((len - s) / P) + 1);
+    return len - s - (n - 1) * P;
+  };
+  const ok = e => e >= minE - 1e-9 && e <= maxE + 1e-9;
+
+  // Same length, a different first-hole offset. Scan round multiples of 5 so
+  // the suggestion is a number someone would actually write on a drawing,
+  // falling back to whole millimetres only if no round value fits.
+  const sOptions = [];
+  for (const step of [5, 1]) {
+    const from = step === 5 ? Math.ceil(minE / 5) * 5 : Math.ceil(minE);
+    for (let s = from; s <= Math.floor(maxE); s += step) {
+      if (s !== S && ok(edgeFor(L, s)) && !sOptions.some(o => o.s === s)) {
+        sOptions.push({ s, e: edgeFor(L, s) });
+      }
+    }
+    if (sOptions.length) break;
+  }
+  // Nearest the standard, but break ties away from the ends of the permitted
+  // range so the suggestion is not sitting on a limit.
+  const margin = o => Math.min(o.e - minE, maxE - o.e);
+  sOptions.sort((a, b) =>
+    (Math.abs(a.s - stdE) - Math.abs(b.s - stdE)) || (margin(b) - margin(a)));
+
+  // Same offset, the nearest workable length either side. Round lengths are
+  // tried first: someone who asked for 900 mm will take 890 mm far sooner
+  // than 892 mm, and 892 only exists because E has landed on its own limit.
+  const nearestLength = dir => {
+    for (const step of [10, 1]) {
+      const first = dir < 0
+        ? Math.floor((L - 1) / step) * step
+        : Math.ceil((L + 1) / step) * step;
+      for (let len = first; Math.abs(len - L) <= P; len += dir * step) {
+        if (len > P && len <= spec.Lmax && ok(edgeFor(len, S))) return len;
+      }
+    }
+    return null;
+  };
+
+  // Only worth offering a different length while S itself is legal — if S is
+  // the thing out of range, no length rescues it and the chip would still
+  // land on an error.
+  const lengths = ok(S) ? [nearestLength(-1), nearestLength(1)].filter(Boolean) : [];
+  return { sOptions: sOptions.slice(0, 2), lengths };
+}
+
+function fixSuggestionHTML(L, S, spec) {
+  const { sOptions, lengths } = suggestFixes(L, S, spec);
+  if (!sOptions.length && !lengths.length) return '';
+
+  const chips = [];
+  sOptions.forEach(o => chips.push(
+    `<button class="fix-chip" onclick="applyFix(${L}, ${o.s})">S = ${o.s} mm
+       <span>keeps ${L} mm</span></button>`));
+  lengths.forEach(len => chips.push(
+    `<button class="fix-chip" onclick="applyFix(${len}, ${S})">${len} mm
+       <span>keeps S = ${S} mm</span></button>`));
+
+  return `<div class="fix-suggest">
+    <div class="fix-title">These work instead:</div>
+    <div class="fix-chips">${chips.join('')}</div>
+  </div>`;
+}
+
+function applyFix(length, s) {
+  document.getElementById('rail-length').value = length;
+  document.getElementById('rail-s').value = s;
+  recalc();
+  showToast(`Set to ${length} mm with ${s} mm edges.`, 'success');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   AIRTAC 3D CAD — deep links into PARTcommunity
+
+   Airtac already publishes configurable CAD for these parts on CADENAS
+   PARTcommunity, so there is nothing to host or maintain here: the models
+   stay authored and revised by the manufacturer.
+
+   We link rather than embed. The portal asks for a free registration before
+   it hands over a file, and framing it would put that wall inside our page
+   while handing the lead to CADENAS instead of us. A labelled outbound link
+   sets the expectation honestly and keeps the quote flow intact.
+
+   `info=` picks the project — `_rail.prj`, `_table.prj` (the block), or the
+   bare `_series.prj` assembly. `varset` pre-selects the configuration, and
+   its slots are the same ones Airtac's part numbers are built from:
+
+     LSH25BK-F3N-N-D-M6  ->  WOR=25, BS=F3, BT=N, ACCE=N, PL=D, MT=M6
+     LSH30RLX900-N-D     ->  WOR=30, L=900, ACCE=N, PL=D, plus S for the cut
+
+   So a customer who has configured a 900 mm rail here lands on that rail in
+   3D, not on a generic family page. If a slot name is ever wrong the portal
+   falls back to the family page, which is still where they wanted to go.
+   ════════════════════════════════════════════════════════════════ */
+const CAD_BASE = 'https://airtac.partcommunity.com/3d-cad-models/';
+
+function cadURL(project, vars) {
+  // Braces and '=' are escaped but the separating commas are left literal,
+  // which is the form PARTcommunity's own links use.
+  const varset = Object.entries(vars)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `%7B${encodeURIComponent(k)}%3D${encodeURIComponent(v)}%7D`)
+    .join(',');
+  return `${CAD_BASE}?info=${encodeURIComponent('airtac/linear_guide/' + project)}&varset=${varset}`;
+}
+
+function railCadURL(series, size, L, S) {
+  const s = series.toLowerCase();
+  return cadURL(`${s}_series/${s}_series_rail.prj`, {
+    WOR: size, L: Math.round(L), S: Math.round(S), ACCE: 'N', PL: 'D',
+  });
+}
+
+function blockCadURL(b) {
+  const s = b.family.toLowerCase();
+  const m = /BK-([A-Z]\d?)([A-Z])-([A-Z])-([A-Z])-(.+)$/.exec(b.pn);
+  const vars = { WOR: b.size };
+  if (m) Object.assign(vars, { BS: m[1], BT: m[2], ACCE: m[3], PL: m[4], MT: m[5] });
+  return cadURL(`${s}_series/${s}_series_table.prj`, vars);
+}
+
 /* ── RAIL UI ── */
 function renderSeriesButtons() {
   document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
@@ -1482,6 +1636,7 @@ function recalc() {
     document.getElementById('res-price').textContent = '$0.00';
     renderDiagram(null);
     warn.style.display = 'none';
+    document.getElementById('res-cad').style.display = 'none';
     addBtn.disabled = true;
     return;
   }
@@ -1489,6 +1644,16 @@ function recalc() {
 
   document.getElementById('res-pn').textContent = r.configuredPN;
   renderDiagram(r, inputs);
+
+  // Only offer the 3D link for a rail that is actually buildable — sending
+  // someone to configure a length Airtac will not cut wastes their time.
+  const cad = document.getElementById('res-cad');
+  if (r.valid) {
+    cad.href = railCadURL(inputs.series, inputs.size, r.deliveredLen, inputs.S);
+    cad.style.display = '';
+  } else {
+    cad.style.display = 'none';
+  }
 
   const row = (k, v) => `<div class="result-row"><span class="k">${k}</span><span class="v">${v}</span></div>`;
   document.getElementById('res-rows').innerHTML =
@@ -1503,7 +1668,11 @@ function recalc() {
 
   if (r.errors.length) {
     warn.className = 'result-warn err';
-    warn.innerHTML = r.errors.map(e => `⛔ ${e}`).join('<br>');
+    // Only the edge-pitch failure has a nearby fix worth offering; an
+    // over-length rail needs a joint rail, not a different number.
+    const edgeProblem = r.errors.some(e => e.includes('edge pitch'));
+    warn.innerHTML = r.errors.map(e => `⛔ ${e}`).join('<br>')
+      + (edgeProblem ? fixSuggestionHTML(inputs.L, inputs.S, r.spec) : '');
     warn.style.display = 'block';
   } else if (r.warnings.length) {
     warn.className = 'result-warn';
@@ -1636,7 +1805,9 @@ function specDetailHTML(b, s) {
     <div><div class="xs-title">Cross-section</div>${blockSectionSVG(b, s)}</div>
     <div><div class="xs-title">Top view</div>${blockTopViewSVG(b, s)}</div>
   </div>
-  <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>`;
+  <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>
+  <a class="cad-link" href="${blockCadURL(b)}" target="_blank" rel="noopener noreferrer">⬡ Open ${b.pn} in 3D
+    <span>Airtac's CAD portal — free sign-in to download</span></a>`;
 }
 
 function toggleBlockFilter() {

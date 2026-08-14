@@ -54,6 +54,30 @@ the selected rail.
 price, emailed to the customer with a copy of the lead to the rep. A "Request Volume Pricing"
 action sends the same build as a pricing enquiry instead of a firm quote.
 
+## 3D CAD
+
+Airtac publishes configurable CAD for these parts on CADENAS PARTcommunity,
+so nothing is hosted here and the models stay revised by the manufacturer. The
+calculator deep-links into them: a valid rail gets an "Open this rail in 3D"
+link, and each expanded block panel links to that block.
+
+Links carry a `varset` that pre-selects the configuration, so a customer who
+has just configured a 900 mm rail lands on that rail rather than a family page.
+The slots are the ones Airtac's own part numbers are built from, and
+`railCadURL`/`blockCadURL` in `index.html` derive them from the part number:
+
+```
+LSH25BK-F3N-N-D-M6  ->  WOR=25, BS=F3, BT=N, ACCE=N, PL=D, MT=M6
+LSH30RLX900-N-D     ->  WOR=30, L=900, ACCE=N, PL=D, plus S for the cut
+```
+
+**Linking, not embedding, is deliberate.** PARTcommunity requires a free
+registration before it releases a file. Framing it would put that wall inside
+the quote page and hand the lead to CADENAS rather than TSI, so the link is
+labelled with the sign-in up front and opens in a new tab. If Airtac ever
+grants a whitelabel portal, `airtac-embedded.partcommunity.com` is the host
+built for framing.
+
 ## Pricing model — list-based, published above list
 
 **No cost basis is stored in this repository.** The catalog ships published Airtac

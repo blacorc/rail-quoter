@@ -15,13 +15,24 @@ the Airtac brochures (LSH p.15, LSD p.42) and `TSI_Airtac_Rail_Calculator_v26`:
 ```
 L = (n-1)·P + S + E
 list/mm    = Airtac list price of 4000mm stock ÷ (4000 - scrap allowance)
-sell price = list/mm × priced length × price factor + cut fee + handling
+sell price = list/mm × cut length × price factor + cut fee + handling
 ```
 
-Exact-length mode lets `E` float so the delivered rail matches the customer's
-requested length, and generates the configured part number
-(e.g. `LSD20RLX900-N-D- e=20.0/s=40`). Manual hole-count override is available.
-A live diagram redraws the hole pattern with the entered values.
+**`E` is a driven dimension.** Fix the length and the first-hole offset `S` and
+the geometry has no freedom left: `n` is however many pitches fit, and `E` is
+the remainder. So `E` is computed and displayed as reference, never entered —
+the calculator used to take it as an input and then override it, which is the
+sketch equivalent of an over-constrained drawing.
+
+`S` is therefore the only edge dimension you set. Two shortcuts fill it in:
+**Standard 20 mm S**, and **Balance the ends**, which picks the `S` that splits
+the leftover evenly so `E` comes out equal (exactly, when the pitch allows).
+
+The remaining choice is `n`, exposed by the manual hole-count override: ask for
+fewer holes than fit and the spare length moves into the end offsets, which the
+edge-pitch validation will reject once `E` runs past `maxE`. A live diagram
+redraws the hole pattern, and the configured part number carries the result
+(e.g. `LSD20RLX900-N-D- e=40.0/s=20`).
 
 ### Rail specification and validation
 
@@ -122,8 +133,17 @@ Two deliberate differences from the v26 sheet:
 - Cut and handling fees are charged as entered. The sheet divided them by
   `(1 - margin)`, which marked a $10 cut charge up to $16.67; set the fee to what
   you intend to charge.
-- Pricing still follows v26 in charging for the grid-snapped length rather than
-  the delivered length. Both figures are shown in the calculator.
+- The material charge is based on the length actually cut. v26 charged for a
+  grid-snapped length, which drifted from the delivered length in both
+  directions — an LSH45 cut to 400 mm was priced as 355 mm, and an LSH35 cut to
+  400 mm was priced as 440 mm. Making `E` driven removed the second length, so
+  there is now one number and it is the one the customer receives. Across a
+  9-rail × 6-length matrix this moved prices by 1.4% on average, at most 11.7%
+  (that LSH45 short cut), in whichever direction the old snap was wrong.
+
+The scrap allowance is the standard end allowance on the stock bar
+(`2 × stdE`), not the customer's own offsets, so the published per-mm rate does
+not shift when someone chooses a different `S`.
 
 ## Deploying to Vercel
 

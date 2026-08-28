@@ -59,7 +59,21 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: err.message || 'Failed to send customer email' });
     }
 
-    // Notify rep with lead info
+    // Notify rep with lead info.
+    //
+    // Both failure modes here used to be silent: an unset REP_EMAIL skipped
+    // the notification entirely, and a rejected send was never checked. The
+    // customer saw success either way, so leads could vanish with no signal
+    // anywhere. Neither is fatal to the customer's own quote, which has
+    // already gone out, so they are logged rather than thrown.
+    let leadNotified = false;
+
+    if (!repEmail) {
+      console.error('REP_EMAIL is not set — no lead notification sent for ' +
+        `${customerName || toEmail}${company ? ` @ ${company}` : ''}. ` +
+        'Set REP_EMAIL in the Vercel project environment variables.');
+    }
+
     if (repEmail) {
       const leadHTML = `
         <div style="font-family:Arial,sans-serif;max-width:600px;">
@@ -79,16 +93,25 @@ module.exports = async function handler(req, res) {
         </div>`;
 
       // Lead notification: replying goes straight back to the customer.
-      await send(
+      const leadRes = await send(
         repEmail,
         `New Lead: ${customerName || toEmail}${company ? ` @ ${company}` : ''}` +
           (account ? ` [${account.name}]` : ''),
         leadHTML,
         toEmail,
       );
+
+      leadNotified = leadRes.ok;
+      if (!leadRes.ok) {
+        const detail = await leadRes.text().catch(() => '');
+        console.error(`Lead notification to ${repEmail} failed ` +
+          `(HTTP ${leadRes.status}): ${detail}`);
+      }
     }
 
-    return res.json({ success: true });
+    // leadNotified is for the Vercel logs and for debugging a quiet inbox —
+    // the browser does not show it, since the customer's quote did send.
+    return res.json({ success: true, leadNotified });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

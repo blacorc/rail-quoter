@@ -185,6 +185,23 @@ See `.env.example`.
 Without `RESEND_API_KEY` the app still calculates and quotes normally — only the
 email button returns "Email service not configured".
 
+**If leads stop arriving**, the customer's own quote sending fine tells you
+nothing about the lead copy — they are two separate sends. Check, in order:
+
+1. **Resend dashboard → Emails.** Definitive. Every attempt is logged with its
+   status. No entries at all means nobody submitted the form; entries to the
+   customer but not to you means the lead send is the problem.
+2. **`REP_EMAIL` set, and ticked for Production.** Unset means no lead email at
+   all — the customer still gets their quote and still sees success.
+3. **Vercel → the project's Logs.** `/api/send-quote` logs a specific error for
+   an unset `REP_EMAIL` and for a rejected lead send, and every response
+   carries `leadNotified` so a quiet inbox can be told apart from a failed send.
+4. **Your spam folder**, particularly on Proton.
+
+Nothing is sent until a customer submits the form. Browsing the site, building
+a rail and filling the quote table all send nothing, so silence may simply mean
+no one has submitted yet — use Analytics to see traffic.
+
 `FROM_EMAIL` is typically a send-only address on a domain with no mailbox, so
 both emails set a reply-to: the customer's quote replies to `REPLY_TO` (or
 `REP_EMAIL`), and the lead notification replies straight to the customer.

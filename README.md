@@ -206,6 +206,34 @@ no one has submitted yet — use Analytics to see traffic.
 both emails set a reply-to: the customer's quote replies to `REPLY_TO` (or
 `REP_EMAIL`), and the lead notification replies straight to the customer.
 
+### Deliverability
+
+Resend reporting "sent" only means it accepted the message — it says nothing
+about whether the receiver kept it. Three things carry that:
+
+**SPF and DKIM** come from Resend's domain verification and should already be
+in DNS: a DKIM key at `resend._domainkey`, plus SPF and a bounce MX on the
+`send.` subdomain.
+
+**DMARC** is separate and is not created by Resend. Without it, receivers have
+no published policy to check alignment against, and strict filters — Proton
+especially — discount an unfamiliar sending domain accordingly. DNS for this
+domain is on Vercel, so add it under the project's Domains tab:
+
+| field | value |
+|---|---|
+| Type | `TXT` |
+| Name | `_dmarc` |
+| Value | `v=DMARC1; p=none; rua=mailto:you@yourdomain.com; fo=1` |
+
+`p=none` monitors without affecting delivery, which is the right place to
+start; `rua` collects the daily aggregate reports that show whether SPF and
+DKIM are aligning. Tighten to `p=quarantine` only once those reports are clean.
+
+**A plain-text part** ships on every email — `htmlToText()` renders the quote
+table into readable text. HTML with no text alternative is a long-standing spam
+signal, and it was the one thing entirely within this repo's control.
+
 ## Customer account pricing
 
 An OEM given a link like `https://industriallinearrail.com/?c=ACME-7K2F` sees

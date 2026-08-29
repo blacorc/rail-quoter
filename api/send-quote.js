@@ -1,5 +1,35 @@
 const { lookupCustomer } = require('../lib/customers');
 
+/**
+ * Plain-text rendering of the quote, sent alongside the HTML.
+ *
+ * The quote is a table, so the row and cell boundaries are what carry the
+ * meaning — those become newlines and column gaps before the tags are
+ * stripped, otherwise every figure runs together into one unreadable line.
+ */
+function htmlToText(html) {
+  return String(html || '')
+    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\/(td|th)>\s*(?=<(td|th)\b)/gi, '   ')     // cell gap
+    .replace(/<\/(tr|p|div|h[1-6]|li|table)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<hr\s*\/?>/gi, '\n' + '-'.repeat(48) + '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&times;/gi, '×')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;|&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')                              // last, or it double-decodes
+    .split('\n').map(l => l.replace(/[ \t]+/g, ' ').trimEnd()).join('\n')
+    .replace(/^[ \t]+/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -40,6 +70,11 @@ module.exports = async function handler(req, res) {
         to: [to],
         subject,
         html,
+        // A plain-text alternative makes the message multipart/alternative
+        // rather than HTML-only. HTML with no text part is one of the oldest
+        // spam signals there is, and it is what several filters — Proton
+        // among them — weigh most heavily on an unfamiliar sending domain.
+        text: htmlToText(html),
         ...(replyToAddr ? { reply_to: replyToAddr } : {}),
       }),
     });

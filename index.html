@@ -915,8 +915,10 @@ function itemMarkup(item) {
 
 // Multiplier applied to an item's list price. List is the anchor throughout.
 //
-// Published price is list plus that part's markup. An account code switches
-// to that customer's rate, which is a percentage OFF list, resolved in this
+// Published price is list plus that part's markup. An account code switches to
+// that customer's rate, which /api/customer has already normalised to a
+// multiplier on list whichever field it was written in — so 0.75 is 25% off,
+// 1.0 is at list, 1.8 sits between list and the web price. Resolved in this
 // order: a per-part override, then the rail or block line rate, then the
 // published price if the account has no rate for that line.
 function publishedFactor(item) {
@@ -927,12 +929,10 @@ function itemFactor(item, kind) {
   const c = state.customer;
   if (c) {
     const override = (item && item.pn && c.parts) ? c.parts[item.pn] : undefined;
-    const disc = (typeof override === 'number' && override > 0)
+    const rate = (typeof override === 'number' && override > 0)
       ? override
       : (kind === 'rail' ? c.rail : c.block);
-    if (typeof disc === 'number' && disc > 0) {
-      return 1 - Math.min(95, disc) / 100;
-    }
+    if (typeof rate === 'number' && rate > 0) return rate;
   }
   return publishedFactor(item);
 }

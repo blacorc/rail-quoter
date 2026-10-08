@@ -247,12 +247,41 @@ everyone else's rates are never sent to a browser and cannot be enumerated.
 Precedence is per-part override, then the rail or block line rate, then the
 published web price.
 
+### Rates are multipliers on list
+
+A rate is a **multiplier on Airtac list**, so one number covers the whole range:
+
+| `railMult` | what the customer pays |
+|---|---|
+| `0.75` | 25% off list |
+| `1.00` | at list |
+| `1.80` | above list, still under the published web price |
+| `2.50` | the web price itself, at the default 150% markup |
+| `3.00` | above the web price |
+
+A percentage discount could only ever reach list, which made everything between
+list and the web price unreachable — and made the *smallest* possible discount
+a 60% cut, because any code at all moved the customer off the 2.5× web markup
+and onto the list anchor. A "1% account" was really "price at list".
+
+`railMult`, `blockMult` and `partsMult` take multipliers. The older `rail`,
+`block` and `parts` fields hold a percentage off list and still work, so codes
+already issued keep exactly the pricing they had — `"rail": 25` resolves to the
+same `0.75`. They are separate field names rather than a reinterpretation on
+purpose: a live `"rail": 5` means 5% off, and silently rereading it as 5× list
+would bill five times list. A multiplier outside 0.05–20 is rejected as a typo
+and that account falls back to published pricing, which is visible and safe.
+
+Everything is normalised to a multiplier server-side, so the browser never sees
+a percentage.
+
 Quotes from a coded session are tagged on the lead notification
 (`New Lead: Jane Smith @ Acme [Acme Automation]`), with the code re-resolved
 server-side rather than trusted from the client.
 
 See `lib/customers.js` for the margin guardrail: rails and blocks are bought at
-different fractions of list, so they are not equally discountable.
+different fractions of list, so they are not equally discountable. A rail hits
+zero material margin at a `0.50` multiplier, a block at `0.32`.
 
 ## Analytics
 

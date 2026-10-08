@@ -1584,6 +1584,36 @@ function blockCadURL(b) {
   return cadURL(`${s}_series/${s}_series_table.prj`, vars);
 }
 
+/* Overall assembled height — rail base to the top of the carriage, which is
+   the number that has to fit the machine envelope. The rail's own height is
+   not it, and it is not a single figure either: a square block sits taller
+   than a flange block on most sizes (LSH25 is 36 flange against 40 square),
+   so both are named rather than picking one and being wrong half the time. */
+function assemblyHeights(series, size) {
+  const out = {};
+  getBlocks()
+    .filter(b => b.family === series && b.size === size)
+    .forEach(b => {
+      const s = BLOCK_SPECS[b.pn];
+      if (s && typeof s.H === 'number') out[b.type] = s.H;
+    });
+  return out;
+}
+
+function assemblyHeightLabel(series, size) {
+  const h = assemblyHeights(series, size);
+  const types = Object.keys(h);
+  if (!types.length) return '—';
+
+  const values = [...new Set(types.map(t => h[t]))];
+  if (values.length === 1) {
+    return types.length > 1
+      ? `${values[0]} mm`                       // same either way, say it once
+      : `${values[0]} mm (${types[0].toLowerCase()})`;
+  }
+  return types.map(t => `${h[t]} mm ${t.toLowerCase()}`).join(' · ');
+}
+
 /* ── RAIL UI ── */
 function renderSeriesButtons() {
   document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
@@ -1706,6 +1736,7 @@ function recalc() {
     row('Mounting holes n', r.n) +
     row('S / E offsets', `${inputs.S} / ${r.floatE.toFixed(1)} mm`) +
     row('Rail section W×H', `${r.spec.W} × ${r.spec.Hr} mm`) +
+    row('Overall height', assemblyHeightLabel(inputs.series, inputs.size)) +
     row('Approx. weight', `${(r.spec.kgm * r.deliveredLen / 1000).toFixed(2)} kg`) +
     row('Stock rail', r.basePN);
 

@@ -188,6 +188,8 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .driven-value { padding: 10px 12px; border: 1px dashed var(--gray-200); border-radius: var(--radius); background: var(--gray-50); font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gray-600); }
 .driven-value.bad { border-color: var(--red); color: var(--red); background: rgba(198,40,40,0.04); }
 .edge-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.cad-mini { display: inline-block; margin-top: 4px; font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--gray-400); text-decoration: none; white-space: nowrap; transition: var(--transition); }
+.cad-mini:hover { color: var(--orange); }
 .cad-link { display: inline-block; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); color: var(--navy); text-decoration: none; font-size: 13px; font-weight: 600; line-height: 1.3; transition: var(--transition); }
 .cad-link:hover { border-color: var(--orange); color: var(--orange); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .cad-link span { display: block; font-size: 11px; font-weight: 500; color: var(--gray-400); margin-top: 2px; }
@@ -941,6 +943,8 @@ let state = {
   series: 'LSH',
   size: 20,
   blockFilter: true,   // show only blocks that fit the selected rail
+  lastL: 0,            // last valid rail length/offset, so a carriage can be
+  lastS: 0,            // linked as an assembly on the rail being configured
   quoteLines: [],
 };
 
@@ -1614,6 +1618,42 @@ function assemblyHeightLabel(series, size) {
   return types.map(t => `${h[t]} mm ${t.toLowerCase()}`).join(' · ');
 }
 
+/* Rail and carriage together, which is what actually gets dropped into an
+   assembly model — the bare `_series.prj` project rather than the rail-only
+   or block-only ones.
+
+   Only the variables confirmed from Airtac's own live links are sent. The
+   assembly project uses PRE for preload where the block project uses PL for
+   precision, and they take different letter sets, so neither is guessed here:
+   an omitted variable defaults, a wrong one lands on the wrong part. */
+function assemblyCadURL(b, L, S) {
+  const s = b.family.toLowerCase();
+  const m = /BK-([A-Z]\d?)([A-Z])-[A-Z]-[A-Z]-(.+)$/.exec(b.pn);
+  const vars = { WOR: b.size };
+  if (m) Object.assign(vars, { BS: m[1], BT: m[2], NOB: 1, MT: m[3] });
+  if (L > 0) Object.assign(vars, { L: Math.round(L), S: Math.round(S) });
+  return cadURL(`${s}_series/${s}_series.prj`, vars);
+}
+
+function assemblyCadCaption(b) {
+  return state.lastL > 0
+    ? `${b.family}${b.size} assembly at ${Math.round(state.lastL)} mm · Airtac's PARTcommunity portal`
+    : `${b.family}${b.size} rail and carriage · Airtac's PARTcommunity portal`;
+}
+
+/* Spec panels are rendered once and left alone while the rail is retuned, so
+   their assembly links have to be refreshed in place — otherwise an expanded
+   panel keeps linking to whatever length was configured when it opened. */
+function refreshAssemblyCadLinks() {
+  document.querySelectorAll('.cad-link[data-asm-pn]').forEach(a => {
+    const b = getBlocks().find(x => x.pn === a.dataset.asmPn);
+    if (!b) return;
+    a.href = assemblyCadURL(b, state.lastL, state.lastS);
+    const caption = a.querySelector('span');
+    if (caption) caption.textContent = assemblyCadCaption(b);
+  });
+}
+
 /* ── RAIL UI ── */
 function renderSeriesButtons() {
   document.getElementById('series-buttons').innerHTML = Object.keys(SERIES_INFO).map(s =>
@@ -1725,6 +1765,10 @@ function recalc() {
   if (r.valid) {
     cad.href = railCadURL(inputs.series, inputs.size, r.deliveredLen, inputs.S);
     cad.style.display = '';
+    // Remembered so a carriage below can be linked as an assembly on this rail.
+    state.lastL = r.deliveredLen;
+    state.lastS = inputs.S;
+    refreshAssemblyCadLinks();
   } else {
     cad.style.display = 'none';
   }
@@ -1837,7 +1881,9 @@ function renderBlockCatalog() {
           const s = BLOCK_SPECS[b.pn];
           return `<tr>
           <td>${b.size}</td>
-          <td class="pn">${b.pn}</td>
+          <td class="pn">${b.pn}
+            <a class="cad-mini" href="${blockCadURL(b)}" target="_blank" rel="noopener noreferrer"
+               title="Open ${b.pn} in Airtac's PARTcommunity portal">⬡ 3D model</a></td>
           <td class="price" style="font-weight:500;color:var(--gray-600);">${s ? `${s.dynC} / ${s.statC}` : '—'}</td>
           <td class="price">${(() => {
             const now = blockSellPrice(b), pub = blockPublishedPrice(b);
@@ -1876,8 +1922,9 @@ function specDetailHTML(b, s) {
     <div><div class="xs-title">Top view</div>${blockTopViewSVG(b, s)}</div>
   </div>
   <div class="spec-note">Dimensions per Airtac ${b.family} catalog, normal-length block with standard end caps.</div>
-  <a class="cad-link" href="${blockCadURL(b)}" target="_blank" rel="noopener noreferrer">⬡ Airtac's PARTcommunity portal
-    <span>3D CAD, pre-set to ${b.pn}</span></a>`;
+  <a class="cad-link" data-asm-pn="${b.pn}" href="${assemblyCadURL(b, state.lastL, state.lastS)}"
+     target="_blank" rel="noopener noreferrer">⬡ This carriage on your rail, in 3D
+    <span>${assemblyCadCaption(b)}</span></a>`;
 }
 
 function toggleBlockFilter() {

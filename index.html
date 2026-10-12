@@ -1111,19 +1111,42 @@ function renderDiagram(r, inputs) {
   const W = 520, PAD = 26, railY = 30, railH = 30;
   const x0 = PAD, x1 = W - PAD, span = x1 - x0;
   const L = r.deliveredLen || 1;
-  const mm = v => x0 + (v / L) * span;           // mm -> svg x
   const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
 
   // Hole centers: S, S+P, S+2P ... (n of them)
   const holes = [];
   for (let i = 0; i < r.n; i++) holes.push(inputs.S + i * r.P);
 
-  // Draw at most ~14 holes, with a break symbol, so long rails stay legible
-  const MAXH = 14;
-  let shown = holes, broken = false;
-  if (holes.length > MAXH) {
-    shown = [...holes.slice(0, 6), ...holes.slice(-6)];
-    broken = true;
+  // Long rails are drawn as a broken view: a few holes at each end at a pitch
+  // you can actually read, with the break standing for everything between.
+  //
+  // The scale has to break with them. Drawing the end groups at true scale is
+  // what made a 4 m rail illegible — 67 holes over 468 px put six of them
+  // inside 37 px, so they merged into a smear. Each end group now gets its own
+  // share of the width, allocated in proportion to the true length it covers
+  // so the pitch renders identically at both ends.
+  const MAXH = 10, KEND = 4;
+  const broken = holes.length > MAXH;
+  const shown = broken ? [...holes.slice(0, KEND), ...holes.slice(-KEND)] : holes;
+
+  let mm;
+  let xBreakL = 0, xBreakR = 0;
+  if (!broken) {
+    mm = v => x0 + (v / L) * span;
+  } else {
+    const leftEnd    = holes[KEND - 1];              // last hole of the left group
+    const rightStart = holes[holes.length - KEND];   // first hole of the right group
+    const lenL = leftEnd, lenR = L - rightStart;
+    const BREAK = 46;
+    const avail = span - BREAK;
+    const wL = avail * (lenL / (lenL + lenR));
+    xBreakL = x0 + wL;
+    xBreakR = xBreakL + BREAK;
+    mm = v => {
+      if (v <= leftEnd)    return x0 + (v / lenL) * wL;
+      if (v >= rightStart) return xBreakR + ((v - rightStart) / lenR) * (avail - wL);
+      return (xBreakL + xBreakR) / 2;                // anything inside the break
+    };
   }
 
   const hatch = `<pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -1137,12 +1160,13 @@ function renderDiagram(r, inputs) {
             <line x1="${x}" y1="${railY - 4}" x2="${x}" y2="${railY + railH + 4}" stroke="var(--diagram-line)" stroke-width="0.8" stroke-dasharray="3 2.5"/>`;
   }).join('');
 
-  // Break symbol where holes were elided
+  // Break symbol where holes were elided, centred in the reserved gap
   let breakMark = '';
   if (broken) {
-    const bx = (mm(shown[5]) + mm(shown[6])) / 2;
-    breakMark = `<path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--card-bg)" stroke-width="7"/>
-      <path d="M${bx - 7} ${railY - 3} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5" fill="none" stroke="var(--diagram-line)" stroke-width="1.3"/>`;
+    const bx = (xBreakL + xBreakR) / 2;
+    const zig = `M${bx - 7} ${railY - 4} l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5 l7 5 l-7 5`;
+    breakMark = `<path d="${zig}" fill="none" stroke="var(--card-bg)" stroke-width="13"/>
+      <path d="${zig}" fill="none" stroke="var(--diagram-line)" stroke-width="1.3"/>`;
   }
 
   // Dimension arrow between two mm positions at a given y
@@ -1156,9 +1180,12 @@ function renderDiagram(r, inputs) {
 
   // S below the line, P a row lower, E below — keeps the three clear of each
   // other however short the spans get on a long rail.
-  const yS = railY + railH + 20, yL = railY + railH + 62;
+  // S and E share a row at the two ends, where they cannot collide. P gets its
+  // own row below: it starts exactly where S finishes, so on one row the two
+  // lines abut and read as a single dimension.
+  const yS = railY + railH + 18, yP = railY + railH + 48, yL = railY + railH + 88;
   let dims = dim(0, inputs.S, yS, 'S ' + inputs.S, '', 14);
-  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yS, 'P ' + r.P, '', 28);
+  if (r.n >= 2) dims += dim(inputs.S, inputs.S + r.P, yP, 'P ' + r.P, '', 14);
   dims += dim(holes[holes.length - 1], L, yS, 'E ' + r.floatE.toFixed(1), '', 14);
   dims += dim(0, L, yL, `L ${r.deliveredLen} mm`, 'dim-strong', -8);
 
@@ -1167,7 +1194,8 @@ function renderDiagram(r, inputs) {
       <line x1="4" y1="1" x2="4" y2="7" stroke="var(--diagram-dim)" stroke-width="1.2"/>
     </marker></defs>
     ${bar}${holeMarks}${breakMark}
-    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${broken ? ' (center section omitted)' : ''}</text>
+    <text x="${x0}" y="${railY - 10}" class="dim-note">${r.n} mounting holes${
+      broken ? ` · ${r.n - KEND * 2} omitted at the break` : ''}</text>
     ${dims}`;
 }
 

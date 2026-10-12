@@ -188,6 +188,35 @@ body { font-family: var(--font-body); background: var(--gray-50); color: var(--g
 .driven-value { padding: 10px 12px; border: 1px dashed var(--gray-200); border-radius: var(--radius); background: var(--gray-50); font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--gray-600); }
 .driven-value.bad { border-color: var(--red); color: var(--red); background: rgba(198,40,40,0.04); }
 .edge-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+/* Hiwin interchange */
+.xref-card { padding: 0; overflow: hidden; }
+.xref-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; }
+.xref-title { font-size: 16px; font-weight: 700; color: var(--navy); }
+.xref-sub { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+.xref-input { flex: 1 1 280px; max-width: 360px; }
+.xref-input .form-input { font-family: var(--font-mono); text-transform: uppercase; }
+.xref-body { border-top: 1px solid var(--gray-100); background: var(--gray-50); padding: 18px 24px; }
+.xref-read { font-size: 12px; color: var(--gray-500); margin-bottom: 14px; }
+.xref-read code { font-family: var(--font-mono); color: var(--navy); font-weight: 700; }
+.xref-match { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; }
+.xref-match-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--green, #15803d); margin-bottom: 10px; }
+.xref-part { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed var(--gray-100); }
+.xref-part:last-of-type { border-bottom: 0; margin-bottom: 10px; }
+.xref-part .k { font-size: 12px; color: var(--gray-500); }
+.xref-part .v { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--navy); }
+.xref-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.xref-col { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 12px 14px; }
+.xref-col.ok { border-left: 3px solid #15803d; }
+.xref-col.warn { border-left: 3px solid #d97706; }
+.xref-col-head { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 7px; }
+.xref-col ul { margin: 0; padding-left: 16px; }
+.xref-col li { font-size: 12px; color: var(--gray-600); line-height: 1.55; }
+.xref-fine { font-size: 11px; color: var(--gray-400); margin: 8px 0 0; }
+.xref-note { font-size: 12px; color: var(--gray-600); line-height: 1.55; background: var(--white); border: 1px solid var(--gray-200); border-left: 3px solid #d97706; border-radius: var(--radius); padding: 10px 14px; margin-top: 12px; }
+.xref-note.blocked { border-left-color: var(--red); }
+.xref-note code, .xref-miss code { font-family: var(--font-mono); font-size: 11px; background: var(--gray-100); border-radius: 3px; padding: 1px 4px; }
+.xref-miss p { font-size: 13px; color: var(--gray-600); margin: 0 0 10px; }
+@media (max-width: 720px) { .xref-cols { grid-template-columns: 1fr; } }
 .cad-mini { display: inline-block; margin-top: 4px; font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--gray-400); text-decoration: none; white-space: nowrap; transition: var(--transition); }
 .cad-mini:hover { color: var(--orange); }
 .cad-link { display: inline-block; margin-top: 10px; padding: 8px 12px; border: 1px solid var(--gray-200); border-radius: var(--radius); background: var(--white); color: var(--navy); text-decoration: none; font-size: 13px; font-weight: 600; line-height: 1.3; transition: var(--transition); }
@@ -351,8 +380,26 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
   <div class="account-banner" id="account-banner" style="display:none;"></div>
 
+  <!-- HIWIN INTERCHANGE -->
+  <section id="panel-interchange">
+    <div class="card xref-card">
+      <div class="xref-head">
+        <div>
+          <div class="xref-title">Replacing a Hiwin rail?</div>
+          <div class="xref-sub">Paste the part number and we'll configure the Airtac equivalent.</div>
+        </div>
+        <div class="xref-input">
+          <input class="form-input" id="xref-pn" type="text" spellcheck="false"
+                 placeholder="e.g. HGH25CA or HGR25R1000"
+                 oninput="runInterchange()" onkeydown="if(event.key==='Enter')runInterchange()">
+        </div>
+      </div>
+      <div id="xref-result"></div>
+    </div>
+  </section>
+
   <!-- RAIL BUILDER -->
-  <section id="panel-rail">
+  <section id="panel-rail" class="section-gap">
     <div class="card">
       <div class="card-header">
         <div class="card-title">Cut-Length Rail Calculator</div>
@@ -1652,6 +1699,219 @@ function refreshAssemblyCadLinks() {
     const caption = a.querySelector('span');
     if (caption) caption.textContent = assemblyCadCaption(b);
   });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   HIWIN INTERCHANGE
+
+   Someone replacing a worn Hiwin rail arrives holding a part number, not a
+   length and an edge pitch. This reads the number and drops them into the
+   calculator with the equivalent already configured.
+
+   It checks interchange; it does not claim equivalence. Hiwin HG and Airtac
+   LSH share every fit dimension — assembly height, block width, bolt pattern,
+   rail section and hole pitch, at every size 15 to 45, verified against
+   Hiwin's own HG catalogue. What they do not share is load rating, and the
+   preload, accuracy and seal codes on a part number are fit and performance
+   classes that have never been cross-checked. Those are reported as unmapped
+   rather than guessed: a rail that bolts up but binds is worse than one that
+   does not arrive.
+
+   Part number anatomy, front half parseable, back half not:
+
+     HGH 25 CA  ZA C        HGR 25 R 2000
+     │   │  │   │  └ accuracy   │  │ └ rail length
+     │   │  │   └ preload       │  └ rail form
+     │   │  └ length class + mounting variant
+     │   └ size
+     └ HGH square block · HGW flange block · HGR rail
+   ════════════════════════════════════════════════════════════════ */
+const HIWIN_SIZES = [15, 20, 25, 30, 35, 45];   // what TSI stocks in LSH
+
+function parseHiwin(input) {
+  const raw = String(input || '').toUpperCase().replace(/[\s_]/g, '');
+  if (!raw) return null;
+
+  // HG = standard profile (LSH), EG = low profile (LSD). H square, W flange,
+  // R rail. The leading separator-free form is what people actually paste.
+  const m = /^(HG|EG)([HWR])-?(\d{2})(.*)$/.exec(raw);
+  if (!m) return null;
+
+  const [, family, kind, sizeStr, tail] = m;
+  const size = parseInt(sizeStr, 10);
+
+  // A 3+ digit run in the tail is the rail length; shorter runs are preload
+  // digits such as Z0. Hiwin writes it with or without a + or - in front.
+  const lenMatch = /(\d{3,5})/.exec(tail);
+  const length = lenMatch ? parseInt(lenMatch[1], 10) : null;
+
+  // Length class sits immediately after the size on a block: C standard,
+  // H long. The letter after it is the mounting variant, which we ignore.
+  const classMatch = kind !== 'R' ? /^([CH])([ABC])?/.exec(tail) : null;
+
+  // Accuracy is the grade left at the END once the class, rail form, length
+  // and preload are stripped off — C, H, P, SP or UP. Matching it positionally
+  // rather than by pattern is what keeps it from colliding with the class
+  // letters, which use the same alphabet.
+  const rest = tail
+    .replace(/^[CH][ABC]?/, '')     // block length class + mounting variant
+    .replace(/^R/, '')              // rail form letter
+    .replace(/[+-]?\d{3,5}/, '')    // rail length
+    .replace(/Z[0AB]/, '');         // preload
+  const accMatch = /(SP|UP|[CHP])$/.exec(rest);
+
+  return {
+    raw, family, size, length,
+    kind: kind === 'R' ? 'rail' : (kind === 'H' ? 'square' : 'flange'),
+    longBlock: !!(classMatch && classMatch[1] === 'H'),
+    preload: (/(Z[0AB])/.exec(tail) || [])[1] || null,
+    accuracy: accMatch ? accMatch[1] : null,
+  };
+}
+
+/* Resolve a parsed Hiwin number to what TSI would supply, with every caveat
+   the mapping cannot carry. Returns null only for input that is not Hiwin. */
+function hiwinInterchange(p) {
+  if (!p) return null;
+  const notes = [], blocked = [];
+
+  if (p.family === 'EG') {
+    blocked.push(`EG is Hiwin's low-profile series. Airtac's LSD is its
+      counterpart and we stock sizes 15 to 25, but we have not yet verified
+      EG against LSD dimension by dimension — so we will not claim a fit here.
+      Send us the number and we will confirm it properly.`);
+    return { p, blocked, notes, rail: null, block: null };
+  }
+
+  if (!HIWIN_SIZES.includes(p.size)) {
+    blocked.push(`HG${p.size} is outside the 15–45&nbsp;mm range we stock in
+      LSH. Airtac builds larger sizes to order — tell us what you need.`);
+    return { p, blocked, notes, rail: null, block: null };
+  }
+
+  const spec = getSpec('LSH', p.size);
+  const rail = getRails().find(r => r.series === 'LSH' && r.size === p.size);
+  const block = p.kind === 'rail' ? null
+    : getBlocks().find(b => b.family === 'LSH' && b.size === p.size
+        && b.type === (p.kind === 'square' ? 'Square' : 'Flange'));
+
+  if (p.kind !== 'rail' && !block) {
+    blocked.push(`We do not stock that block style in LSH${p.size}.`);
+  }
+
+  if (p.longBlock && block) {
+    const s = BLOCK_SPECS[block.pn];
+    notes.push(`Your number specifies a <strong>long block</strong>. We stock
+      the standard length (${s ? s.C + '&nbsp;mm' : 'shorter'}), which mounts
+      identically but carries less load. Ask us if you need the long version.`);
+  }
+
+  if (p.length && p.length > spec.Lmax) {
+    notes.push(`${p.length}&nbsp;mm is beyond the ${spec.Lmax}&nbsp;mm maximum
+      for a single rail — that length needs a joint rail.`);
+  }
+
+  if (p.preload || p.accuracy) {
+    const bits = [p.preload && `preload <code>${p.preload}</code>`,
+                  p.accuracy && `accuracy <code>${p.accuracy}</code>`].filter(Boolean);
+    notes.push(`Your number also specifies ${bits.join(' and ')}. Those are fit
+      and performance classes, not dimensions, and they do not translate
+      directly between manufacturers — tell us what the application needs and
+      we will match it.`);
+  }
+
+  return { p, rail, block, spec, notes, blocked };
+}
+
+function runInterchange() {
+  const host = document.getElementById('xref-result');
+  const input = document.getElementById('xref-pn').value;
+  const parsed = parseHiwin(input);
+
+  if (!input.trim()) { host.innerHTML = ''; return; }
+
+  if (!parsed) {
+    host.innerHTML = `<div class="xref-body xref-miss">
+      <p>That doesn't look like a Hiwin HG or EG number. They start
+      <code>HGH</code>, <code>HGW</code> or <code>HGR</code> followed by the
+      size — <code>HGH25CA</code>, <code>HGR25R1000</code>.</p>
+      <p>If it's a THK, NSK or other number, send it over and we'll cross it
+      by hand.</p>
+      <button class="btn btn-sm btn-secondary" onclick="openSendModal('availability')">
+        ✉️ Ask us to cross this part</button></div>`;
+    return;
+  }
+
+  const r = hiwinInterchange(parsed);
+  const pieces = [];
+
+  if (r.rail || r.block) {
+    const what = [];
+    if (r.block) what.push(`<div class="xref-part"><span class="k">Carriage</span>
+      <span class="v">${r.block.pn}</span></div>`);
+    if (r.rail) what.push(`<div class="xref-part"><span class="k">Rail</span>
+      <span class="v">${r.rail.pn.replace('4000', parsed.length ? String(parsed.length) : '····')}</span></div>`);
+
+    pieces.push(`<div class="xref-match">
+      <div class="xref-match-head">✓ Airtac equivalent</div>
+      ${what.join('')}
+      <button class="btn btn-primary btn-sm" onclick="applyInterchange(${parsed.size}, ${parsed.length || 0})">
+        Configure this →</button>
+    </div>`);
+
+    const s = r.block ? BLOCK_SPECS[r.block.pn] : null;
+    pieces.push(`<div class="xref-cols">
+      <div class="xref-col ok">
+        <div class="xref-col-head">Matches your Hiwin part</div>
+        <ul>
+          <li>Assembly height, block width and bolt pattern</li>
+          <li>Rail section and ${r.spec.P}&nbsp;mm mounting-hole pitch</li>
+          <li>Rail bolt size and counterbore</li>
+        </ul>
+        <p class="xref-fine">Verified against Hiwin's HG catalogue at every
+        size from 15 to 45&nbsp;mm — it drops into the existing holes.</p>
+      </div>
+      <div class="xref-col warn">
+        <div class="xref-col-head">Check before you switch</div>
+        <ul>
+          ${s ? `<li>Load rating: this block is rated
+            <strong>${s.dynC}&nbsp;kN</strong> dynamic /
+            <strong>${s.statC}&nbsp;kN</strong> static</li>` : ''}
+          <li>Hiwin's published dynamic ratings run roughly 25–30% higher at
+          the same size, so compare against your figure</li>
+          <li>Preload, accuracy and seal classes don't translate between
+          manufacturers</li>
+        </ul>
+      </div>
+    </div>`);
+  }
+
+  (r.blocked || []).forEach(b => pieces.push(`<div class="xref-note blocked">${b}</div>`));
+  (r.notes || []).forEach(n => pieces.push(`<div class="xref-note">${n}</div>`));
+
+  if (r.blocked && r.blocked.length) {
+    pieces.push(`<button class="btn btn-sm btn-secondary"
+      onclick="openSendModal('availability')">✉️ Send us this part number</button>`);
+  }
+
+  host.innerHTML = `<div class="xref-body">
+    <div class="xref-read">Read as
+      <code>${parsed.raw}</code> — Hiwin ${parsed.family}, size ${parsed.size},
+      ${parsed.kind}${parsed.length ? `, ${parsed.length}&nbsp;mm rail` : ''}</div>
+    ${pieces.join('')}</div>`;
+}
+
+/* Hand off into the calculator with the equivalent already set, which is the
+   whole point — a lookup result on its own does not get anyone a price. */
+function applyInterchange(size, length) {
+  state.series = 'LSH';
+  state.size = size;
+  renderSeriesButtons();
+  if (length > 0) document.getElementById('rail-length').value = length;
+  useStandardEdges();
+  renderBlockCatalog();
+  document.getElementById('panel-rail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast(`LSH${size} configured${length > 0 ? ` at ${length} mm` : ''}.`, 'success');
 }
 
 /* ── RAIL UI ── */

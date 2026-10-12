@@ -70,6 +70,9 @@ without re-drilling. (The catalog's nominal 40/55/67.5 mm is a different figure
 and is not what Airtac's own calculator or TSI cuts to.) The `minE`/`maxE`
 limits are Airtac's and are enforced regardless.
 
+**Hiwin interchange** — paste a Hiwin HG part number and the Airtac equivalent
+is identified and loaded into the calculator. See below.
+
 **Carriage Blocks** — LSH and LSD flange/square blocks, filtered to those that fit
 the selected rail.
 
@@ -103,6 +106,44 @@ the quote page and hand the lead to CADENAS rather than TSI, so the link is
 labelled with the sign-in up front and opens in a new tab. If Airtac ever
 grants a whitelabel portal, `airtac-embedded.partcommunity.com` is the host
 built for framing.
+
+## Hiwin interchange
+
+Someone replacing a worn rail arrives holding a part number, not a length and
+an edge pitch. `parseHiwin()` reads the number and `hiwinInterchange()` resolves
+it, with a **Configure this →** button that sets the calculator to the
+equivalent — the point is to land them on a price, not on a lookup result.
+
+```
+HGH 25 CA  ZA C           HGR 25 R 2000
+│   │  │   │  └ accuracy       │  │ └ rail length
+│   │  │   └ preload           │  └ rail form
+│   │  └ length class + mounting variant
+│   └ size
+└ HGH square block · HGW flange block · HGR rail
+```
+
+**The front half is parsed; the back half is reported, not mapped.** Series,
+size, block style and rail length drive the configuration. Preload, accuracy
+and seal codes are fit and performance classes that have never been
+cross-checked between manufacturers, so they are shown back to the customer as
+something to confirm. Guessing them is the one way this tool could do real
+damage — a rail that bolts up but binds.
+
+It checks interchange rather than claiming equivalence. The result names what
+matches (assembly height, block width, bolt pattern, rail section, hole pitch
+and rail bolts — verified against Hiwin's HG catalogue at every size 15–45) and
+what does not (load rating, with the Airtac figure shown, and a note that
+Hiwin's published dynamic ratings run roughly 25–30% higher).
+
+Cases that cannot be answered become leads rather than dead ends: HG55/65 and
+other unstocked sizes, Hiwin's EG low-profile series (the LSD counterpart, not
+yet verified dimension by dimension), and unrecognised numbers from THK or NSK
+all route to the enquiry form.
+
+To add THK, verify its dimensions against THK's own catalogue first — the
+figures gathered so far come from distributor listings that disagree with each
+other on load ratings.
 
 ## Pricing model — list-based, published above list
 

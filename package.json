@@ -1,0 +1,23 @@
+{
+  "name": "rail-quoter",
+  "version": "1.0.0",
+  "description": "Cut-length linear rail and carriage block quoting tool for TSI Solutions. Single static page plus one serverless function for sending quotes by email.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blacorc/rail-quoter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blacorc/rail-quoter/issues"
+  },
+  "homepage": "https://github.com/blacorc/rail-quoter#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}

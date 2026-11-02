@@ -837,35 +837,28 @@ const REP_INFO = {
   logoUrl: '',                  // absolute https:// URL to a logo image
 };
 
-// Markup for one catalog item: its own if set, otherwise the default above.
-function itemMarkup(item) {
-  return (item && typeof item.markup === 'number')
-    ? Math.max(0, item.markup)
-    : Math.max(0, DEFAULT_PRICING.webMarkup);
+/* Prices come in finished, not as list times a markup.
+ *
+ * /catalog.js carries a sell rate per mm of rail (webPerMm) and a sell price
+ * per block (webPrice), with Airtac list and the markup already multiplied
+ * together server-side. Nothing here can reconstruct either, which is the
+ * point: the pricing formula used to be readable in view-source on a page
+ * that deliberately hides a customer's discount percentage.
+ *
+ * An account's own rates arrive from /api/customer in the same finished shape,
+ * keyed by part number, and simply replace the published figure for the parts
+ * they cover. A part the account has no rate for falls back to published.
+ */
+function railPerMm(rail) {
+  const acct = state.customer && state.customer.rails;
+  const own = acct ? acct[rail.pn] : undefined;
+  return (typeof own === 'number' && own > 0) ? own : rail.webPerMm;
 }
 
-// Multiplier applied to an item's list price. List is the anchor throughout.
-//
-// Published price is list plus that part's markup. An account code switches to
-// that customer's rate, which /api/customer has already normalised to a
-// multiplier on list whichever field it was written in — so 0.75 is 25% off,
-// 1.0 is at list, 1.8 sits between list and the web price. Resolved in this
-// order: a per-part override, then the rail or block line rate, then the
-// published price if the account has no rate for that line.
-function publishedFactor(item) {
-  return 1 + itemMarkup(item) / 100;
-}
-
-function itemFactor(item, kind) {
-  const c = state.customer;
-  if (c) {
-    const override = (item && item.pn && c.parts) ? c.parts[item.pn] : undefined;
-    const rate = (typeof override === 'number' && override > 0)
-      ? override
-      : (kind === 'rail' ? c.rail : c.block);
-    if (typeof rate === 'number' && rate > 0) return rate;
-  }
-  return publishedFactor(item);
+function blockPrice(block) {
+  const acct = state.customer && state.customer.blocks;
+  const own = acct ? acct[block.pn] : undefined;
+  return (typeof own === 'number' && own > 0) ? own : block.webPrice;
 }
 
 /* ── STATE ── */
@@ -928,22 +921,24 @@ function computeRail({ series, size, L, S }) {
   const configuredPN = rail.pn.replace('4000', String(pnLen)) +
     `- e=${E.toFixed(1)}/s=${S}`;
 
-  // Price model: list price per mm of usable stock (v26 B19-B20 scrap logic),
-  // times the rail price factor. Cut/handling are service charges, not marked
-  // up or discounted.
+  // Price model: a finished sell rate per mm, computed server-side from list
+  // and markup against usable stock after the standard end allowance (v26
+  // B19-B20 scrap logic). See api/catalog.js.
   //
   // Scrap is the standard end allowance on the stock bar, not this customer's
   // offsets — the per-mm rate is a published rate and must not shift because
   // someone chose a different S.
-  const scrap = 2 * spec.stdE + p.buffer;
-  const usable = STOCK_LEN - scrap;
-  const factor = itemFactor(rail, 'rail');
-  const listPerMm = rail.list / usable;
-  const materialList = listPerMm * pricedLen;
-  const material = materialList * factor;
+  // Material is the sell rate per mm times the priced length. Cut and handling
+  // are service charges, charged as entered — never marked up or discounted.
+  const material = railPerMm(rail) * pricedLen;
   const sellPrice = material + p.cutFee + p.handling;
   // What this rail costs without an account, so the saving can be shown.
-  const publishedPrice = materialList * publishedFactor(rail) + p.cutFee + p.handling;
+  const publishedPrice = rail.webPerMm * pricedLen + p.cutFee + p.handling;
+
+  // Yield of one stock bar after the standard end allowance. Dimensional, not
+  // a price — the rate per mm already accounts for it server-side — but still
+  // needed here to warn when a length cannot come out of a single bar.
+  const usable = STOCK_LEN - (2 * spec.stdE + p.buffer);
 
   // Spec validation against Airtac's published limits.
   const errors = [], warnings = [];
@@ -967,19 +962,19 @@ function computeRail({ series, size, L, S }) {
 
   return {
     P, spec, n, pricedLen, deliveredLen, floatE: E,
-    configuredPN, basePN: rail.pn, listPerMm, sellPrice, publishedPrice,
-    materialList, material, factor, S,
+    configuredPN, basePN: rail.pn, sellPrice, publishedPrice,
+    material, S,
     errors, warnings, valid: errors.length === 0,
     minLen: P + S + spec.minE, // n=2 floor, with the tightest legal end
   };
 }
 
 function blockSellPrice(block) {
-  return block.list * itemFactor(block, 'block');
+  return blockPrice(block);
 }
 
 function blockPublishedPrice(block) {
-  return block.list * publishedFactor(block);
+  return block.webPrice;
 }
 
 /* ════════════════════════════════════════════════════════════════

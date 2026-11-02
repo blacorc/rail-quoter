@@ -1,20 +1,23 @@
 /**
  * THE CATALOGUE — the single source of truth for every price and dimension.
  *
- * Loaded two ways from this one file, so there is nothing to keep in sync:
- *   - the browser reads it as a plain script before index.html's own script
- *   - api/specifications.js requires() it to render the crawlable spec page
+ * SERVER ONLY. Three readers, none of them a browser:
+ *   - api/catalog.js       emits the browser's copy, prices already multiplied
+ *   - api/specifications.js renders the crawlable spec-and-price page
+ *   - api/customer.js      builds an account's rate table
  *
- * That second reader is why this file exists. Prices and part numbers used to
- * live only inside index.html's script, so they reached a visitor's screen but
- * never reached a crawler that does not run JavaScript — which is most of the
- * AI ones. Copying the figures into static HTML would have created a second
- * source of truth that drifts, and a stale price an assistant quotes with
- * confidence is worse than no price at all.
+ * Keeping it here is what keeps Airtac list and the markup off the wire. The
+ * browser used to hold both side by side, which handed anyone reading
+ * view-source the whole pricing formula.
+ *
+ * It is also why the figures cannot drift. Everything priced anywhere — the
+ * calculator, the spec page, an account's rates — is derived from this one
+ * file at request time, so there is no committed copy to go stale, and no
+ * build step either.
  *
  * EDITING: change a value, commit, and Vercel redeploys within a minute or so.
  * The new figure is then what every visitor AND the spec page shows. You can
- * edit this straight from GitHub in a browser: open catalog.js, click the
+ * edit this straight from GitHub in a browser: open api/_catalog.js, click the
  * pencil, change the number, Commit changes.
  */
 
@@ -146,11 +149,12 @@ const DEFAULT_PRICING = {
   buffer: 0,        // mm of extra scrap beyond S + E when costing a cut
 };
 
-/* Browser: these become globals, as they were when they lived in index.html.
-   Node: require('./catalog.js') hands back the same objects. */
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    STOCK_LEN, RAIL_SPEC, BLOCK_SPECS, SERIES_INFO,
-    DEFAULT_RAILS, DEFAULT_BLOCKS, DEFAULT_PRICING, getSpec,
-  };
-}
+/* Server-only. This file is never served: an api/_ prefix is neither routed
+   as an endpoint nor exposed as a static asset, which is what keeps the list
+   prices and the markup off the wire. api/catalog.js emits the browser's copy
+   with prices already multiplied; api/specifications.js and api/customer.js
+   read these figures directly. */
+module.exports = {
+  STOCK_LEN, RAIL_SPEC, BLOCK_SPECS, SERIES_INFO,
+  DEFAULT_RAILS, DEFAULT_BLOCKS, DEFAULT_PRICING, getSpec,
+};

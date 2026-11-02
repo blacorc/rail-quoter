@@ -1,4 +1,4 @@
-const { lookupCustomer } = require('../lib/customers');
+const { lookupCustomer } = require('./_customers');
 
 /**
  * Plain-text rendering of the quote, sent alongside the HTML.

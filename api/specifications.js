@@ -1,6 +1,6 @@
 const {
   STOCK_LEN, RAIL_SPEC, BLOCK_SPECS, DEFAULT_RAILS, DEFAULT_BLOCKS, DEFAULT_PRICING,
-} = require('../catalog.js');
+} = require('./_catalog.js');
 
 /**
  * The crawlable specification and price page.

@@ -147,27 +147,53 @@ other on load ratings.
 
 ## Pricing model — list-based, published above list
 
-**No cost basis is stored in this repository.** The catalog ships published Airtac
-list prices only, so neither the source nor the browser reveals what stock is
-bought for.
+**No cost basis is stored in this repository.** The catalog holds published
+Airtac list prices only, so nothing here reveals what stock is bought for.
 
 **List is the anchor.** Every price is that part's Airtac list price times
-`1 + markup`. There is no admin panel and no runtime configuration — the settings
-are constants near the top of `index.html`:
+`1 + markup`. There is no admin panel and no runtime configuration — the
+settings are constants in **`api/_catalog.js`**:
 
 | Constant | What it sets |
 |---|---|
 | `DEFAULT_RAILS` / `DEFAULT_BLOCKS` | Per-part list price and markup |
 | `DEFAULT_PRICING` | Default markup, cut fee, handling, scrap buffer |
-| `REP_INFO` | Name, phone, company and logo on the quote email |
+| `RAIL_SPEC` / `BLOCK_SPECS` | Dimensions and limits |
+| `REP_INFO` (in `index.html`) | Name, phone, company and logo on the quote email |
 
 Markup is per part, so one SKU can be repositioned without moving the rest;
 anything without its own `markup` inherits `DEFAULT_PRICING.webMarkup`.
 
 **To change a price:** edit the value, commit, and Vercel redeploys — the new
-figure is then what every visitor sees. This works from GitHub in a browser
-(open `index.html`, pencil icon, edit, Commit changes), so no local checkout is
+figure is then what every visitor sees, on both the calculator and the
+specifications page. This works from GitHub in a browser (open
+`api/_catalog.js`, pencil icon, edit, Commit changes), so no local checkout is
 needed. Every change is versioned, so `git log` shows when a price moved and why.
+
+### Why list and markup never reach the browser
+
+`api/_catalog.js` is **not served**. Files in `api/` whose names begin with an
+underscore are neither routed as endpoints nor served as static assets, so the
+list prices and the markup stay server-side.
+
+What the browser gets is `/catalog.js`, rewritten to `api/catalog.js`, which
+emits the same dimensions verbatim plus a *finished* sell rate per rail
+(`webPerMm`) and price per block (`webPrice`) — list and markup already
+multiplied together and left behind. `/api/customer` returns an account's rates
+in the same finished shape rather than a multiplier, because the browser has no
+list price left to multiply.
+
+Previously the browser held `list: 260.30` and `webMarkup: 150` side by side,
+which handed anyone reading view-source the entire pricing formula — on a page
+that deliberately hides a customer's discount percentage. Airtac's list prices
+are public, so the markup was the part worth protecting.
+
+**This obscures the markup rather than eliminating it.** A rate per mm divided
+by a known public list price still yields the multiplier, for anyone who also
+guesses the scrap basis. Closing it completely would mean pricing every quote
+through an API call, costing the instant, offline-capable calculator that makes
+the page worth using. Generating the file per request rather than committing a
+derived copy is what keeps one source of truth and no build step.
 
 **To quote one customer below list**, edit the unit price on the quote line
 itself. Those fields are editable and affect only that quote, never the site.
@@ -320,7 +346,7 @@ Quotes from a coded session are tagged on the lead notification
 (`New Lead: Jane Smith @ Acme [Acme Automation]`), with the code re-resolved
 server-side rather than trusted from the client.
 
-See `lib/customers.js` for the margin guardrail: rails and blocks are bought at
+See `api/_customers.js` for the margin guardrail: rails and blocks are bought at
 different fractions of list, so they are not equally discountable. A rail hits
 zero material margin at a `0.50` multiplier, a block at `0.32`.
 

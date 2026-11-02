@@ -819,9 +819,11 @@ textarea.form-input { resize: vertical; min-height: 80px; }
 
 <script>
 /* ════════════════════════════════════════════════════════════════
-   CATALOG DEFAULTS — from TSI_Airtac_Rail_Calculator_v26 PriceTable
-   and TSI_Airtac_carriage_spreadsheet (TSI Net = 32% of list).
-   Prices and markups are edited in this file and take effect on deploy.
+   CATALOG DEFAULTS — Airtac published list prices and catalogue
+   dimensions. Edited here; takes effect on deploy.
+
+   Nothing about what stock costs belongs in this file: it is served to
+   every browser. The margin and net-of-list figures are in README.md.
    ════════════════════════════════════════════════════════════════ */
 const STOCK_LEN = 4000; // mm, fixed stock rail length
 
@@ -892,8 +894,8 @@ const SERIES_INFO = {
 };
 
 // Published Airtac list prices for 4000mm stock rails.
-// Cost basis is deliberately NOT shipped here — quoting works off list, with an
-// optional discount that each user sets locally in Admin (localStorage only).
+// Published Airtac list prices for 4000mm stock rails. What TSI pays for them
+// is not here and must not be added — this file reaches the browser.
 const DEFAULT_RAILS = [
   { series: 'LSD', size: 15, pn: 'LSD15RLX4000-N-D', list: 193.70 },
   { series: 'LSD', size: 20, pn: 'LSD20RLX4000-N-D', list: 209.50 },

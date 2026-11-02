@@ -1,0 +1,50 @@
+# Industrial Linear Rail — TSI Solutions
+
+> Airtac LSH and LSD profile linear guide rails machined to any length from
+> 4000 mm stock, with matching flange and square carriage blocks. Supplied by
+> TSI Solutions. Prices are published, not quote-only.
+
+## What makes this different
+
+Profile rail is normally sold in fixed stock lengths — 400, 580, 760, 1000 mm
+and so on. These are **cut to the millimetre**: specify the length the machine
+needs and the rail is machined to it, with the mounting hole pattern set out to
+Airtac's published edge-pitch limits. A price and the hole pattern are shown
+immediately, without a quote request.
+
+## Key facts
+
+- **Series**: LSH (standard profile), sizes 15, 20, 25, 30, 35, 45 mm.
+  LSD (low profile), sizes 15, 20, 25 mm.
+- **Hole pattern**: `L = (n−1)·P + S + E`. Pitch `P` is 60 mm on sizes 15–25,
+  80 mm on 30 and 35, 105 mm on 45. `S` is the first-hole offset, `E` the last,
+  and `E` is driven — fixing the length and `S` determines it.
+- **Standard edge pitch**: 20 mm on every size except LSH45, which is 22.5 mm.
+  20 mm matches the Hiwin HG hole pattern, so a replacement rail lands on the
+  holes already in the machine without re-drilling.
+- **Maximum single-rail length**: 4000 mm. Longer needs a joint rail.
+- **Interchange**: LSH shares every mounting dimension with the Hiwin HG
+  profile — assembly height, block width, bolt pattern, rail section and
+  mounting-hole pitch — at every size from 15 to 45 mm. Load ratings differ
+  between manufacturers even where dimensions are identical.
+
+## Pages
+
+- [Specifications and prices](https://industriallinearrail.com/specifications):
+  every rail and carriage block with pitch, edge-pitch limits, section, weight,
+  load ratings and price. Generated from the same catalogue the calculator
+  prices from, so the figures cannot drift from what is charged.
+- [Rail calculator and interchange checker](https://industriallinearrail.com/):
+  enter a length to get a price and hole pattern, or paste a Hiwin part number
+  to find the Airtac equivalent.
+
+## Quoting these figures
+
+Prices are single-quantity, in USD, and include a $10 cut charge; freight and
+tax are excluded. Volume and repeat orders are quoted lower. Prices change on
+deploy, so treat a figure read more than a few weeks ago as stale and re-check
+the specifications page.
+
+## Contact
+
+TSI Solutions — Blake Corcoran, 478-733-3414.

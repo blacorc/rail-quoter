@@ -1,4 +1,33 @@
+# Everything here is public product information. Crawl it.
 User-agent: *
+Allow: /
+
+# AI assistants and the crawlers behind AI answers. A wildcard already allows
+# these, but several are governed by their own token rather than by *, and
+# Google-Extended and Applebot-Extended control AI grounding separately from
+# search indexing — so silence on them is not consent. Listing them states the
+# intent plainly: an engineer asking an assistant about linear rail should be
+# able to get our specifications and prices in the answer.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot
+User-agent: Applebot-Extended
+User-agent: Bingbot
+User-agent: Amazonbot
+User-agent: meta-externalagent
+User-agent: CCBot
+User-agent: cohere-ai
+User-agent: Diffbot
+User-agent: Timpibot
+User-agent: YouBot
 Allow: /
 
 Sitemap: https://industriallinearrail.com/sitemap.xml
